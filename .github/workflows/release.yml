@@ -1,0 +1,174 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify-version:
+    name: Reconcile tag with workspace version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Resolve release version
+        id: resolve
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="$(cargo metadata --no-deps --format-version 1 \
+              | jq -r '.packages[] | select(.name == "storypole-cli") | .version')"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "Release version: ${version}"
+
+      - name: Verify workspace crates match release version
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          status=0
+          while read -r name crate_version; do
+            if [[ "${crate_version}" != "${VERSION}" ]]; then
+              echo "::error::${name} is at ${crate_version}, expected ${VERSION}"
+              status=1
+            else
+              echo "ok: ${name} ${crate_version}"
+            fi
+          done < <(cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[] | "\(.name) \(.version)"')
+          exit "${status}"
+
+      - name: Verify CHANGELOG.md documents release version
+        env:
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          set -euo pipefail
+          if ! grep -Fq "## [${VERSION}]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md missing '## [${VERSION}]' heading"
+            exit 1
+          fi
+          echo "ok: CHANGELOG.md contains entry for ${VERSION}"
+
+  build-binaries:
+    name: Build ${{ matrix.target }}
+    needs: verify-version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive: tar.gz
+            rustflags: ""
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+            rustflags: "-C link-arg=-mmacosx-version-min=13.1"
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive: tar.gz
+            rustflags: "-C link-arg=-mmacosx-version-min=13.1"
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive: zip
+            rustflags: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache registry and target directory
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      - name: Build release binary
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
+        run: cargo build --release --locked --package storypole-cli --bin storypole --target ${{ matrix.target }}
+
+      - name: Package tar.gz (Unix)
+        if: runner.os != 'Windows'
+        env:
+          VERSION: ${{ needs.verify-version.outputs.version }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          staging="storypole-v${VERSION}-${TARGET}"
+          mkdir -p "${staging}"
+          cp "target/${TARGET}/release/storypole" "${staging}/storypole"
+          cp README.md LICENSE NOTICE "${staging}/"
+          tar -czf "${staging}.tar.gz" -C "${staging}" storypole README.md LICENSE NOTICE
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum "${staging}.tar.gz" > "${staging}.tar.gz.sha256"
+          else
+            shasum -a 256 "${staging}.tar.gz" > "${staging}.tar.gz.sha256"
+          fi
+          ls -l "${staging}.tar.gz" "${staging}.tar.gz.sha256"
+
+      - name: Package zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.verify-version.outputs.version }}
+        run: |
+          $staging = "storypole-v$env:VERSION-${{ matrix.target }}"
+          New-Item -ItemType Directory -Path $staging | Out-Null
+          Copy-Item "target/${{ matrix.target }}/release/storypole.exe" "$staging/storypole.exe"
+          Copy-Item README.md, LICENSE, NOTICE -Destination $staging
+          Compress-Archive -Path "$staging/*" -DestinationPath "$staging.zip"
+          $hash = (Get-FileHash "$staging.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  $staging.zip" | Out-File "$staging.zip.sha256" -Encoding ascii
+          Get-ChildItem "$staging.zip*" | Format-Table Name, Length
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: storypole-${{ matrix.target }}
+          path: storypole-v${{ needs.verify-version.outputs.version }}-${{ matrix.target }}.${{ matrix.archive }}*
+          if-no-files-found: error
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [verify-version, build-binaries]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: List assets
+        run: ls -la dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.verify-version.outputs.version }}
+          name: storypole v${{ needs.verify-version.outputs.version }}
+          files: dist/*
+          generate_release_notes: true
+          prerelease: ${{ contains(needs.verify-version.outputs.version, '-') }}
+          draft: false

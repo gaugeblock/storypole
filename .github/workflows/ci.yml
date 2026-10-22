@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: ""
+
+jobs:
+  gate:
+    name: fmt, clippy, test, audit, dogfood
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install the stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache registry and target directory
+        uses: Swatinem/rust-cache@v2
+
+      - name: cargo fmt --all -- --check
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: cargo test --workspace --all-targets
+        run: cargo test --workspace --all-targets
+
+      - name: cargo test --doc --workspace
+        run: cargo test --doc --workspace
+
+      - name: Audit Hard 250-Line File Limit
+        run: |
+          set -euo pipefail
+          violating=0
+          while IFS= read -r file; do
+            count=$(wc -l < "$file")
+            if [ "$count" -gt 250 ]; then
+              echo "::error file=$file::File exceeds 250 LOC limit ($count lines)"
+              violating=$((violating + 1))
+            fi
+          done < <(find crates src tests -name "*.rs" 2>/dev/null || true)
+          if [ "$violating" -gt 0 ]; then
+            echo "Failed: $violating file(s) exceeded the 250 LOC ceiling."
+            exit 1
+          fi
+          echo "ok: All Rust source files strictly under 250 LOC."
+
+      - name: Dogfood CLI and Stdio MCP
+        run: |
+          set -euo pipefail
+          test_dir=$(mktemp -d)
+          cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" init --prefix CI
+          cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" add "CI Dogfood Task" --kind feature --priority 1
+          cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" list
+          cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" next
+          cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" graph --format mermaid
+          # Test stdio MCP JSON-RPC message handling
+          printf '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}\n{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}\n' | cargo run --package storypole-cli --bin storypole -- --dir "$test_dir" mcp
+          rm -rf "$test_dir"

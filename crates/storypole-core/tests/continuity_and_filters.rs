@@ -1,5 +1,7 @@
 //! Integration tests for agent continuity, handoff packets, collision detection, and multi-dimensional filters.
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use storypole_core::config::StorypoleConfig;
 use storypole_core::index::query::{TaskFilter, query_tasks, resolve_task_id};
 use storypole_core::model::decision::HandoffPacket;
@@ -10,8 +12,10 @@ use storypole_core::store::StorypoleStore;
 
 fn temp_store() -> StorypoleStore {
     let tmp = tempfile::tempdir().expect("tempdir");
-    let mut config = StorypoleConfig::default();
-    config.claim_ttl_minutes = 60;
+    let config = StorypoleConfig {
+        claim_ttl_minutes: 60,
+        ..Default::default()
+    };
     StorypoleStore::init(tmp.path(), config).expect("init")
 }
 

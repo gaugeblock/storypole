@@ -1,5 +1,7 @@
 //! Integration tests for DAG cycle detection and chained decision lifecycles.
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use storypole_core::config::StorypoleConfig;
 use storypole_core::model::decision::DecisionStatus;
 use storypole_core::model::task::{EdgeKind, TaskStatus};

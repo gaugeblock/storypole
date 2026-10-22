@@ -1,5 +1,7 @@
 //! Integration test for `storypole-mcp` tools and dispatch.
 
+#![allow(clippy::unwrap_used, clippy::expect_used)]
+
 use serde_json::json;
 use storypole_core::config::StorypoleConfig;
 use storypole_core::store::StorypoleStore;

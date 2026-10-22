@@ -1,9 +1,20 @@
 [package]
 name = "storypole-core"
-version = "0.0.1-alpha.1"
-edition = "2024"
-authors = ["Colin Wolff"]
-description = "Core library and traits for storypole:Git-native SQLite and JSONL backlog, task DAG, and MCP memory store for AI coding agents."
-license = "Apache-2.0"
-repository = "https://github.com/gaugeblock/storypole"
-readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core library, models, ledger, and DAG engine for storypole"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "0.8"
+uuid = { version = "1.10", features = ["v4", "serde"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+thiserror = "1.0"
+tracing = "0.1"
+
+[lints]
+workspace = true

@@ -1,13 +1,25 @@
 [package]
 name = "storypole-cli"
-version = "0.0.1-alpha.1"
-edition = "2024"
-authors = ["Colin Wolff"]
-description = "Command-line interface and MCP server for storypole:Git-native SQLite and JSONL backlog, task DAG, and MCP memory store for AI coding agents."
-license = "Apache-2.0"
-repository = "https://github.com/gaugeblock/storypole"
-readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Command-line interface and entrypoint for storypole"
 
 [[bin]]
 name = "storypole"
 path = "src/main.rs"
+
+[dependencies]
+storypole-core = { path = "../storypole-core" }
+storypole-mcp = { path = "../storypole-mcp" }
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+anyhow = "1.0"
+
+[lints]
+workspace = true

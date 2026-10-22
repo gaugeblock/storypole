@@ -1,0 +1,135 @@
+//! Primary store facade managing `.storypole/` files, SQLite index, and configuration.
+
+use crate::config::StorypoleConfig;
+use crate::error::StorypoleError;
+use crate::index::open_and_sync_index;
+use crate::ledger::append_event;
+use crate::model::LedgerEvent;
+use rusqlite::Connection;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Central gateway for storypole repository access, caching, and mutations.
+#[derive(Debug)]
+pub struct StorypoleStore {
+    root_dir: PathBuf,
+    dot_dir: PathBuf,
+    config: StorypoleConfig,
+    conn: Connection,
+}
+
+impl StorypoleStore {
+    /// Open an existing storypole repository at `root_dir`.
+    pub fn open(root_dir: &Path) -> Result<Self, StorypoleError> {
+        let dot_dir = root_dir.join(".storypole");
+        let config_path = dot_dir.join("config.toml");
+        if !config_path.exists() {
+            return Err(StorypoleError::Uninitialized(dot_dir));
+        }
+
+        let config = StorypoleConfig::load_from_file(&config_path)?;
+        let ledger_path = dot_dir.join("ledger.jsonl");
+        let sqlite_path = dot_dir.join("index.sqlite");
+
+        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+
+        Ok(Self {
+            root_dir: root_dir.to_path_buf(),
+            dot_dir,
+            config,
+            conn,
+        })
+    }
+
+    /// Initialize a new storypole repository at `root_dir`.
+    pub fn init(root_dir: &Path, config: StorypoleConfig) -> Result<Self, StorypoleError> {
+        let dot_dir = root_dir.join(".storypole");
+        fs::create_dir_all(&dot_dir).map_err(|e| StorypoleError::IoWithPath {
+            path: dot_dir.clone(),
+            source: e,
+        })?;
+
+        let config_path = dot_dir.join("config.toml");
+        config.save_to_file(&config_path)?;
+
+        let gitignore_path = dot_dir.join(".gitignore");
+        if !gitignore_path.exists() {
+            let ignore_content = "index.sqlite\nindex.sqlite-shm\nindex.sqlite-wal\n";
+            fs::write(&gitignore_path, ignore_content).map_err(|e| StorypoleError::IoWithPath {
+                path: gitignore_path.clone(),
+                source: e,
+            })?;
+        }
+
+        let ledger_path = dot_dir.join("ledger.jsonl");
+        if !ledger_path.exists() {
+            fs::File::create(&ledger_path).map_err(|e| StorypoleError::IoWithPath {
+                path: ledger_path.clone(),
+                source: e,
+            })?;
+        }
+
+        let sqlite_path = dot_dir.join("index.sqlite");
+        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+
+        Ok(Self {
+            root_dir: root_dir.to_path_buf(),
+            dot_dir,
+            config,
+            conn,
+        })
+    }
+
+    /// Access active repository configuration.
+    pub fn config(&self) -> &StorypoleConfig {
+        &self.config
+    }
+
+    /// Mutable access to SQLite database connection.
+    pub fn conn(&self) -> &Connection {
+        &self.conn
+    }
+
+    /// Mutable access to SQLite database connection.
+    pub fn conn_mut(&mut self) -> &mut Connection {
+        &mut self.conn
+    }
+
+    /// Root directory of the repository containing `.storypole`.
+    pub fn root_dir(&self) -> &Path {
+        &self.root_dir
+    }
+
+    /// Path to the `.storypole` directory.
+    pub fn dot_dir(&self) -> &Path {
+        &self.dot_dir
+    }
+
+    /// Path to `ledger.jsonl`.
+    pub fn ledger_path(&self) -> PathBuf {
+        self.dot_dir.join("ledger.jsonl")
+    }
+
+    /// Path to `index.sqlite`.
+    pub fn sqlite_path(&self) -> PathBuf {
+        self.dot_dir.join("index.sqlite")
+    }
+
+    /// Record a ledger event, sync SQLite index, and persist to disk.
+    pub fn record_event(&mut self, event: &LedgerEvent) -> Result<(), StorypoleError> {
+        let ledger = self.ledger_path();
+        append_event(&ledger, event)?;
+        let sqlite = self.sqlite_path();
+        self.conn = open_and_sync_index(&sqlite, &ledger)?;
+        Ok(())
+    }
+
+    /// Current Unix epoch timestamp in milliseconds.
+    pub fn now_ms() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_millis() as u64)
+            .unwrap_or(0)
+    }
+}

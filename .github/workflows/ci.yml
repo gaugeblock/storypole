@@ -35,8 +35,11 @@ jobs:
       - name: cargo clippy --workspace --all-targets -- -D warnings
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: cargo test --workspace --all-targets
-        run: cargo test --workspace --all-targets
+      - name: Install nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: cargo nextest run --workspace --all-targets --profile ci
+        run: cargo nextest run --workspace --all-targets --profile ci
 
       - name: cargo test --doc --workspace
         run: cargo test --doc --workspace

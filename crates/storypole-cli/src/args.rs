@@ -79,6 +79,10 @@ pub enum Commands {
         #[arg(long, default_value = "ascii")]
         format: String,
     },
+    /// Archive a completed or closed task out of active backlog views
+    Archive { identifier: String },
+    /// Restore an archived task back to active backlog
+    Unarchive { identifier: String },
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,
 }
@@ -130,6 +134,8 @@ pub struct ListArgs {
     pub label: Option<String>,
     #[arg(long)]
     pub priority: Option<u8>,
+    #[arg(long)]
+    pub include_archived: bool,
 }
 
 #[derive(Debug, Args)]

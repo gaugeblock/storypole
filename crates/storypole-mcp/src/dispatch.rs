@@ -204,6 +204,18 @@ pub fn dispatch_tool(
             let receipt = verify_task(store, task_id, None, run_cmd, run_compiler)?;
             Ok(json!(receipt))
         }
+        "storypole_archive" => {
+            let ident = req_str(args, "identifier")?;
+            let task_id = resolve_task_id(store.conn(), ident)?;
+            storypole_core::ops::archive::archive_task(store, task_id)?;
+            Ok(json!({ "success": true, "status": "archived" }))
+        }
+        "storypole_unarchive" => {
+            let ident = req_str(args, "identifier")?;
+            let task_id = resolve_task_id(store.conn(), ident)?;
+            let status = storypole_core::ops::archive::unarchive_task(store, task_id)?;
+            Ok(json!({ "success": true, "status": format!("{status:?}") }))
+        }
         _ => Err(StorypoleError::InvalidIdentifier(format!(
             "Unknown MCP tool '{name}'"
         ))),

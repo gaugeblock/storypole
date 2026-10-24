@@ -42,6 +42,8 @@ pub enum TaskStatus {
     Verifying,
     /// Passed verification with a recorded `VerificationReceipt`.
     Verified,
+    /// Completed, certified, and archived out of active backlog views.
+    Archived,
     /// Intentionally parked for future milestones.
     Deferred,
     /// Exhausted retry budget or failed verification; requires handoff inspection or split.

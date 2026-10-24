@@ -76,6 +76,7 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
         kind: args.kind.as_deref().map(parse_kind),
         label: args.label,
         priority: args.priority,
+        include_archived: args.include_archived,
         ..Default::default()
     };
     let tasks = query_tasks(store.conn(), &filter)?;
@@ -227,6 +228,7 @@ fn parse_status(s: &str) -> TaskStatus {
         "ready" => TaskStatus::Ready,
         "in_progress" | "inprogress" => TaskStatus::InProgress,
         "verified" => TaskStatus::Verified,
+        "archived" => TaskStatus::Archived,
         "deferred" => TaskStatus::Deferred,
         "failed" => TaskStatus::Failed,
         _ => TaskStatus::Triage,

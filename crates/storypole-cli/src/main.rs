@@ -86,6 +86,14 @@ fn main() -> Result<()> {
                 Commands::Update(args) => handle_update(&mut store, args, cli.json)?,
                 Commands::Plan(args) => handle_plan(&mut store, args, cli.json)?,
                 Commands::Graph { format } => handle_graph(&store, &format, cli.json)?,
+                Commands::Archive { identifier } => {
+                    handle_archive(&mut store, &identifier, cli.json)?
+                }
+                Commands::Unarchive { identifier } => {
+                    handle_unarchive(&mut store, &identifier, cli.json)?
+                }
+                Commands::Archive { identifier } => handle_archive(&mut store, &identifier, cli.json)?,
+                Commands::Unarchive { identifier } => handle_unarchive(&mut store, &identifier, cli.json)?,
             }
         }
     }

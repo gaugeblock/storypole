@@ -20,6 +20,7 @@ pub struct TaskFilter {
     pub target_symbol: Option<String>,
     pub needs_decision: Option<bool>,
     pub exclude_file_collisions: bool,
+    pub include_archived: bool,
 }
 
 /// Resolve a task by ticket_key (case-insensitive), slug, or UUID full/prefix.
@@ -152,6 +153,8 @@ pub fn query_tasks(
         let s = serde_json::to_string(&st)?.replace('"', "");
         conditions.push("t.status = ?".to_string());
         params_vec.push(s.into());
+    } else if !filter.include_archived {
+        conditions.push("t.status != 'archived'".to_string());
     }
 
     if let Some(k) = filter.kind {

@@ -94,9 +94,7 @@ pub fn verify_task(
         .or_else(|| resolve_merge_base(Some(store.root_dir()), "main", "HEAD"))
         .or_else(|| head_commit_sha.clone());
     let commit_shas = match (&base_commit_sha, &head_commit_sha) {
-        (Some(base), Some(head)) => {
-            resolve_commit_shas_between(Some(store.root_dir()), base, head)
-        }
+        (Some(base), Some(head)) => resolve_commit_shas_between(Some(store.root_dir()), base, head),
         (None, Some(head)) => vec![head.clone()],
         _ => Vec::new(),
     };

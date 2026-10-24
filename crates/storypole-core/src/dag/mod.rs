@@ -120,7 +120,12 @@ pub fn is_task_dependency_ready(task: &TaskNode, all_tasks: &BTreeMap<Uuid, Task
     for edge in &task.edges {
         if edge.kind == EdgeKind::BlockedBy {
             match all_tasks.get(&edge.target_id) {
-                Some(parent) if parent.status == TaskStatus::Verified => continue,
+                Some(parent)
+                    if parent.status == TaskStatus::Verified
+                        || parent.status == TaskStatus::Archived =>
+                {
+                    continue;
+                }
                 _ => return false,
             }
         }

@@ -166,7 +166,7 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
     } else {
         None
     };
-    let receipt = verify_task(store, id, override_receipt, args.run)?;
+    let receipt = verify_task(store, id, override_receipt, args.run, args.compiler)?;
     if json {
         println!("{}", serde_json::to_string_pretty(&receipt)?);
     } else {
@@ -180,8 +180,12 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
         } else {
             String::new()
         };
+        let diag_info = receipt
+            .diagnostic_count
+            .map(|d| format!(", diagnostics: {d}"))
+            .unwrap_or_default();
         println!(
-            "Verified task {} successfully (verifier: {}, exit_code: {:?}{branch_info}{commits_info})",
+            "Verified task {} successfully (verifier: {}, exit_code: {:?}{diag_info}{branch_info}{commits_info})",
             args.identifier, receipt.verifier, receipt.exit_code
         );
     }

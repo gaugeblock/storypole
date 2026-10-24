@@ -227,7 +227,7 @@ fn test_verify_unblocks_downstream_task() {
 
     assert_eq!(child.status, TaskStatus::Blocked);
 
-    verify_task(&mut store, parent.id, None, false).expect("verify");
+    verify_task(&mut store, parent.id, None, false, false).expect("verify");
 
     let child_after =
         storypole_core::index::query::get_task_by_id(store.conn(), child.id).expect("get");

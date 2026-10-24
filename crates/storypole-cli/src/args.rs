@@ -229,6 +229,8 @@ pub struct VerifyArgs {
     #[arg(long)]
     pub run: bool,
     #[arg(long)]
+    pub compiler: bool,
+    #[arg(long)]
     pub verifier: Option<String>,
     #[arg(long)]
     pub summary: Option<String>,

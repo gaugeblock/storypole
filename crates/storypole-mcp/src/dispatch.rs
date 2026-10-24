@@ -200,7 +200,8 @@ pub fn dispatch_tool(
             let ident = req_str(args, "identifier")?;
             let task_id = resolve_task_id(store.conn(), ident)?;
             let run_cmd = opt_bool(args, "run_command").unwrap_or(false);
-            let receipt = verify_task(store, task_id, None, run_cmd)?;
+            let run_compiler = opt_bool(args, "run_compiler").unwrap_or(false);
+            let receipt = verify_task(store, task_id, None, run_cmd, run_compiler)?;
             Ok(json!(receipt))
         }
         _ => Err(StorypoleError::InvalidIdentifier(format!(

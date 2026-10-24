@@ -94,6 +94,6 @@ fn test_claim_and_verify_git_tracking() {
     let claim = briefing.task.active_claim.as_ref().unwrap();
     assert_eq!(claim.agent_id, "agent-git");
 
-    let receipt = verify_task(&mut store, task.id, None, false).expect("verify_task");
+    let receipt = verify_task(&mut store, task.id, None, false, false).expect("verify_task");
     assert_eq!(receipt.verifier, "manual");
 }

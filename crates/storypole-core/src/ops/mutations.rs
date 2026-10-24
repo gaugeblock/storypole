@@ -86,6 +86,7 @@ pub fn add_task(
         active_claim: None,
         latest_handoff: None,
         verification_receipt: None,
+        plan: None,
         created_at_epoch_ms: now,
         updated_at_epoch_ms: now,
     };

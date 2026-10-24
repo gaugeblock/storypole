@@ -4,7 +4,7 @@ use serde_json::{Value, json};
 
 /// Enumerate all MCP tools exposed by the Storypole server.
 pub fn list_tools() -> Vec<Value> {
-    vec![
+    let mut tools = vec![
         tool(
             "storypole_next",
             "Retrieve next ready task matching filters, with context briefing and collision warnings",
@@ -169,7 +169,8 @@ pub fn list_tools() -> Vec<Value> {
                 "type": "object",
                 "properties": {
                     "identifier": { "type": "string" },
-                    "agent_id": { "type": "string" }
+                    "agent_id": { "type": "string" },
+                    "branch": { "type": "string" }
                 },
                 "required": ["identifier", "agent_id"]
             }),
@@ -218,10 +219,12 @@ pub fn list_tools() -> Vec<Value> {
                 "required": ["identifier"]
             }),
         ),
-    ]
+    ];
+    tools.extend(crate::schema_plan::plan_tools());
+    tools
 }
 
-fn tool(name: &str, description: &str, input_schema: Value) -> Value {
+pub(crate) fn tool(name: &str, description: &str, input_schema: Value) -> Value {
     json!({
         "name": name,
         "description": description,

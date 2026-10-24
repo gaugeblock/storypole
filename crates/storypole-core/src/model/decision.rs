@@ -68,6 +68,12 @@ pub struct AgentClaim {
     pub claimed_at_epoch_ms: u64,
     /// Milliseconds since Unix epoch after which the lease expires without heartbeat.
     pub lease_expires_at_epoch_ms: u64,
+    /// Active git branch when claim was acquired.
+    #[serde(default)]
+    pub git_branch: Option<String>,
+    /// Base commit hash when claim was acquired.
+    #[serde(default)]
+    pub base_commit_sha: Option<String>,
 }
 
 impl AgentClaim {
@@ -92,4 +98,16 @@ pub struct VerificationReceipt {
     pub summary: String,
     /// Milliseconds since Unix epoch when verification succeeded.
     pub verified_at_epoch_ms: u64,
+    /// Active git branch when task was verified.
+    #[serde(default)]
+    pub git_branch: Option<String>,
+    /// Base commit hash from claim or merge-base.
+    #[serde(default)]
+    pub base_commit_sha: Option<String>,
+    /// Certified head commit hash upon verification.
+    #[serde(default)]
+    pub head_commit_sha: Option<String>,
+    /// Ordered list of commit hashes comprising the branch delta.
+    #[serde(default)]
+    pub commit_shas: Vec<String>,
 }

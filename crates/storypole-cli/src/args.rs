@@ -1,5 +1,6 @@
 //! Command-line argument definitions and Clap parsers for `storypole-cli`.
 
+use crate::plan_args::PlanArgs;
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -35,6 +36,8 @@ pub enum Commands {
     Claim {
         identifier: String,
         agent_id: String,
+        #[arg(long)]
+        branch: Option<String>,
     },
     /// Renew claim lease for an active InProgress task
     Heartbeat {
@@ -66,6 +69,8 @@ pub enum Commands {
     },
     /// Verify a task and certify with a VerificationReceipt
     Verify(VerifyArgs),
+    /// Manage attached execution plans and design markdown blueprints
+    Plan(PlanArgs),
     /// Display ASCII or Mermaid DAG graph
     Graph {
         #[arg(long, default_value = "ascii")]

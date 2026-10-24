@@ -15,10 +15,11 @@ pub fn handle_claim(
     store: &mut StorypoleStore,
     ident: &str,
     agent_id: &str,
+    branch: Option<&str>,
     json: bool,
 ) -> Result<()> {
     let id = resolve_task_id(store.conn(), ident)?;
-    let briefing = claim_task(store, id, agent_id)?;
+    let briefing = claim_task(store, id, agent_id, branch)?;
     if json {
         println!("{}", serde_json::to_string_pretty(&briefing)?);
     } else {
@@ -147,12 +148,40 @@ pub fn handle_supersede_decision(
 
 pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -> Result<()> {
     let id = resolve_task_id(store.conn(), &args.identifier)?;
-    let receipt = verify_task(store, id, None, args.run)?;
+    let override_receipt = if args.verifier.is_some() || args.summary.is_some() {
+        Some(storypole_core::model::decision::VerificationReceipt {
+            verifier: args.verifier.unwrap_or_else(|| "manual".to_string()),
+            command: "n/a".to_string(),
+            exit_code: Some(0),
+            diagnostic_count: None,
+            summary: args
+                .summary
+                .unwrap_or_else(|| "Manual verification confirmed".to_string()),
+            verified_at_epoch_ms: StorypoleStore::now_ms(),
+            git_branch: None,
+            base_commit_sha: None,
+            head_commit_sha: None,
+            commit_shas: Vec::new(),
+        })
+    } else {
+        None
+    };
+    let receipt = verify_task(store, id, override_receipt, args.run)?;
     if json {
         println!("{}", serde_json::to_string_pretty(&receipt)?);
     } else {
+        let branch_info = receipt
+            .git_branch
+            .as_deref()
+            .map(|b| format!(" on branch '{b}'"))
+            .unwrap_or_default();
+        let commits_info = if !receipt.commit_shas.is_empty() {
+            format!(" [{} commit(s)]", receipt.commit_shas.len())
+        } else {
+            String::new()
+        };
         println!(
-            "Verified task {} successfully (verifier: {}, exit_code: {:?})",
+            "Verified task {} successfully (verifier: {}, exit_code: {:?}{branch_info}{commits_info})",
             args.identifier, receipt.verifier, receipt.exit_code
         );
     }

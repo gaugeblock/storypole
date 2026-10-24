@@ -5,6 +5,7 @@
 pub mod dispatch;
 pub mod dispatch_helpers;
 pub mod schema;
+pub mod schema_plan;
 
 use dispatch::dispatch_tool;
 use schema::list_tools;

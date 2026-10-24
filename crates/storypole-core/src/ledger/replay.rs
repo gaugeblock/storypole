@@ -188,6 +188,16 @@ pub fn replay_events(events: &[LedgerEvent]) -> BTreeMap<Uuid, TaskNode> {
                     task.updated_at_epoch_ms = receipt.verified_at_epoch_ms;
                 }
             }
+            LedgerEvent::PlanUpdated {
+                task_id,
+                plan,
+                timestamp_ms,
+            } => {
+                if let Some(task) = tasks.get_mut(task_id) {
+                    task.plan = Some(plan.clone());
+                    task.updated_at_epoch_ms = *timestamp_ms;
+                }
+            }
         }
     }
 

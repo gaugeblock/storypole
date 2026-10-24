@@ -57,7 +57,7 @@ fn test_agent_claim_and_collision_briefing() {
     .expect("task2");
 
     // Agent 1 claims Task 1
-    let briefing1 = claim_task(&mut store, task1.id, "agent-1").expect("claim1");
+    let briefing1 = claim_task(&mut store, task1.id, "agent-1", None).expect("claim1");
     assert_eq!(briefing1.task.status, TaskStatus::InProgress);
     assert_eq!(
         briefing1.task.active_claim.as_ref().map(|c| &c.agent_id),
@@ -65,7 +65,7 @@ fn test_agent_claim_and_collision_briefing() {
     );
 
     // Agent 2 attempts claim on Task 1 -> Conflict!
-    let conflict = claim_task(&mut store, task1.id, "agent-2");
+    let conflict = claim_task(&mut store, task1.id, "agent-2", None);
     assert!(conflict.is_err(), "Expected ClaimConflict");
 
     // Next query with exclude_file_collisions: true should avoid task2
@@ -103,7 +103,7 @@ fn test_handoff_packet_persistence() {
     )
     .expect("task");
 
-    claim_task(&mut store, task.id, "worker-1").expect("claim");
+    claim_task(&mut store, task.id, "worker-1", None).expect("claim");
 
     let packet = HandoffPacket {
         recorded_by_agent: "worker-1".into(),

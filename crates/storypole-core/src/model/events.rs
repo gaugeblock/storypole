@@ -1,6 +1,7 @@
 //! Ledger events and context briefing models.
 
 use crate::model::decision::{AgentClaim, HandoffPacket, TaskDecision, VerificationReceipt};
+use crate::model::plan::TaskPlan;
 use crate::model::task::{TaskEdge, TaskNode, TaskScope, TaskStatus};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -118,6 +119,13 @@ pub enum LedgerEvent {
     TaskVerified {
         task_id: Uuid,
         receipt: VerificationReceipt,
+    },
+
+    /// Attached execution plan and design markdown updated.
+    PlanUpdated {
+        task_id: Uuid,
+        plan: TaskPlan,
+        timestamp_ms: u64,
     },
 
     /// Deferred bug, tech debt, or enhancement captured out-of-band.

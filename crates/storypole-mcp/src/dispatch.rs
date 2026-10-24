@@ -172,9 +172,11 @@ pub fn dispatch_tool(
             let ident = req_str(args, "identifier")?;
             let task_id = resolve_task_id(store.conn(), ident)?;
             let agent = req_str(args, "agent_id")?;
-            let briefing = claim_task(store, task_id, agent)?;
+            let branch = opt_str(args, "branch");
+            let briefing = claim_task(store, task_id, agent, branch.as_deref())?;
             Ok(json!(briefing))
         }
+        "storypole_set_plan" => handle_set_plan(store, args),
         "storypole_heartbeat" => {
             let ident = req_str(args, "identifier")?;
             let task_id = resolve_task_id(store.conn(), ident)?;

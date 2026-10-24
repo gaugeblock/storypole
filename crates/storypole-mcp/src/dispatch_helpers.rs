@@ -90,3 +90,51 @@ pub fn parse_handoff_packet(val: &Value) -> Result<HandoffPacket, StorypoleError
         dirty_files: opt_vec(val, "dirty_files"),
     })
 }
+
+pub fn handle_set_plan(store: &mut StorypoleStore, args: &Value) -> Result<Value, StorypoleError> {
+    use storypole_core::index::query::resolve_task_id;
+    use storypole_core::model::plan::{PlanStep, TaskPlan};
+    use storypole_core::ops::plan_ops::set_task_plan;
+
+    let ident = req_str(args, "identifier")?;
+    let task_id = resolve_task_id(store.conn(), ident)?;
+    let summary = req_str(args, "summary")?.to_string();
+    let design_markdown = req_str(args, "design_markdown")?.to_string();
+
+    let mut steps = Vec::new();
+    if let Some(arr) = args.get("steps").and_then(|v| v.as_array()) {
+        for item in arr {
+            let step_id = item
+                .get("step_id")
+                .and_then(|v| v.as_str())
+                .unwrap_or("step")
+                .to_string();
+            let title = item
+                .get("title")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string();
+            let target_files = opt_vec(item, "target_files");
+            let verification_gate = opt_str(item, "verification_gate");
+            let completed = opt_bool(item, "completed").unwrap_or(false);
+            steps.push(PlanStep {
+                step_id,
+                title,
+                target_files,
+                verification_gate,
+                completed,
+            });
+        }
+    }
+
+    let plan = TaskPlan {
+        summary,
+        design_markdown,
+        steps,
+        plan_file_path: None,
+        updated_at_epoch_ms: 0,
+    };
+
+    let updated = set_task_plan(store, task_id, plan)?;
+    Ok(serde_json::to_value(updated)?)
+}

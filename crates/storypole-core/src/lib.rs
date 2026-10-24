@@ -5,6 +5,7 @@
 pub mod config;
 pub mod dag;
 pub mod error;
+pub mod git;
 pub mod index;
 pub mod ledger;
 pub mod model;

@@ -1,6 +1,7 @@
 //! Core task and graph model definitions for `storypole-core`.
 
 use crate::model::decision::{AgentClaim, HandoffPacket, TaskDecision, VerificationReceipt};
+use crate::model::plan::TaskPlan;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -120,6 +121,9 @@ pub struct TaskNode {
     pub latest_handoff: Option<HandoffPacket>,
     /// Verification receipt recorded upon passing gate.
     pub verification_receipt: Option<VerificationReceipt>,
+    /// Attached execution plan and design markdown blueprint.
+    #[serde(default)]
+    pub plan: Option<TaskPlan>,
     /// Milliseconds since Unix epoch when created.
     pub created_at_epoch_ms: u64,
     /// Milliseconds since Unix epoch when last updated.

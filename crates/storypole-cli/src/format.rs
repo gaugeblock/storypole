@@ -68,10 +68,53 @@ pub fn format_task_briefing(b: &TaskContextBriefing) -> String {
     }
 
     if let Some(ref claim) = t.active_claim {
+        let branch_info = claim
+            .git_branch
+            .as_deref()
+            .map(|b| format!(" [branch: {b}]"))
+            .unwrap_or_default();
         out.push_str(&format!(
-            "Claim:       {} (expires at epoch {})\n",
-            claim.agent_id, claim.lease_expires_at_epoch_ms
+            "Claim:       {} (expires at epoch {}){}\n",
+            claim.agent_id, claim.lease_expires_at_epoch_ms, branch_info
         ));
+    }
+
+    if let Some(ref receipt) = t.verification_receipt {
+        let branch_str = receipt
+            .git_branch
+            .as_deref()
+            .map(|b| format!(" [branch: {b}]"))
+            .unwrap_or_default();
+        let commits_str = if !receipt.commit_shas.is_empty() {
+            format!(" [{} commit(s)]", receipt.commit_shas.len())
+        } else {
+            String::new()
+        };
+        out.push_str(&format!(
+            "Receipt:     verified by {} (exit: {:?}){}{}\n",
+            receipt.verifier, receipt.exit_code, branch_str, commits_str
+        ));
+    }
+
+    if let Some(ref plan) = t.plan {
+        out.push_str(&format!(
+            "Plan:        {} ({} steps, file: {})\n",
+            plan.summary,
+            plan.steps.len(),
+            plan.plan_file_path.as_deref().unwrap_or("inline")
+        ));
+        for step in &plan.steps {
+            let mark = if step.completed { "[x]" } else { "[ ]" };
+            let gate = step
+                .verification_gate
+                .as_deref()
+                .map(|g| format!(" (gate: {g})"))
+                .unwrap_or_default();
+            out.push_str(&format!(
+                "  {} {}: {}{}\n",
+                mark, step.step_id, step.title, gate
+            ));
+        }
     }
 
     if !b.related_tasks_summary.is_empty() {

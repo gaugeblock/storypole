@@ -31,7 +31,12 @@ pub fn set_task_plan(
         source: e,
     })?;
 
-    plan.plan_file_path = Some(format!(".storypole/plans/{plan_filename}"));
+    let rel_prefix = if store.dot_dir().to_string_lossy().contains(".gaugeblock") {
+        ".gaugeblock/storypole"
+    } else {
+        ".storypole"
+    };
+    plan.plan_file_path = Some(format!("{rel_prefix}/plans/{plan_filename}"));
 
     store.record_event(&LedgerEvent::PlanUpdated {
         task_id,

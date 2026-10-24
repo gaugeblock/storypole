@@ -43,6 +43,26 @@ impl StorypoleConfig {
         Ok(config)
     }
 
+    /// Load configuration from `.gaugeblock/config.toml` (if `[storypole]` table present)
+    /// or fallback to legacy path.
+    pub fn load_unified_or_legacy(root_dir: &Path, legacy_path: &Path) -> Result<Self, StorypoleError> {
+        let unified_path = root_dir.join(".gaugeblock").join("config.toml");
+        if unified_path.is_file()
+            && let Ok(content) = fs::read_to_string(&unified_path)
+        {
+            #[derive(Deserialize)]
+            struct Unified {
+                storypole: Option<StorypoleConfig>,
+            }
+            if let Ok(u) = toml::from_str::<Unified>(&content)
+                && let Some(c) = u.storypole
+            {
+                return Ok(c);
+            }
+        }
+        Self::load_from_file(legacy_path)
+    }
+
     /// Save configuration to `.storypole/config.toml`.
     pub fn save_to_file(&self, path: &Path) -> Result<(), StorypoleError> {
         let content =

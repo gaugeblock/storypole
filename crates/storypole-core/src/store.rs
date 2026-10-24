@@ -20,15 +20,30 @@ pub struct StorypoleStore {
 }
 
 impl StorypoleStore {
+    /// Resolves the storypole directory, preferring `.gaugeblock/storypole` if present,
+    /// falling back to `.storypole`.
+    pub fn resolve_dot_dir(root_dir: &Path) -> PathBuf {
+        let gb_dir = root_dir.join(".gaugeblock").join("storypole");
+        if gb_dir.is_dir() {
+            gb_dir
+        } else {
+            root_dir.join(".storypole")
+        }
+    }
+
     /// Open an existing storypole repository at `root_dir`.
     pub fn open(root_dir: &Path) -> Result<Self, StorypoleError> {
-        let dot_dir = root_dir.join(".storypole");
+        let dot_dir = Self::resolve_dot_dir(root_dir);
         let config_path = dot_dir.join("config.toml");
-        if !config_path.exists() {
-            return Err(StorypoleError::Uninitialized(dot_dir));
-        }
 
-        let config = StorypoleConfig::load_from_file(&config_path)?;
+        let config = if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(root_dir, &config_path) {
+            cfg
+        } else if !config_path.exists() {
+            return Err(StorypoleError::Uninitialized(dot_dir));
+        } else {
+            StorypoleConfig::load_from_file(&config_path)?
+        };
+
         let ledger_path = dot_dir.join("ledger.jsonl");
         let sqlite_path = dot_dir.join("index.sqlite");
 
@@ -44,7 +59,11 @@ impl StorypoleStore {
 
     /// Initialize a new storypole repository at `root_dir`.
     pub fn init(root_dir: &Path, config: StorypoleConfig) -> Result<Self, StorypoleError> {
-        let dot_dir = root_dir.join(".storypole");
+        let dot_dir = if root_dir.join(".gaugeblock").is_dir() {
+            root_dir.join(".gaugeblock").join("storypole")
+        } else {
+            root_dir.join(".storypole")
+        };
         fs::create_dir_all(&dot_dir).map_err(|e| StorypoleError::IoWithPath {
             path: dot_dir.clone(),
             source: e,

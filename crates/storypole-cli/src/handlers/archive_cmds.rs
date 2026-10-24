@@ -26,4 +26,3 @@ pub fn handle_unarchive(store: &mut StorypoleStore, ident: &str, json: bool) -> 
     }
     Ok(())
 }
-

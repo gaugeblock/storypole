@@ -216,7 +216,7 @@ fn parse_kind(s: &str) -> TaskKind {
         "epic" => TaskKind::Epic,
         "bug" => TaskKind::Bug,
         "refactor" => TaskKind::Refactor,
-        "tech_debt" | "techdebt" => TaskKind::TechDebt,
+        "tech_debt" | "techdebt" | "tech-debt" => TaskKind::TechDebt,
         "spike" => TaskKind::Spike,
         _ => TaskKind::Feature,
     }

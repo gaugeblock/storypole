@@ -92,8 +92,6 @@ fn main() -> Result<()> {
                 Commands::Unarchive { identifier } => {
                     handle_unarchive(&mut store, &identifier, cli.json)?
                 }
-                Commands::Archive { identifier } => handle_archive(&mut store, &identifier, cli.json)?,
-                Commands::Unarchive { identifier } => handle_unarchive(&mut store, &identifier, cli.json)?,
             }
         }
     }

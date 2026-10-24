@@ -1,6 +1,7 @@
 //! Command-line argument definitions and Clap parsers for `storypole-cli`.
 
 use crate::plan_args::PlanArgs;
+use crate::update_args::UpdateArgs;
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -69,6 +70,8 @@ pub enum Commands {
     },
     /// Verify a task and certify with a VerificationReceipt
     Verify(VerifyArgs),
+    /// Update an existing backlog task node
+    Update(UpdateArgs),
     /// Manage attached execution plans and design markdown blueprints
     Plan(PlanArgs),
     /// Display ASCII or Mermaid DAG graph

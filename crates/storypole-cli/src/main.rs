@@ -6,6 +6,7 @@ mod args;
 mod format;
 mod handlers;
 mod plan_args;
+mod update_args;
 
 use anyhow::Result;
 use args::{Cli, Commands};
@@ -82,6 +83,7 @@ fn main() -> Result<()> {
                     cli.json,
                 )?,
                 Commands::Verify(args) => handle_verify(&mut store, args, cli.json)?,
+                Commands::Update(args) => handle_update(&mut store, args, cli.json)?,
                 Commands::Plan(args) => handle_plan(&mut store, args, cli.json)?,
                 Commands::Graph { format } => handle_graph(&store, &format, cli.json)?,
             }

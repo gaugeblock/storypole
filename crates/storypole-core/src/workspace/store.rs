@@ -44,11 +44,8 @@ impl StorypoleWorkspaceStore {
             open_and_sync_index(&rs.sqlite_path(), &rs.ledger_path())?
         } else {
             let conn = Connection::open_in_memory().map_err(StorypoleError::Sqlite)?;
-            crate::index::open_and_sync_index(
-                &workspace_root.join(".storypole-workspace.tmp"),
-                &workspace_root.join(".storypole-workspace.tmp-ledger"),
-            )
-            .unwrap_or(conn)
+            crate::index::init_schema(&conn)?;
+            conn
         };
 
         let mut ws = Self {

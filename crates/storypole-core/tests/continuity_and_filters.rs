@@ -216,10 +216,7 @@ fn test_verify_unblocks_downstream_task() {
         &mut store,
         CreateTaskParams {
             title: "Child Worker".into(),
-            edges: vec![TaskEdge {
-                kind: EdgeKind::BlockedBy,
-                target_id: parent.id,
-            }],
+            edges: vec![TaskEdge::new(EdgeKind::BlockedBy, parent.id)],
             ..Default::default()
         },
     )

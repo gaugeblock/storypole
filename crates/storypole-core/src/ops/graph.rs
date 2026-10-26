@@ -23,7 +23,8 @@ pub fn link_tasks(
     validate_no_cycle(&all_tasks, source_id, target_id, kind)?;
 
     let now = StorypoleStore::now_ms();
-    let edge = TaskEdge { kind, target_id };
+    let edge = TaskEdge::new(kind, target_id)
+        .with_target_meta(&target.ticket_key, target.scope.repo.as_deref());
     store.record_event(&LedgerEvent::EdgeAdded {
         task_id: source_id,
         edge,
@@ -51,7 +52,7 @@ pub fn unlink_tasks(
     kind: EdgeKind,
 ) -> Result<(), StorypoleError> {
     let now = StorypoleStore::now_ms();
-    let edge = TaskEdge { kind, target_id };
+    let edge = TaskEdge::new(kind, target_id);
     store.record_event(&LedgerEvent::EdgeRemoved {
         task_id: source_id,
         edge,
@@ -79,10 +80,7 @@ pub fn defer_issue(
 
     let mut edges = Vec::new();
     if let Some(src) = from_task {
-        edges.push(TaskEdge {
-            kind: EdgeKind::DiscoveredFrom,
-            target_id: src,
-        });
+        edges.push(TaskEdge::new(EdgeKind::DiscoveredFrom, src));
     }
 
     let status = match kind {
@@ -141,16 +139,11 @@ pub fn split_task(
         let ticket_key = format!("{prefix}-{current_max}");
         let slug = format!("{}-{}", slugify(&title), &child_id.to_string()[..6]);
 
-        let mut edges = vec![TaskEdge {
-            kind: EdgeKind::ParentEpic,
-            target_id: parent.id,
-        }];
+        let mut edges = vec![TaskEdge::new(EdgeKind::ParentEpic, parent.id)
+            .with_target_meta(&parent.ticket_key, parent.scope.repo.as_deref())];
 
         if sequential && let Some(prev) = prev_child_id {
-            edges.push(TaskEdge {
-                kind: EdgeKind::BlockedBy,
-                target_id: prev,
-            });
+            edges.push(TaskEdge::new(EdgeKind::BlockedBy, prev));
         }
 
         let child_status = if idx == 0 || !sequential {

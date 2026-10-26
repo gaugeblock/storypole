@@ -43,7 +43,7 @@ pub fn open_and_sync_index(
     Ok(conn)
 }
 
-fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
+pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
     conn.execute_batch(
         "
         CREATE TABLE IF NOT EXISTS meta (
@@ -161,7 +161,7 @@ pub fn rebuild_index(
     Ok(())
 }
 
-fn insert_task_record(conn: &Connection, task: &TaskNode) -> Result<(), StorypoleError> {
+pub fn insert_task_record(conn: &Connection, task: &TaskNode) -> Result<(), StorypoleError> {
     let has_pending = task
         .decisions
         .iter()

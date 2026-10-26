@@ -1,0 +1,5 @@
+ticket_prefix = "SP"
+allowed_repos = ["storypole"]
+allowed_crates = []
+claim_ttl_minutes = 60
+verification_commands = []

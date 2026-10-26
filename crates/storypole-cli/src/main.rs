@@ -7,6 +7,7 @@ mod format;
 mod handlers;
 mod plan_args;
 mod update_args;
+mod workspace_args;
 
 use anyhow::Result;
 use args::{Cli, Commands};
@@ -34,6 +35,17 @@ fn main() -> Result<()> {
 
     match cli.command {
         Commands::Init(args) => handle_init(&root_dir, args, cli.json)?,
+        Commands::Workspace(args) => match args.command {
+            crate::workspace_args::WorkspaceCommands::List => {
+                handle_workspace_list(&root_dir, cli.json)?;
+            }
+            crate::workspace_args::WorkspaceCommands::Init => {
+                handle_workspace_init(&root_dir, cli.json)?;
+            }
+            crate::workspace_args::WorkspaceCommands::Distribute { dry_run } => {
+                handle_workspace_distribute(&root_dir, dry_run, cli.json)?;
+            }
+        },
         Commands::Mcp => {
             storypole_mcp::run_stdio_server(&root_dir)
                 .map_err(|e| anyhow::anyhow!("MCP server error: {e}"))?;
@@ -41,7 +53,7 @@ fn main() -> Result<()> {
         cmd => {
             let mut store = StorypoleStore::open(&root_dir)?;
             match cmd {
-                Commands::Init(_) | Commands::Mcp => unreachable!(),
+                Commands::Init(_) | Commands::Mcp | Commands::Workspace(_) => unreachable!(),
                 Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
                 Commands::List(args) => handle_list(&store, args, cli.json)?,
                 Commands::Show { identifier } => handle_show(&store, &identifier, cli.json)?,

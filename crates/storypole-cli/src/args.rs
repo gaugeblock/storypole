@@ -83,6 +83,8 @@ pub enum Commands {
     Archive { identifier: String },
     /// Restore an archived task back to active backlog
     Unarchive { identifier: String },
+    /// Manage multi-repository workspace members and distributed migration
+    Workspace(crate::workspace_args::WorkspaceArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,
 }

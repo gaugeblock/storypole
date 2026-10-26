@@ -31,8 +31,57 @@ impl StorypoleStore {
         }
     }
 
-    /// Open an existing storypole repository at `root_dir`.
-    pub fn open(root_dir: &Path) -> Result<Self, StorypoleError> {
+    /// Discover the nearest enclosing repository containing `.gaugeblock/storypole` or `.storypole`,
+    /// traversing up parent directories starting from `start_dir`.
+    pub fn find_enclosing_store(start_dir: &Path) -> Option<(PathBuf, PathBuf)> {
+        for ancestor in start_dir.ancestors() {
+            let gb_dir = ancestor.join(".gaugeblock").join("storypole");
+            if gb_dir.is_dir() {
+                return Some((ancestor.to_path_buf(), gb_dir));
+            }
+            let sp_dir = ancestor.join(".storypole");
+            if sp_dir.is_dir() {
+                return Some((ancestor.to_path_buf(), sp_dir));
+            }
+        }
+        None
+    }
+
+    /// Open an existing storypole repository at or above `start_dir`.
+    pub fn open(start_dir: &Path) -> Result<Self, StorypoleError> {
+        let (root_dir, dot_dir) = match Self::find_enclosing_store(start_dir) {
+            Some(pair) => pair,
+            None => {
+                let fallback = Self::resolve_dot_dir(start_dir);
+                return Err(StorypoleError::Uninitialized(fallback));
+            }
+        };
+
+        let config_path = dot_dir.join("config.toml");
+
+        let config = if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(&root_dir, &config_path) {
+            cfg
+        } else if !config_path.exists() {
+            return Err(StorypoleError::Uninitialized(dot_dir));
+        } else {
+            StorypoleConfig::load_from_file(&config_path)?
+        };
+
+        let ledger_path = dot_dir.join("ledger.jsonl");
+        let sqlite_path = dot_dir.join("index.sqlite");
+
+        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+
+        Ok(Self {
+            root_dir,
+            dot_dir,
+            config,
+            conn,
+        })
+    }
+
+    /// Open an existing storypole repository strictly at `root_dir` without upward traversal.
+    pub fn open_exact(root_dir: &Path) -> Result<Self, StorypoleError> {
         let dot_dir = Self::resolve_dot_dir(root_dir);
         let config_path = dot_dir.join("config.toml");
 

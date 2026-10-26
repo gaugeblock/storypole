@@ -198,20 +198,19 @@ pub fn query_tasks(
 
 /// Compute highest numeric ticket index used for a prefix (e.g. "SP-14" -> 14).
 pub fn get_max_ticket_number(conn: &Connection, prefix: &str) -> Result<u64, StorypoleError> {
+    let prefix_dash = format!("{}-", prefix.to_lowercase());
+    let pattern = format!("{prefix_dash}%");
     let mut stmt = conn
-        .prepare("SELECT ticket_key FROM tasks")
+        .prepare("SELECT ticket_key_lower FROM tasks WHERE ticket_key_lower LIKE ?")
         .map_err(StorypoleError::Sqlite)?;
     let rows = stmt
-        .query_map([], |r| r.get::<_, String>(0))
+        .query_map([pattern], |r| r.get::<_, String>(0))
         .map_err(StorypoleError::Sqlite)?;
 
-    let prefix_dash = format!("{prefix}-").to_lowercase();
     let mut max_num = 0u64;
-
     for row in rows {
         let key = row.map_err(StorypoleError::Sqlite)?;
-        let lower = key.to_lowercase();
-        if let Some(rest) = lower.strip_prefix(&prefix_dash)
+        if let Some(rest) = key.strip_prefix(&prefix_dash)
             && let Ok(num) = rest.parse::<u64>()
             && num > max_num
         {

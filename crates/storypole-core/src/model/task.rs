@@ -71,6 +71,31 @@ pub struct TaskEdge {
     pub kind: EdgeKind,
     /// Unique identifier of the target task.
     pub target_id: Uuid,
+    /// Optional cached ticket key for standalone or cross-repo rendering (e.g. "MTR-12").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_ticket_key: Option<String>,
+    /// Optional target repository name if cross-repository (e.g. "miter").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_repo: Option<String>,
+}
+
+impl TaskEdge {
+    /// Create a standard task edge without target metadata.
+    pub fn new(kind: EdgeKind, target_id: Uuid) -> Self {
+        Self {
+            kind,
+            target_id,
+            target_ticket_key: None,
+            target_repo: None,
+        }
+    }
+
+    /// Attach cached target metadata for cross-repo reference.
+    pub fn with_target_meta(mut self, ticket_key: impl Into<String>, repo: Option<impl Into<String>>) -> Self {
+        self.target_ticket_key = Some(ticket_key.into());
+        self.target_repo = repo.map(|r| r.into());
+        self
+    }
 }
 
 /// Multi-dimensional scope coordinates for filtering across repos, crates, and AST symbols.

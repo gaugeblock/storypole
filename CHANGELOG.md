@@ -5,6 +5,20 @@ All notable changes to `storypole` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-beta.2] - 2026-10-24
+
+### Added
+- `storypole-core`: support unified `.gaugeblock/` configuration directory and state consolidation (GB-36).
+- `storypole-core`: task archiving and unarchiving lifecycle support (`storypole archive`, `storypole unarchive`) (GB-34).
+- `storypole-core`: `TaskPlan` specification persistence and unabridged design markdown in `.storypole/plans/<KEY>.md` (GB-28).
+- `storypole-core`: branch isolation tracking and base commit recording in `AgentClaim` leases (GB-28).
+- `storypole-cli`: `storypole update` command for mutating task nodes, descriptions, kinds, priorities, and scopes (GB-32).
+- `storypole-cli`: integrated `miter` compiler verification and target path resolution during task verification (GB-26).
+- `storypole-core`: short commit ref resolution in `VerificationReceipt` (GB-25).
+
+### Fixed
+- `storypole-cli`: parse tech-debt hyphenated kind in CLI arguments (GB-35).
+
 ## [0.1.0-beta.1] - 2026-10-21
 
 ### Added

@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.1.0-beta.4] - 2026-05-09
+
+### Added
+- Established the 9-doc architecture for the storypole documentation set.
+
+### Fixed
+- No changes.
+
+### Changed
+- Standardized the README to align with the new 9-doc architecture.
+
+### Maintenance
+- Updated documentation conventions across the storypole workspace.
+
 ### Documentation
 - Standardize README to 9-section template and establish AST-grounded 9-document architecture
 

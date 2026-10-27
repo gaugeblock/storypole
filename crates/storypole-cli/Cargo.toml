@@ -12,8 +12,8 @@ name = "storypole"
 path = "src/main.rs"
 
 [dependencies]
-storypole-core = { path = "../storypole-core", version = "0.1.0-beta.2" }
-storypole-mcp = { path = "../storypole-mcp", version = "0.1.0-beta.2" }
+storypole-core = { path = "../storypole-core", version = "0.1.0-beta.3" }
+storypole-mcp = { path = "../storypole-mcp", version = "0.1.0-beta.3" }
 clap = { version = "4.5", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

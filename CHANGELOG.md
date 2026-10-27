@@ -5,6 +5,21 @@ All notable changes to `storypole` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [v0.1.0-beta.3] - 2026-05-09
+
+### Added
+- Add multi-repository workspace discovery, upward traversal, and distributed stores for first-class multi-repo support in `storypole` [GB-57].
+
+### Fixed
+- Use an in-memory SQLite schema instead of a temporary on-disk file for store initialization in `storypole` [GB-57].
+
+### Changed
+- Migrate scoped tasks and design plans to the updated workspace model in `storypole`.
+
+### Maintenance
+- Update release history with alpha and beta milestones in `storypole`.
+
 ## [0.1.0-beta.2] - 2026-10-24
 
 ### Added

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Documentation
+- Standardize README to 9-section template and establish AST-grounded 9-document architecture
+
 ## [v0.1.0-beta.3] - 2026-05-09
 
 ### Added

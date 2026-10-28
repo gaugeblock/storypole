@@ -11,7 +11,31 @@ use crate::model::events::TaskContextBriefing;
 use crate::model::task::TaskStatus;
 pub use crate::ops::verification::verify_task;
 use crate::store::StorypoleStore;
+use std::path::{Path, PathBuf};
 use uuid::Uuid;
+
+/// Resolves the git repository that owns a task, if any.
+///
+/// A *member store* keeps `.storypole` at the repository root and therefore owns every task in it.
+/// A *workspace store* keeps `.gaugeblock/storypole` at the meta-harness root, which owns no code:
+/// each task belongs to the member named by `scope.repo`, and a task without a repo scope belongs
+/// to no repository at all.
+///
+/// Returns `None` when no repository owns the task, in which case callers must not touch branches.
+pub fn resolve_task_repo(store_root: &Path, task: &crate::model::TaskNode) -> Option<PathBuf> {
+    if store_root.join(".storypole").is_dir() {
+        return Some(store_root.to_path_buf());
+    }
+
+    let repo = task.scope.repo.as_deref()?;
+    let candidate = store_root.join(repo);
+    // `.git` is a directory for normal clones and a file for worktrees, so `exists()` covers both.
+    if candidate.join(".git").exists() {
+        Some(candidate)
+    } else {
+        None
+    }
+}
 
 /// Acquire an agent lease claim on a task and transition to `InProgress`.
 pub fn claim_task(
@@ -34,15 +58,30 @@ pub fn claim_task(
         });
     }
 
-    if let Some(b) = branch_override
-        && let Err(e) = checkout_or_create_branch(Some(store.root_dir()), b)
-    {
-        tracing::warn!("Failed to checkout branch '{b}': {e}");
+    let task_repo = resolve_task_repo(store.root_dir(), &task);
+
+    if let Some(b) = branch_override {
+        match task_repo.as_deref() {
+            Some(repo_dir) => {
+                if let Err(e) = checkout_or_create_branch(Some(repo_dir), b) {
+                    tracing::warn!("Failed to checkout branch '{b}': {e}");
+                }
+            }
+            // No repository owns this task (harness-level ledger): record the intended branch in the
+            // lease without moving any checkout.
+            None => tracing::debug!(
+                "Task has no owning git repository; recording branch '{b}' without checkout"
+            ),
+        }
     }
 
-    let git_branch = resolve_current_branch(Some(store.root_dir()))
+    let git_branch = task_repo
+        .as_deref()
+        .and_then(|dir| resolve_current_branch(Some(dir)))
         .or_else(|| branch_override.map(ToString::to_string));
-    let base_commit_sha = resolve_head_commit(Some(store.root_dir()));
+    let base_commit_sha = task_repo
+        .as_deref()
+        .and_then(|dir| resolve_head_commit(Some(dir)));
 
     let ttl_ms = (store.config().claim_ttl_minutes as u64) * 60 * 1000;
     let claim = AgentClaim {

@@ -85,16 +85,16 @@ pub fn verify_task(
     let now = StorypoleStore::now_ms();
     let target_dir = resolve_target_dir(store.root_dir(), &task);
 
-    let git_branch = resolve_current_branch(Some(store.root_dir()));
-    let head_commit_sha = resolve_head_commit(Some(store.root_dir()));
+    let git_branch = resolve_current_branch(Some(&target_dir));
+    let head_commit_sha = resolve_head_commit(Some(&target_dir));
     let base_commit_sha = task
         .active_claim
         .as_ref()
         .and_then(|c| c.base_commit_sha.clone())
-        .or_else(|| resolve_merge_base(Some(store.root_dir()), "main", "HEAD"))
+        .or_else(|| resolve_merge_base(Some(&target_dir), "main", "HEAD"))
         .or_else(|| head_commit_sha.clone());
     let commit_shas = match (&base_commit_sha, &head_commit_sha) {
-        (Some(base), Some(head)) => resolve_commit_shas_between(Some(store.root_dir()), base, head),
+        (Some(base), Some(head)) => resolve_commit_shas_between(Some(&target_dir), base, head),
         (None, Some(head)) => vec![head.clone()],
         _ => Vec::new(),
     };

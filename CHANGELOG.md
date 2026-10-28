@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `storypole-core`: `claim` now creates and checks out the lease branch in the repository that owns the task (`scope.repo`) instead of the store root, so claiming a member task can no longer switch a harness checkout onto a feature branch; harness-level tasks record the branch without touching any checkout, and verification receipts read branch/SHA from the task's own repository (GB-137).
+
 ### Changed
 - `storypole-core`: index connections open with `journal_mode = WAL`, `synchronous = NORMAL`, `temp_store = MEMORY`, a 64 MiB page cache and a 5 s `busy_timeout`, removing the double `fsync()` per transaction and letting concurrent CLI/MCP/daemon readers proceed without blocking the writer. [GB-132]
 

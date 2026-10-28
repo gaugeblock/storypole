@@ -91,7 +91,11 @@ impl TaskEdge {
     }
 
     /// Attach cached target metadata for cross-repo reference.
-    pub fn with_target_meta(mut self, ticket_key: impl Into<String>, repo: Option<impl Into<String>>) -> Self {
+    pub fn with_target_meta(
+        mut self,
+        ticket_key: impl Into<String>,
+        repo: Option<impl Into<String>>,
+    ) -> Self {
         self.target_ticket_key = Some(ticket_key.into());
         self.target_repo = repo.map(|r| r.into());
         self

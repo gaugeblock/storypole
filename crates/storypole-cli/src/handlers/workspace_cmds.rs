@@ -34,7 +34,10 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
     }
 
     println!("Workspace Root: {}", ws.workspace_root().display());
-    println!("{:<14} {:<8} {:<10} {:<30}", "MEMBER", "PREFIX", "TASKS", "PATH");
+    println!(
+        "{:<14} {:<8} {:<10} {:<30}",
+        "MEMBER", "PREFIX", "TASKS", "PATH"
+    );
     println!("{}", "-".repeat(70));
 
     for member in ws.members() {
@@ -44,7 +47,9 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
                 repo: Some(member.name.clone()),
                 ..Default::default()
             };
-            query_tasks(ws.conn(), &filter).map(|t| t.len()).unwrap_or(0)
+            query_tasks(ws.conn(), &filter)
+                .map(|t| t.len())
+                .unwrap_or(0)
         } else {
             0
         };
@@ -53,7 +58,11 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
             "{:<14} {:<8} {:<10} {:<30}",
             member.name,
             prefix,
-            if member.dot_dir.is_some() { task_count.to_string() } else { "uninit".to_string() },
+            if member.dot_dir.is_some() {
+                task_count.to_string()
+            } else {
+                "uninit".to_string()
+            },
             member.repo_path.display()
         );
     }
@@ -111,7 +120,10 @@ pub fn handle_workspace_distribute(dir: &Path, dry_run: bool, json: bool) -> Res
     }
 
     if dry_run {
-        println!("[DRY RUN] Would distribute {} tasks:", tasks_to_distribute.len());
+        println!(
+            "[DRY RUN] Would distribute {} tasks:",
+            tasks_to_distribute.len()
+        );
         for (repo, task, _) in &tasks_to_distribute {
             println!("  - {} [{}] -> {}", task.ticket_key, task.title, repo);
         }
@@ -141,4 +153,3 @@ pub fn handle_workspace_distribute(dir: &Path, dry_run: bool, json: bool) -> Res
 
     Ok(())
 }
-

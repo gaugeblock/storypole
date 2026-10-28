@@ -59,13 +59,14 @@ impl StorypoleStore {
 
         let config_path = dot_dir.join("config.toml");
 
-        let config = if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(&root_dir, &config_path) {
-            cfg
-        } else if !config_path.exists() {
-            return Err(StorypoleError::Uninitialized(dot_dir));
-        } else {
-            StorypoleConfig::load_from_file(&config_path)?
-        };
+        let config =
+            if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(&root_dir, &config_path) {
+                cfg
+            } else if !config_path.exists() {
+                return Err(StorypoleError::Uninitialized(dot_dir));
+            } else {
+                StorypoleConfig::load_from_file(&config_path)?
+            };
 
         let ledger_path = dot_dir.join("ledger.jsonl");
         let sqlite_path = dot_dir.join("index.sqlite");
@@ -85,13 +86,14 @@ impl StorypoleStore {
         let dot_dir = Self::resolve_dot_dir(root_dir);
         let config_path = dot_dir.join("config.toml");
 
-        let config = if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(root_dir, &config_path) {
-            cfg
-        } else if !config_path.exists() {
-            return Err(StorypoleError::Uninitialized(dot_dir));
-        } else {
-            StorypoleConfig::load_from_file(&config_path)?
-        };
+        let config =
+            if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(root_dir, &config_path) {
+                cfg
+            } else if !config_path.exists() {
+                return Err(StorypoleError::Uninitialized(dot_dir));
+            } else {
+                StorypoleConfig::load_from_file(&config_path)?
+            };
 
         let ledger_path = dot_dir.join("ledger.jsonl");
         let sqlite_path = dot_dir.join("index.sqlite");

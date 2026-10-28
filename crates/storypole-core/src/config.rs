@@ -45,7 +45,10 @@ impl StorypoleConfig {
 
     /// Load configuration from `.gaugeblock/config.toml` (if `[storypole]` table present)
     /// or fallback to legacy path.
-    pub fn load_unified_or_legacy(root_dir: &Path, legacy_path: &Path) -> Result<Self, StorypoleError> {
+    pub fn load_unified_or_legacy(
+        root_dir: &Path,
+        legacy_path: &Path,
+    ) -> Result<Self, StorypoleError> {
         let unified_path = root_dir.join(".gaugeblock").join("config.toml");
         if unified_path.is_file()
             && let Ok(content) = fs::read_to_string(&unified_path)

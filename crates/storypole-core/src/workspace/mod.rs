@@ -7,4 +7,3 @@ pub mod store;
 pub use config::WorkspaceConfig;
 pub use discovery::{DiscoveredMember, discover_members};
 pub use store::StorypoleWorkspaceStore;
-

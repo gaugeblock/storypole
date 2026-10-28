@@ -139,8 +139,10 @@ pub fn split_task(
         let ticket_key = format!("{prefix}-{current_max}");
         let slug = format!("{}-{}", slugify(&title), &child_id.to_string()[..6]);
 
-        let mut edges = vec![TaskEdge::new(EdgeKind::ParentEpic, parent.id)
-            .with_target_meta(&parent.ticket_key, parent.scope.repo.as_deref())];
+        let mut edges = vec![
+            TaskEdge::new(EdgeKind::ParentEpic, parent.id)
+                .with_target_meta(&parent.ticket_key, parent.scope.repo.as_deref()),
+        ];
 
         if sequential && let Some(prev) = prev_child_id {
             edges.push(TaskEdge::new(EdgeKind::BlockedBy, prev));

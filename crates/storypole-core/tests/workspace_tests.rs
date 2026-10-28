@@ -115,8 +115,8 @@ fn test_workspace_discovery_and_unified_rollup() {
 #[test]
 fn test_cross_repo_edge_metadata() {
     let target_id = uuid::Uuid::new_v4();
-    let edge = TaskEdge::new(EdgeKind::BlockedBy, target_id)
-        .with_target_meta("MTR-12", Some("miter"));
+    let edge =
+        TaskEdge::new(EdgeKind::BlockedBy, target_id).with_target_meta("MTR-12", Some("miter"));
 
     assert_eq!(edge.target_ticket_key.as_deref(), Some("MTR-12"));
     assert_eq!(edge.target_repo.as_deref(), Some("miter"));
@@ -129,4 +129,3 @@ fn test_cross_repo_edge_metadata() {
     let deserialized: TaskEdge = serde_json::from_str(&json).expect("from_str");
     assert_eq!(deserialized, edge);
 }
-

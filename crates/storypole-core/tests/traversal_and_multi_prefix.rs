@@ -83,4 +83,3 @@ fn test_multi_prefix_ticket_numbers() {
         0
     );
 }
-

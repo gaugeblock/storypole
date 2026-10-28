@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `storypole-core`: index connections open with `journal_mode = WAL`, `synchronous = NORMAL`, `temp_store = MEMORY`, a 64 MiB page cache and a 5 s `busy_timeout`, removing the double `fsync()` per transaction and letting concurrent CLI/MCP/daemon readers proceed without blocking the writer. [GB-132]
+
 ### Fixed
 - `storypole-core`: context briefings now summarise `ParentEpic` links and inbound edges, so epics list their children and freshly linked tasks appear in `storypole show` and the benchwork inspector. Mutual links are deduplicated. [GB-136]
 

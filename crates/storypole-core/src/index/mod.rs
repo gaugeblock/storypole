@@ -12,6 +12,20 @@ use std::fs;
 use std::path::Path;
 use std::time::UNIX_EPOCH;
 
+/// Performance PRAGMAs applied to every index connection.
+///
+/// WAL keeps readers from blocking the writer during ledger replays, `synchronous = NORMAL`
+/// removes the second `fsync()` per transaction that the default `FULL` mode issues, and the
+/// in-memory temp store plus a 64 MiB page cache keep rebuilds off the disk. `busy_timeout`
+/// lets concurrent processes (CLI, MCP server, benchwork daemon) wait instead of erroring.
+const INDEX_PRAGMAS: &str = "
+    PRAGMA journal_mode = WAL;
+    PRAGMA synchronous = NORMAL;
+    PRAGMA temp_store = MEMORY;
+    PRAGMA cache_size = -64000;
+    PRAGMA busy_timeout = 5000;
+";
+
 /// Open or synchronize the ephemeral SQLite database against `ledger.jsonl`.
 pub fn open_and_sync_index(
     sqlite_path: &Path,
@@ -25,6 +39,7 @@ pub fn open_and_sync_index(
     }
 
     let mut conn = Connection::open(sqlite_path).map_err(StorypoleError::Sqlite)?;
+    apply_connection_pragmas(&conn)?;
     init_schema(&conn)?;
 
     let ledger_meta = fs::metadata(ledger_path).ok();
@@ -41,6 +56,12 @@ pub fn open_and_sync_index(
     }
 
     Ok(conn)
+}
+
+/// Applies the index performance PRAGMAs ([`INDEX_PRAGMAS`]) to an open connection.
+pub fn apply_connection_pragmas(conn: &Connection) -> Result<(), StorypoleError> {
+    conn.execute_batch(INDEX_PRAGMAS)
+        .map_err(StorypoleError::Sqlite)
 }
 
 pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {

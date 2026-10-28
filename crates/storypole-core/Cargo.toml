@@ -8,6 +8,8 @@ repository.workspace = true
 description = "Core library, models, ledger, and DAG engine for storypole"
 
 [dependencies]
+# Shared wire contracts; resolved locally through the meta-harness [patch.crates-io] mapping.
+gaugeblock-contracts = "0.1.0-beta.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "1.1"

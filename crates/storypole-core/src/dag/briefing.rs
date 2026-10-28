@@ -29,11 +29,16 @@ pub fn build_task_briefing(
 
     let mut related_tasks_summary = Vec::new();
     let mut inherited_decisions = Vec::new();
+    let mut linked_ids: Vec<Uuid> = Vec::new();
 
+    // Outgoing edges: dependencies, related work, and the parent epic this task hangs under.
     for edge in &task.edges {
-        if matches!(edge.kind, EdgeKind::RelatedTo | EdgeKind::BlockedBy)
-            && let Some(target) = all_tasks.get(&edge.target_id)
+        if matches!(
+            edge.kind,
+            EdgeKind::RelatedTo | EdgeKind::BlockedBy | EdgeKind::ParentEpic
+        ) && let Some(target) = all_tasks.get(&edge.target_id)
         {
+            linked_ids.push(target.id);
             related_tasks_summary.push((
                 target.ticket_key.clone(),
                 target.title.clone(),
@@ -44,6 +49,30 @@ pub fn build_task_briefing(
                     inherited_decisions.push(d.clone());
                 }
             }
+        }
+    }
+
+    // Incoming edges: subtasks of an epic, dependents blocked by this task, and related siblings
+    // that recorded the link on their own side. Without this pass an epic reports no links at all,
+    // because `ParentEpic` edges are stored on the child.
+    for other in all_tasks.values() {
+        if other.id == task.id || linked_ids.contains(&other.id) {
+            continue;
+        }
+        let linked_to_this = other.edges.iter().any(|edge| {
+            edge.target_id == task.id
+                && matches!(
+                    edge.kind,
+                    EdgeKind::RelatedTo | EdgeKind::BlockedBy | EdgeKind::ParentEpic
+                )
+        });
+        if linked_to_this {
+            linked_ids.push(other.id);
+            related_tasks_summary.push((
+                other.ticket_key.clone(),
+                other.title.clone(),
+                other.status,
+            ));
         }
     }
 

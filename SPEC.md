@@ -24,6 +24,14 @@
 
 ---
 
+### Invariant 4: Bidirectional Link Summarisation in Context Briefings
+* `TaskContextBriefing.related_tasks_summary` MUST summarise every task linked to the briefing subject by `RelatedTo`, `BlockedBy` or `ParentEpic`, **in either direction**.
+* The outgoing pass covers dependencies and the task's own parent epic; the inbound pass covers an epic's children, the tasks a blocker is holding back, and siblings that recorded the link on their own side.
+* Mutual links collapse to a single entry, and the wire shape stays `(ticket_key, title, status)` so consumers such as the benchwork inspector render invariantly.
+* Resolved decisions inherit across the same link set, so a child briefing also carries its parent epic's resolved decisions.
+
+---
+
 ## 2. System State Machines
 
 ### 2.1 Task Node Lifecycle

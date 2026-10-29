@@ -30,6 +30,8 @@ pub enum Commands {
     /// List backlog tasks matching filters
     /// Audit every ledger for corruption and replay truth
     LedgerVerify,
+    /// Compare the unified index against the ledger replay
+    LedgerReconcile,
     List(ListArgs),
     /// Show full context briefing for a task
     Show {

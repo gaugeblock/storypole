@@ -1,5 +1,10 @@
 //! Verification certification and downstream dependency unblocking.
 
+mod capture_trace;
+mod target;
+
+use self::capture_trace::capture_trace;
+use self::target::{resolve_target_dir, run_miter_verify};
 use crate::dag::is_task_dependency_ready;
 use crate::error::StorypoleError;
 use crate::git::{
@@ -10,68 +15,8 @@ use crate::model::LedgerEvent;
 use crate::model::decision::VerificationReceipt;
 use crate::model::task::{EdgeKind, TaskStatus};
 use crate::store::StorypoleStore;
-use std::path::{Path, PathBuf};
 use std::process::Command;
 use uuid::Uuid;
-
-fn resolve_target_dir(root: &Path, task: &crate::model::TaskNode) -> PathBuf {
-    if let Some(repo) = task.scope.repo.as_deref() {
-        let candidate = root.join(repo);
-        if candidate.is_dir() {
-            return candidate;
-        }
-    }
-    if let Some(crate_name) = task.scope.crate_name.as_deref() {
-        let base_crate = crate_name.split('-').next().unwrap_or(crate_name);
-        let candidate = root.join(base_crate);
-        if candidate.is_dir() {
-            return candidate;
-        }
-    }
-    root.to_path_buf()
-}
-
-fn run_miter_verify(dir: &Path) -> Result<u32, StorypoleError> {
-    let output = Command::new("miter")
-        .arg("verify")
-        .arg("--path")
-        .arg(dir)
-        .arg("--json")
-        .output()
-        .map_err(|e| StorypoleError::VerificationFailed(format!("Failed to invoke miter: {e}")))?;
-
-    if !output.status.success() && output.stdout.is_empty() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(StorypoleError::VerificationFailed(format!(
-            "miter verify failed: {stderr}"
-        )));
-    }
-
-    let val: serde_json::Value = serde_json::from_slice(&output.stdout).map_err(|e| {
-        StorypoleError::VerificationFailed(format!("Failed to parse miter JSON output: {e}"))
-    })?;
-
-    let outcome = val
-        .get("outcome")
-        .and_then(|o| o.as_str())
-        .unwrap_or("unknown");
-    if outcome == "success" {
-        Ok(0)
-    } else {
-        let msg = val
-            .get("message")
-            .and_then(|m| m.as_str())
-            .unwrap_or("Compiler diagnostic failure");
-        let spans_len = val
-            .get("spans")
-            .and_then(|s| s.as_array())
-            .map(|a| a.len() as u32)
-            .unwrap_or(1);
-        Err(StorypoleError::VerificationFailed(format!(
-            "miter compiler verification failed ({spans_len} diagnostic(s)): {msg}"
-        )))
-    }
-}
 
 /// Verify task execution, certify with a receipt, and unblock dependents.
 pub fn verify_task(
@@ -229,51 +174,4 @@ pub fn verify_task(
     }
 
     Ok(receipt)
-}
-
-/// Spools one `Silver` trace for a task that just verified, keyed on `(task_key, head_commit_sha)`.
-///
-/// The record is deliberately scope-level rather than function-level: the task's target symbols and
-/// the receipt are facts available here, while splitting a diff into functions needs `miter` and
-/// belongs to a follow-up that can degrade gracefully. Re-verifying the same head writes nothing.
-///
-/// # Errors
-///
-/// [`StorypoleError::Io`] when the spool cannot be written, or [`StorypoleError::Json`] when the
-/// record cannot be serialised.
-fn capture_trace(
-    store: &StorypoleStore,
-    task: &crate::model::task::TaskNode,
-    receipt: &VerificationReceipt,
-) -> Result<bool, StorypoleError> {
-    let path = crate::telemetry::spool_path(store.dot_dir());
-    let passed = receipt.exit_code == Some(0);
-
-    let trace = gaugeblock_contracts::AnonymizedSynthesisTrace {
-        trace_id: Uuid::new_v4(),
-        // Task scope carries no language yet; Rust is the deterministic default and the field is
-        // overwritten by producers that know better (joiner, dado).
-        language: gaugeblock_contracts::Language::Rust,
-        tier: gaugeblock_contracts::TelemetryTier::Silver,
-        selected_pattern_id: None,
-        anonymized_scope_signature: format!("{} · {}", task.ticket_key, task.title),
-        filled_holes: task
-            .scope
-            .target_symbols
-            .iter()
-            .map(|symbol| (symbol.clone(), "<verified>".to_string()))
-            .collect(),
-        rejected_attempt: None,
-        verification: gaugeblock_contracts::VerificationReport {
-            ast_valid: passed,
-            typecheck_passed: passed,
-            tests_passed: Some(passed),
-            diagnostics: Vec::new(),
-            duration_ms: 0,
-        },
-        task_key: Some(task.ticket_key.clone()),
-        head_commit_sha: receipt.head_commit_sha.clone(),
-    };
-
-    crate::telemetry::append_trace(&path, &trace)
 }

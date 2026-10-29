@@ -11,6 +11,7 @@ pub mod ledger;
 pub mod model;
 pub mod ops;
 pub mod store;
+pub mod telemetry;
 pub mod workspace;
 
 pub use config::StorypoleConfig;

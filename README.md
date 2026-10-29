@@ -126,6 +126,23 @@ storypole defer --kind bug --symbol "crate::tokenizer" --title "Fix unexpected E
 storypole verify SP-1 agent-antigravity --summary "Completed unit tests and passes clippy"
 ```
 
+### Ledger integrity and index reconciliation
+
+A distributed ledger set has no compiler, so these two commands make drift observable. Both exit
+non-zero on findings, which means they can gate:
+
+```bash
+# Structural audit: parse failures, duplicate events, replayed status histogram
+storypole ledger-verify
+
+# Compare the unified index against the replay, per status
+storypole ledger-reconcile
+```
+
+`ledger-verify` reports `1078 events across 11 files: 0 unparsable, 0 duplicate` on a healthy suite.
+`ledger-reconcile` ends in `index and ledger agree` when the SQLite projection matches the ledgers,
+and names each status group that disagrees otherwise.
+
 ---
 
 ## 5. Canonical 9-Document Architecture

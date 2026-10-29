@@ -6,7 +6,7 @@ use crate::error::StorypoleError;
 use crate::git::{checkout_or_create_branch, resolve_current_branch, resolve_head_commit};
 use crate::index::query::{TaskFilter, get_all_tasks, get_task_by_id, query_tasks};
 use crate::model::LedgerEvent;
-use crate::model::decision::{AgentClaim, HandoffPacket};
+use crate::model::decision::{AgentClaim, DecisionStatus, HandoffPacket};
 use crate::model::events::TaskContextBriefing;
 use crate::model::task::TaskStatus;
 pub use crate::ops::verification::verify_task;
@@ -149,18 +149,35 @@ pub fn heartbeat(
 }
 
 /// Record structured handoff packet and transition task to Ready, Blocked, or Failed.
+///
+/// Returns the status the task actually moved to. A pending decision is an explicit block that a
+/// handoff must not clear, so a requested [`TaskStatus::Ready`] is downgraded to
+/// [`TaskStatus::Blocked`] until the decision is resolved - the same rule
+/// [`crate::dag::is_task_dependency_ready`] enforces at claim time. The packet itself is always
+/// recorded, so the remaining items survive the block.
 pub fn handoff_task(
     store: &mut StorypoleStore,
     task_id: Uuid,
     packet: HandoffPacket,
     new_status: TaskStatus,
-) -> Result<(), StorypoleError> {
+) -> Result<TaskStatus, StorypoleError> {
+    let task = get_task_by_id(store.conn(), task_id)?;
+    let decision_pending = task
+        .decisions
+        .iter()
+        .any(|decision| decision.status == DecisionStatus::Pending);
+    let effective_status = if new_status == TaskStatus::Ready && decision_pending {
+        TaskStatus::Blocked
+    } else {
+        new_status
+    };
+
     store.record_event(&LedgerEvent::HandoffRecorded {
         task_id,
         handoff: packet,
-        new_status,
+        new_status: effective_status,
     })?;
-    Ok(())
+    Ok(effective_status)
 }
 
 /// Retrieve the next optimal ready task, respecting priorities and collision constraints.

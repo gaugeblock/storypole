@@ -61,13 +61,19 @@ pub fn handle_handoff(store: &mut StorypoleStore, args: HandoffArgs, json: bool)
         "failed" => TaskStatus::Failed,
         _ => TaskStatus::Ready,
     };
-    handoff_task(store, id, packet, new_status)?;
+    let effective_status = handoff_task(store, id, packet, new_status)?;
+    if effective_status != new_status {
+        eprintln!(
+            "note: {} still waits on a pending decision; handoff requested {:?} but the task remains {:?}",
+            args.identifier, new_status, effective_status
+        );
+    }
     if json {
-        println!("{{\"success\":true,\"status\":\"{:?}\"}}", new_status);
+        println!("{{\"success\":true,\"status\":\"{:?}\"}}", effective_status);
     } else {
         println!(
             "Recorded handoff packet for {}. Task moved to {:?}",
-            args.identifier, new_status
+            args.identifier, effective_status
         );
     }
     Ok(())

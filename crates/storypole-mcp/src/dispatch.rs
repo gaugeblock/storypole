@@ -193,7 +193,7 @@ pub fn dispatch_tool(
                 Some("failed") => TaskStatus::Failed,
                 _ => TaskStatus::Blocked,
             };
-            handoff_task(store, task_id, packet, status)?;
+            let status = handoff_task(store, task_id, packet, status)?;
             Ok(json!({ "success": true, "status": format!("{status:?}") }))
         }
         "storypole_verify" => {

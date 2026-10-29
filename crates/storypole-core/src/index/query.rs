@@ -151,10 +151,18 @@ pub fn query_tasks(
 
     if let Some(st) = filter.status {
         let s = serde_json::to_string(&st)?.replace('"', "");
-        conditions.push("t.status = ?".to_string());
-        params_vec.push(s.into());
+        // `archived` is a state, so asking for it filters on the timestamp rather than a status
+        // that no longer exists on the task (GB-179).
+        if s == "archived" {
+            conditions.push("t.archived_at IS NOT NULL".to_string());
+        } else {
+            conditions.push("t.status = ?".to_string());
+            params_vec.push(s.into());
+        }
     } else if !filter.include_archived {
-        conditions.push("t.status != 'archived'".to_string());
+        // Archived is a state, not a status (GB-179): hide by the timestamp so a task archived
+        // while verified still reports its verified status when it is asked for.
+        conditions.push("t.archived_at IS NULL".to_string());
     }
 
     if let Some(k) = filter.kind {

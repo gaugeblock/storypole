@@ -78,6 +78,7 @@ pub fn add_task(
         description: params.description,
         kind: params.kind,
         status: initial_status,
+        archived_at_epoch_ms: None,
         priority: params.priority.clamp(1, 5),
         scope: params.scope,
         edges: params.edges,

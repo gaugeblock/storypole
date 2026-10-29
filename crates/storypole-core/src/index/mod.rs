@@ -18,6 +18,10 @@ use std::time::UNIX_EPOCH;
 /// removes the second `fsync()` per transaction that the default `FULL` mode issues, and the
 /// in-memory temp store plus a 64 MiB page cache keep rebuilds off the disk. `busy_timeout`
 /// lets concurrent processes (CLI, MCP server, benchwork daemon) wait instead of erroring.
+/// Semantics version of the replay. Bump when a change alters how events are interpreted, which
+/// no ledger edit would signal on its own.
+const REPLAY_VERSION: &str = "2";
+
 const INDEX_PRAGMAS: &str = "
     PRAGMA journal_mode = WAL;
     PRAGMA synchronous = NORMAL;
@@ -88,6 +92,7 @@ pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
             claim_expires_at INTEGER,
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL,
+            archived_at INTEGER,
             raw_json TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS task_labels (
@@ -117,6 +122,10 @@ pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
         ",
     )
     .map_err(StorypoleError::Sqlite)?;
+    // Indexes created before archiving became a state lack the column; a failed ALTER means
+    // it is already present (GB-179).
+    let _ = conn.execute("ALTER TABLE tasks ADD COLUMN archived_at INTEGER", []);
+
     Ok(())
 }
 
@@ -139,8 +148,16 @@ fn check_needs_rebuild(
         .ok()
         .and_then(|v| v.parse().ok());
 
+    let db_replay_version: Option<String> = stmt
+        .query_row(params!["replay_version"], |r| r.get::<_, String>(0))
+        .ok();
+
+    // A replay change alters what the ledger means without touching the file, so the version takes
+    // part in the cache key. Archiving becoming a state (GB-179) is exactly that case.
+    let version_matches = db_replay_version.as_deref() == Some(REPLAY_VERSION);
+
     match (db_len, db_mtime) {
-        (Some(l), Some(m)) if l == ledger_len && m == ledger_mtime => Ok(false),
+        (Some(l), Some(m)) if version_matches && l == ledger_len && m == ledger_mtime => Ok(false),
         _ => Ok(true),
     }
 }
@@ -173,8 +190,12 @@ pub fn rebuild_index(
     }
 
     tx.execute(
-        "INSERT OR REPLACE INTO meta (key, value) VALUES ('ledger_len', ?), ('ledger_mtime', ?)",
-        params![ledger_len.to_string(), ledger_mtime.to_string()],
+        "INSERT OR REPLACE INTO meta (key, value) VALUES ('ledger_len', ?), ('ledger_mtime', ?), ('replay_version', ?)",
+        params![
+            ledger_len.to_string(),
+            ledger_mtime.to_string(),
+            REPLAY_VERSION.to_string()
+        ],
     )
     .map_err(StorypoleError::Sqlite)?;
 
@@ -195,8 +216,8 @@ pub fn insert_task_record(conn: &Connection, task: &TaskNode) -> Result<(), Stor
         "INSERT INTO tasks (
             id, ticket_key, ticket_key_lower, slug, title, kind, status, priority,
             repo, crate_name, module_path, has_pending_decision, claim_agent,
-            claim_expires_at, created_at, updated_at, raw_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            claim_expires_at, created_at, updated_at, archived_at, raw_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         params![
             task.id.to_string(),
             task.ticket_key,
@@ -216,6 +237,7 @@ pub fn insert_task_record(conn: &Connection, task: &TaskNode) -> Result<(), Stor
                 .map(|c| c.lease_expires_at_epoch_ms as i64),
             task.created_at_epoch_ms as i64,
             task.updated_at_epoch_ms as i64,
+            task.archived_at_epoch_ms.map(|at| at as i64),
             raw_json,
         ],
     )

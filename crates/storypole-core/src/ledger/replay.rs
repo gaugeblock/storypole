@@ -53,7 +53,16 @@ pub fn replay_events(events: &[LedgerEvent]) -> BTreeMap<Uuid, TaskNode> {
                 ..
             } => {
                 if let Some(task) = tasks.get_mut(task_id) {
-                    task.status = *to;
+                    // Archiving is a state, not a status (GB-179): record *when* it happened and
+                    // keep the status the task earned, so an archived `Verified` task still reads
+                    // as verified. Replay is sequential, so the status here is exactly the `from`
+                    // the event carried - which also restores the statuses that earlier archives
+                    // wiped, with no migration script.
+                    if *to == TaskStatus::Archived {
+                        task.archived_at_epoch_ms = Some(*timestamp_ms);
+                    } else {
+                        task.status = *to;
+                    }
                     task.updated_at_epoch_ms = *timestamp_ms;
                 }
             }

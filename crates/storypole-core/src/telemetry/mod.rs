@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use gaugeblock_contracts::AnonymizedSynthesisTrace;
+use gaugeblock_contracts::{AnonymizedSynthesisTrace, SpoolEntry};
 
 use crate::error::StorypoleError;
 
@@ -50,11 +50,11 @@ pub fn already_spooled(
         if line.trim().is_empty() {
             continue;
         }
-        let Ok(record) = serde_json::from_str::<AnonymizedSynthesisTrace>(line) else {
+        let Ok(entry) = serde_json::from_str::<SpoolEntry>(line) else {
             continue;
         };
-        if record.task_key.as_deref() == Some(task_key)
-            && record.head_commit_sha.as_deref() == Some(head)
+        if entry.trace.task_key.as_deref() == Some(task_key)
+            && entry.trace.head_commit_sha.as_deref() == Some(head)
         {
             return Ok(true);
         }
@@ -83,7 +83,9 @@ pub fn append_trace(path: &Path, trace: &AnonymizedSynthesisTrace) -> Result<boo
         std::fs::create_dir_all(parent).map_err(StorypoleError::Io)?;
     }
 
-    let line = serde_json::to_string(trace).map_err(StorypoleError::Json)?;
+    let entry = SpoolEntry::from_trace(trace.clone(), crate::store::StorypoleStore::now_ms())
+        .map_err(StorypoleError::Json)?;
+    let line = serde_json::to_string(&entry).map_err(StorypoleError::Json)?;
     let mut existing = String::new();
     if path.exists() {
         existing = std::fs::read_to_string(path).map_err(StorypoleError::Io)?;
@@ -98,4 +100,65 @@ pub fn append_trace(path: &Path, trace: &AnonymizedSynthesisTrace) -> Result<boo
 
     std::fs::write(path, payload).map_err(StorypoleError::Io)?;
     Ok(true)
+}
+
+/// Rewrites every line of `text` into a canonical `SpoolEntry` envelope.
+///
+/// The outbox briefly held two shapes (`GB-182`): `storypole` appended a bare trace while `joiner`
+/// appended an envelope, so a reader expecting either shape choked on the other. This rewrites the
+/// bare form with the canonical hash, keeping already-enveloped lines untouched.
+///
+/// Returns the rewritten text and how many bare-trace lines were converted. Blank lines are
+/// dropped; lines that parse as neither shape are preserved verbatim so nothing is silently lost.
+///
+/// # Errors
+///
+/// [`StorypoleError::Json`] when an envelope cannot be rebuilt.
+pub fn normalize_spool_text(text: &str) -> Result<(String, usize), StorypoleError> {
+    let mut out = String::with_capacity(text.len());
+    let mut migrated = 0usize;
+
+    for line in text.lines() {
+        if line.trim().is_empty() {
+            continue;
+        }
+        let rewritten = if let Ok(entry) = serde_json::from_str::<SpoolEntry>(line) {
+            entry
+        } else if let Ok(trace) = serde_json::from_str::<AnonymizedSynthesisTrace>(line) {
+            migrated += 1;
+            SpoolEntry::from_trace(trace, crate::store::StorypoleStore::now_ms())
+                .map_err(StorypoleError::Json)?
+        } else {
+            out.push_str(line);
+            out.push('\n');
+            continue;
+        };
+        let encoded = serde_json::to_string(&rewritten).map_err(StorypoleError::Json)?;
+        out.push_str(&encoded);
+        out.push('\n');
+    }
+
+    Ok((out, migrated))
+}
+
+/// Rewrites legacy bare-trace lines in the spool file at `path`.
+///
+/// Returns how many lines were rewritten. The file is only touched when something actually changed,
+/// which is what makes a second run a no-op.
+///
+/// # Errors
+///
+/// [`StorypoleError::Io`] when the spool cannot be read or written, or [`StorypoleError::Json`]
+/// when an envelope cannot be rebuilt.
+pub fn migrate_spool(path: &Path) -> Result<usize, StorypoleError> {
+    if !path.exists() {
+        return Ok(0);
+    }
+
+    let text = std::fs::read_to_string(path).map_err(StorypoleError::Io)?;
+    let (out, migrated) = normalize_spool_text(&text)?;
+    if migrated > 0 {
+        std::fs::write(path, out).map_err(StorypoleError::Io)?;
+    }
+    Ok(migrated)
 }

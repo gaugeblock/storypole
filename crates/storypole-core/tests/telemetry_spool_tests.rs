@@ -1,9 +1,13 @@
-//! Tests for the verify-time trace spool (GB-165).
+//! Tests for the verify-time trace spool (GB-165, GB-182).
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use gaugeblock_contracts::{AnonymizedSynthesisTrace, Language, TelemetryTier, VerificationReport};
-use storypole_core::telemetry::{already_spooled, append_trace, spool_path};
+use gaugeblock_contracts::{
+    AnonymizedSynthesisTrace, Language, SpoolEntry, SyncStatus, TelemetryTier, VerificationReport,
+};
+use storypole_core::telemetry::{
+    already_spooled, append_trace, migrate_spool, normalize_spool_text, spool_path,
+};
 use uuid::Uuid;
 
 fn trace(task_key: Option<&str>, head: Option<&str>) -> AnonymizedSynthesisTrace {
@@ -95,4 +99,75 @@ fn lookups_survive_corrupt_lines() {
         "a corrupt line is skipped, not fatal"
     );
     assert!(append_trace(&path, &trace(Some("GB-1"), Some("sha"))).expect("write"));
+}
+
+#[test]
+fn legacy_bare_trace_lines_are_rewritten_into_envelopes() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let path = spool_path(&tmp.path().join(".gaugeblock").join("storypole"));
+    std::fs::create_dir_all(path.parent().expect("parent")).expect("dir");
+
+    let legacy = trace(Some("GB-165"), Some("9d5f83"));
+    let joiner_trace = trace(None, None);
+    let joiner_style = SpoolEntry {
+        content_hash: SpoolEntry::hash_trace(&joiner_trace).expect("hash"),
+        trace: joiner_trace,
+        sync_status: SyncStatus::Synced,
+        recorded_at_ms: 5,
+    };
+    let seeded = format!(
+        "{}\n{}\n{{not json}}\n",
+        serde_json::to_string(&legacy).expect("legacy line"),
+        serde_json::to_string(&joiner_style).expect("envelope line")
+    );
+    std::fs::write(&path, seeded).expect("seed");
+
+    assert_eq!(migrate_spool(&path).expect("migrate"), 1, "one bare line");
+
+    let migrated = std::fs::read_to_string(&path).expect("read");
+    let lines: Vec<&str> = migrated.lines().collect();
+    assert_eq!(lines.len(), 3, "no line is dropped");
+
+    let first: SpoolEntry = serde_json::from_str(lines[0]).expect("first is an envelope");
+    assert_eq!(first.trace, legacy, "payload is preserved verbatim");
+    assert_eq!(first.sync_status, SyncStatus::Pending);
+    assert_eq!(
+        first.content_hash,
+        SpoolEntry::hash_trace(&legacy).expect("hash"),
+        "the canonical hash is what rabbet recomputes"
+    );
+
+    let second: SpoolEntry = serde_json::from_str(lines[1]).expect("second is an envelope");
+    assert_eq!(second, joiner_style, "an existing envelope is untouched");
+    assert_eq!(lines[2], "{not json}", "unparsable lines survive");
+
+    // Idempotent: nothing left to rewrite, and the file is not rewritten.
+    assert_eq!(migrate_spool(&path).expect("migrate again"), 0);
+    assert_eq!(std::fs::read_to_string(&path).expect("read"), migrated);
+}
+
+#[test]
+fn migrating_a_missing_spool_is_a_no_op() {
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let path = spool_path(&tmp.path().join(".gaugeblock").join("storypole"));
+    assert_eq!(migrate_spool(&path).expect("migrate"), 0);
+    assert!(!path.exists(), "migration never creates an outbox");
+}
+
+#[test]
+fn normalize_keeps_the_legacy_payload_readable_after_rewrite() {
+    let legacy = trace(Some("GB-182"), Some("abc123"));
+    let text = format!("{}\n", serde_json::to_string(&legacy).expect("line"));
+
+    let (out, migrated) = normalize_spool_text(&text).expect("normalize");
+    assert_eq!(migrated, 1);
+
+    let entry: SpoolEntry = serde_json::from_str(out.trim_end()).expect("envelope");
+    assert_eq!(entry.trace, legacy);
+    assert_eq!(
+        entry.trace.task_key.as_deref(),
+        Some("GB-182"),
+        "idempotency key survives the rewrite"
+    );
+    assert_eq!(entry.trace.head_commit_sha.as_deref(), Some("abc123"));
 }

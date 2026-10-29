@@ -4,6 +4,7 @@
 
 use std::process::Command;
 
+use gaugeblock_contracts::{SpoolEntry, SyncStatus, TelemetryTier};
 use storypole_core::config::StorypoleConfig;
 use storypole_core::model::task::TaskScope;
 use storypole_core::ops::mutations::{CreateTaskParams, add_task};
@@ -60,18 +61,24 @@ fn verifying_writes_one_silver_trace_and_re_verifying_writes_none() {
     let first = std::fs::read_to_string(&spool).expect("spool exists after verify");
     assert_eq!(first.lines().count(), 1, "one trace for one verified head");
 
-    let record: serde_json::Value =
-        serde_json::from_str(first.lines().next().unwrap()).expect("json");
+    let record: SpoolEntry = serde_json::from_str(first.lines().next().unwrap()).expect("json");
     assert_eq!(
-        record["task_key"], task.ticket_key,
+        record.trace.task_key.as_deref(),
+        Some(task.ticket_key.as_str()),
         "provenance records the ticket"
     );
-    assert_eq!(record["tier"], "silver");
+    assert_eq!(record.trace.tier, TelemetryTier::Silver);
     assert!(
-        record["head_commit_sha"].is_string(),
-        "provenance records the verified head: {record}"
+        record.trace.head_commit_sha.is_some(),
+        "provenance records the verified head: {record:?}"
     );
-    assert_eq!(record["filled_holes"][0][0], "tokenizer::scan");
+    assert_eq!(record.trace.filled_holes[0].0, "tokenizer::scan");
+    assert_eq!(
+        record.content_hash,
+        SpoolEntry::hash_trace(&record.trace).expect("hash"),
+        "the envelope carries the canonical hash rabbet recomputes"
+    );
+    assert_eq!(record.sync_status, SyncStatus::Pending);
 
     // Re-verifying the same head is a no-op: no duplicate trace.
     verify_task(&mut store, task.id, None, false, false).expect("verify again");

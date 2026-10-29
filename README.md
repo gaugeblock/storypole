@@ -81,6 +81,7 @@ Autonomous coding agents (Claude Code, Cursor, Cline, Windsurf) excel at localiz
 | `archive <KEY>` | Archive a completed or closed task out of active backlog views. | — |
 | `unarchive <KEY>` | Restore an archived task back to active backlog views. | — |
 | `workspace` | Manage multi-repository workspace members and store routing. Subcommands: `list`, `init`, `distribute`. | — |
+| `spool migrate` | Rewrite legacy bare-trace outbox lines into canonical `SpoolEntry` envelopes. | — |
 | `mcp` | Launch the Model Context Protocol (JSON-RPC 2.0 stdio) server. | — |
 
 ---
@@ -142,6 +143,25 @@ storypole ledger-reconcile
 `ledger-verify` reports `1078 events across 11 files: 0 unparsable, 0 duplicate` on a healthy suite.
 `ledger-reconcile` ends in `index and ledger agree` when the SQLite projection matches the ledgers,
 and names each status group that disagrees otherwise.
+
+### Training-trace outbox
+
+`storypole verify` appends one record per verified head to
+`<canonical .gaugeblock>/spool/outbox.jsonl`, keyed on `(task_key, head_commit_sha)` so re-verifying
+the same commit is a no-op. The record is `gaugeblock_contracts::SpoolEntry` - the same type `joiner`
+spools and `rabbet` ingests - so one outbox file is readable by every tool in the suite.
+
+Outboxes written before `GB-182` may still hold bare traces with no envelope. `spool migrate`
+rewrites those in place, computing the canonical SHA-256 content hash and leaving already-enveloped
+lines byte-for-byte untouched; a second run reports zero rewrites.
+
+```bash
+# Preview the rewrite without touching the file
+storypole spool migrate --dry-run
+
+# Rewrite legacy lines, then re-run to confirm the outbox is canonical
+storypole spool migrate
+```
 
 ---
 

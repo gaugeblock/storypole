@@ -6,11 +6,12 @@ mod args;
 mod format;
 mod handlers;
 mod plan_args;
+mod task_args;
 mod update_args;
 mod workspace_args;
 
 use anyhow::Result;
-use args::{Cli, Commands};
+use args::{Cli, Commands, SpoolCommands};
 use clap::Parser;
 use handlers::*;
 use std::env;
@@ -100,6 +101,11 @@ fn main() -> Result<()> {
                 Commands::Update(args) => handle_update(&mut store, args, cli.json)?,
                 Commands::Plan(args) => handle_plan(&mut store, args, cli.json)?,
                 Commands::Graph { format } => handle_graph(&store, &format, cli.json)?,
+                Commands::Spool(args) => match args.command {
+                    SpoolCommands::Migrate { path, dry_run } => {
+                        handle_spool_migrate(&store, path.as_deref(), dry_run, cli.json)?;
+                    }
+                },
                 Commands::Archive { identifier } => {
                     handle_archive(&mut store, &identifier, cli.json)?
                 }

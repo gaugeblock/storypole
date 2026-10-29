@@ -5,6 +5,12 @@ use crate::update_args::UpdateArgs;
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 
+// Task lifecycle, deferral and decision arguments live in `task_args` to hold this file under the
+// hard 250-line ceiling; re-exported here so `crate::args::*` still resolves every name.
+pub use crate::task_args::{
+    AskDecisionArgs, DecideArgs, DeferArgs, HandoffArgs, SplitArgs, VerifyArgs,
+};
+
 /// Git-native backlog, task DAG, decision lifecycle engine, and MCP server.
 #[derive(Debug, Parser)]
 #[command(name = "storypole", version, about)]
@@ -95,8 +101,34 @@ pub enum Commands {
     },
     /// Manage multi-repository workspace members and distributed migration
     Workspace(crate::workspace_args::WorkspaceArgs),
+    /// Inspect or repair the local telemetry spool outbox
+    Spool(SpoolArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,
+}
+
+/// Arguments for the `spool` command group.
+#[derive(Debug, Args)]
+pub struct SpoolArgs {
+    #[command(subcommand)]
+    pub command: SpoolCommands,
+}
+
+/// Subcommands that operate on the append-only telemetry outbox.
+#[derive(Debug, Subcommand)]
+pub enum SpoolCommands {
+    /// Rewrite legacy bare-trace lines into canonical `SpoolEntry` envelopes
+    ///
+    /// Idempotent: lines already carrying an envelope are left byte-for-byte untouched, so a second
+    /// run reports zero rewrites.
+    Migrate {
+        /// Outbox path (defaults to `<.gaugeblock>/spool/outbox.jsonl`)
+        #[arg(long)]
+        path: Option<PathBuf>,
+        /// Report what would be rewritten without touching the file
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 #[derive(Debug, Args)]
@@ -164,92 +196,4 @@ pub struct NextArgs {
     pub exclude_file_collisions: bool,
     #[arg(long)]
     pub claim: Option<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct HandoffArgs {
-    pub identifier: String,
-    pub agent_id: String,
-    #[arg(long)]
-    pub completed: Vec<String>,
-    #[arg(long)]
-    pub remaining: Vec<String>,
-    #[arg(long)]
-    pub blocker: Option<String>,
-    #[arg(long)]
-    pub git_ref: Option<String>,
-    #[arg(long)]
-    pub dirty_files: Vec<String>,
-    #[arg(long, default_value = "ready")]
-    pub status: String,
-}
-
-#[derive(Debug, Args)]
-pub struct DeferArgs {
-    pub title: String,
-    #[arg(long)]
-    pub desc: Option<String>,
-    #[arg(long, default_value = "bug")]
-    pub kind: String,
-    #[arg(long)]
-    pub from: Option<String>,
-    #[arg(long, default_value = "user")]
-    pub captured_by: String,
-    #[arg(long)]
-    pub repo: Option<String>,
-    #[arg(long)]
-    pub crate_name: Option<String>,
-    #[arg(long)]
-    pub files: Vec<String>,
-    #[arg(long)]
-    pub symbols: Vec<String>,
-    #[arg(long)]
-    pub labels: Vec<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct SplitArgs {
-    pub identifier: String,
-    pub child_titles: Vec<String>,
-    #[arg(long, default_value_t = true)]
-    pub sequential: bool,
-}
-
-#[derive(Debug, Args)]
-pub struct AskDecisionArgs {
-    pub identifier: String,
-    pub question: String,
-    #[arg(long, default_value = "general")]
-    pub category: String,
-    #[arg(long = "option")]
-    pub options: Vec<String>,
-    #[arg(long)]
-    pub parent_id: Option<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct DecideArgs {
-    pub identifier: String,
-    pub decision_id: String,
-    #[arg(long)]
-    pub choose: String,
-    #[arg(long)]
-    pub rationale: String,
-    #[arg(long, default_value = "user")]
-    pub resolved_by: String,
-    #[arg(long)]
-    pub criterion: Option<String>,
-}
-
-#[derive(Debug, Args)]
-pub struct VerifyArgs {
-    pub identifier: String,
-    #[arg(long)]
-    pub run: bool,
-    #[arg(long)]
-    pub compiler: bool,
-    #[arg(long)]
-    pub verifier: Option<String>,
-    #[arg(long)]
-    pub summary: Option<String>,
 }

@@ -55,6 +55,7 @@ fn main() -> Result<()> {
             match cmd {
                 Commands::Init(_) | Commands::Mcp | Commands::Workspace(_) => unreachable!(),
                 Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
+                Commands::LedgerVerify => handle_ledger_verify(&root_dir, cli.json)?,
                 Commands::List(args) => handle_list(&store, args, cli.json)?,
                 Commands::Show { identifier } => handle_show(&store, &identifier, cli.json)?,
                 Commands::Next(args) => handle_next(&mut store, args, cli.json)?,

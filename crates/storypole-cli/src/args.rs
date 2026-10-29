@@ -28,9 +28,13 @@ pub enum Commands {
     /// Add a new backlog task node
     Add(AddArgs),
     /// List backlog tasks matching filters
+    /// Audit every ledger for corruption and replay truth
+    LedgerVerify,
     List(ListArgs),
     /// Show full context briefing for a task
-    Show { identifier: String },
+    Show {
+        identifier: String,
+    },
     /// Find next ready task with context briefing and collision warnings
     Next(NextArgs),
     /// Acquire an active agent claim lease on a task
@@ -80,9 +84,13 @@ pub enum Commands {
         format: String,
     },
     /// Archive a completed or closed task out of active backlog views
-    Archive { identifier: String },
+    Archive {
+        identifier: String,
+    },
     /// Restore an archived task back to active backlog
-    Unarchive { identifier: String },
+    Unarchive {
+        identifier: String,
+    },
     /// Manage multi-repository workspace members and distributed migration
     Workspace(crate::workspace_args::WorkspaceArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server

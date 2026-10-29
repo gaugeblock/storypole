@@ -62,6 +62,9 @@ pub fn replay_events(events: &[LedgerEvent]) -> BTreeMap<Uuid, TaskNode> {
                         task.archived_at_epoch_ms = Some(*timestamp_ms);
                     } else {
                         task.status = *to;
+                        // Any other transition leaves the archived state, which is how
+                        // `unarchive` restores a task to the backlog.
+                        task.archived_at_epoch_ms = None;
                     }
                     task.updated_at_epoch_ms = *timestamp_ms;
                 }

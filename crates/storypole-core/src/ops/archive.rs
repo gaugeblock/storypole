@@ -32,7 +32,9 @@ pub fn unarchive_task(
     task_id: Uuid,
 ) -> Result<TaskStatus, StorypoleError> {
     let task = get_task_by_id(store.conn(), task_id)?;
-    if task.status != TaskStatus::Archived {
+    // Archived is a state, not a status (GB-179), so the guard asks whether the task is archived
+    // rather than whether its status reads `Archived` - which it never will again.
+    if task.archived_at_epoch_ms.is_none() {
         return Ok(task.status);
     }
 
@@ -45,7 +47,7 @@ pub fn unarchive_task(
     let now = StorypoleStore::now_ms();
     store.record_event(&LedgerEvent::StatusChanged {
         task_id,
-        from: TaskStatus::Archived,
+        from: task.status,
         to: target_status,
         reason: Some("Unarchived back to active backlog".to_string()),
         timestamp_ms: now,

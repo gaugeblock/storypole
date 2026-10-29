@@ -40,8 +40,10 @@ pub struct LedgerAudit {
     pub duplicates: usize,
     /// Tasks the replay produced.
     pub tasks: usize,
-    /// Status histogram from the real replay, lowercase.
+    /// Status histogram from the real replay, lowercase, excluding archived tasks.
     pub status_counts: BTreeMap<String, usize>,
+    /// Tasks carrying an archived timestamp, counted separately because archived is a state.
+    pub archived: usize,
 }
 
 impl LedgerAudit {
@@ -130,7 +132,14 @@ pub fn audit_ledgers(root: &Path) -> Result<LedgerAudit, StorypoleError> {
 
     let tasks = replay_events(&events);
     let mut status_counts: BTreeMap<String, usize> = BTreeMap::new();
+    let mut archived = 0usize;
     for task in tasks.values() {
+        // Archived is a state, not a status (GB-179): an archived task keeps its status, so it is
+        // counted on its own or the status buckets would double-count it.
+        if task.archived_at_epoch_ms.is_some() {
+            archived += 1;
+            continue;
+        }
         *status_counts
             .entry(format!("{:?}", task.status).to_lowercase())
             .or_insert(0) += 1;
@@ -143,6 +152,7 @@ pub fn audit_ledgers(root: &Path) -> Result<LedgerAudit, StorypoleError> {
         duplicates,
         tasks: tasks.len(),
         status_counts,
+        archived,
     })
 }
 

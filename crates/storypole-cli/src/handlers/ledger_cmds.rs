@@ -28,21 +28,37 @@ pub fn handle_ledger_verify(root_dir: &Path, json: bool) -> Result<()> {
 
 /// Compares the unified index against the ledger replay and prints the delta per status.
 pub fn handle_ledger_reconcile(root_dir: &Path, json: bool) -> Result<()> {
-    let audit = audit_ledgers(root_dir)
+    let mut audit = audit_ledgers(root_dir)
         .with_context(|| format!("Ledger audit failed for {}", root_dir.display()))?;
 
     let workspace = storypole_core::workspace::store::StorypoleWorkspaceStore::open(root_dir)
         .context("Unified index could not be opened")?;
-    let filter = storypole_core::index::query::TaskFilter::default();
+    let filter = storypole_core::index::query::TaskFilter {
+        include_archived: true,
+        ..Default::default()
+    };
     let indexed = storypole_core::index::query::query_tasks(workspace.conn(), &filter)
         .context("Index query failed")?;
 
     let mut index_counts: std::collections::BTreeMap<String, usize> =
         std::collections::BTreeMap::new();
+    let mut index_archived = 0usize;
     for task in &indexed {
+        if task.archived_at_epoch_ms.is_some() {
+            index_archived += 1;
+            continue;
+        }
         *index_counts
             .entry(format!("{:?}", task.status).to_lowercase())
             .or_insert(0) += 1;
+    }
+    if index_archived > 0 {
+        index_counts.insert("archived".to_string(), index_archived);
+    }
+    if audit.archived > 0 {
+        audit
+            .status_counts
+            .insert("archived".to_string(), audit.archived);
     }
 
     let mut statuses: std::collections::BTreeSet<&String> = std::collections::BTreeSet::new();

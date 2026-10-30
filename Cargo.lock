@@ -629,11 +629,9 @@ version = "0.1.0-beta.5"
 dependencies = [
  "anyhow",
  "clap",
- "serde",
  "serde_json",
  "storypole-core",
  "storypole-mcp",
- "tracing",
  "tracing-subscriber",
  "uuid",
 ]
@@ -657,7 +655,6 @@ dependencies = [
 name = "storypole-mcp"
 version = "0.1.0-beta.5"
 dependencies = [
- "serde",
  "serde_json",
  "storypole-core",
  "tempfile",

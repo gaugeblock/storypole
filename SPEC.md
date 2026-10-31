@@ -99,3 +99,4 @@ stateDiagram-v2
 - **`task::TaskStatus`** (`enum`): Lifecycle status of a task (`Ready`, `InProgress`, `Blocked`, `Verified`, `Deferred`, `Archived`).
 - **`decision::VerificationReceipt`** (`struct`): Cryptographic verification record certifying task completion with exit codes and commit SHAs.
 - **`config::WorkspaceConfig`** (`struct`): Multi-repository workspace configuration mapping child stores.
+- **`lib::StorypoleHandler`** (`struct`): The server's tool surface, owning the store behind a `RefCell` because dispatch needs `&mut` and the handler trait hands out `&self`; implements `McpHandler` so the loop and wire rules come from `gaugeblock-mcp`.

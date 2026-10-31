@@ -272,6 +272,7 @@ version = "0.1.0-beta.1"
 dependencies = [
  "gaugeblock-git",
  "thiserror",
+ "toml",
 ]
 
 [[package]]

@@ -71,6 +71,8 @@ pub fn defer_issue(
     from_task: Option<Uuid>,
     captured_by: String,
 ) -> Result<TaskNode, StorypoleError> {
+    // Two concurrent defers otherwise read the same maximum and both claim the next key (GB-185).
+    let _alloc = super::ticket_lock::TicketLock::acquire(store.dot_dir())?;
     let prefix = store.config().ticket_prefix.clone();
     let max_num = get_max_ticket_number(store.conn(), &prefix)?;
     let ticket_key = format!("{}-{}", prefix, max_num + 1);
@@ -127,6 +129,7 @@ pub fn split_task(
     sequential: bool,
 ) -> Result<Vec<TaskNode>, StorypoleError> {
     let parent = get_task_by_id(store.conn(), parent_id)?;
+    let _alloc = super::ticket_lock::TicketLock::acquire(store.dot_dir())?;
     let prefix = store.config().ticket_prefix.clone();
     let mut current_max = get_max_ticket_number(store.conn(), &prefix)?;
     let now = StorypoleStore::now_ms();

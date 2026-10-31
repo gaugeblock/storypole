@@ -6,6 +6,7 @@ pub mod graph;
 pub mod handoff;
 pub mod mutations;
 pub mod plan_ops;
+pub mod ticket_lock;
 pub mod verification;
 pub mod workflow;
 

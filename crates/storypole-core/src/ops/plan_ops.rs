@@ -46,3 +46,44 @@ pub fn set_task_plan(
 
     Ok(plan)
 }
+
+/// Marks one plan step complete, or reopens it.
+///
+/// `PlanStep::completed` has always existed; nothing could set it, so a plan recorded intent and never
+/// progress (`GB-184`). The step is matched by id, falling back to a one-based position so a caller can
+/// tick steps without inventing ids.
+///
+/// # Errors
+///
+/// [`StorypoleError::NotFound`]-style errors when the task has no plan or the step does not exist.
+pub fn set_plan_step_complete(
+    store: &mut StorypoleStore,
+    task_id: Uuid,
+    step: &str,
+    completed: bool,
+) -> Result<TaskPlan, StorypoleError> {
+    let task = get_task_by_id(store.conn(), task_id)?;
+    let Some(mut plan) = task.plan.clone() else {
+        return Err(StorypoleError::InvalidIdentifier(format!(
+            "task {} has no attached plan",
+            task.ticket_key
+        )));
+    };
+
+    let by_id = plan.steps.iter().position(|s| s.step_id == step);
+    let by_index = step
+        .parse::<usize>()
+        .ok()
+        .and_then(|n| n.checked_sub(1))
+        .filter(|n| *n < plan.steps.len());
+    let Some(index) = by_id.or(by_index) else {
+        return Err(StorypoleError::InvalidIdentifier(format!(
+            "no plan step `{step}` on {} ({} step(s) recorded)",
+            task.ticket_key,
+            plan.steps.len()
+        )));
+    };
+
+    plan.steps[index].completed = completed;
+    set_task_plan(store, task_id, plan)
+}

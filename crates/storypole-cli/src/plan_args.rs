@@ -26,6 +26,16 @@ pub enum PlanCommands {
         #[arg(long = "step")]
         steps: Vec<String>,
     },
+    /// Mark one plan step complete, or reopen it with --undo
+    Step {
+        /// Task ticket key, slug, or UUID
+        identifier: String,
+        /// Step id, or its one-based position in the plan
+        step: String,
+        /// Reopen the step instead of completing it
+        #[arg(long)]
+        undo: bool,
+    },
     /// Display the attached plan for a task
     Show {
         /// Task ticket key, slug, or UUID

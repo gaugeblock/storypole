@@ -6,7 +6,7 @@ use std::fs;
 use storypole_core::StorypoleStore;
 use storypole_core::index::query::{get_task_by_id, resolve_task_id};
 use storypole_core::model::plan::{PlanStep, TaskPlan};
-use storypole_core::ops::plan_ops::set_task_plan;
+use storypole_core::ops::plan_ops::{set_plan_step_complete, set_task_plan};
 
 /// Dispatch `storypole plan` subcommands.
 pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Result<()> {
@@ -70,6 +70,25 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                 println!(
                     "Attached plan to {identifier} with {} steps. Saved to {path_str}",
                     updated_plan.steps.len()
+                );
+            }
+        }
+        PlanCommands::Step {
+            identifier,
+            step,
+            undo,
+        } => {
+            let task_id = resolve_task_id(store.conn(), &identifier)?;
+            let plan = set_plan_step_complete(store, task_id, &step, !undo)
+                .map_err(|e| anyhow!(e.to_string()))?;
+            if json {
+                println!("{}", serde_json::to_string_pretty(&plan)?);
+            } else {
+                let done = plan.steps.iter().filter(|s| s.completed).count();
+                let state = if undo { "reopened" } else { "completed" };
+                println!(
+                    "Plan step `{step}` {state} on {identifier} ({done}/{} step(s) complete)",
+                    plan.steps.len()
                 );
             }
         }

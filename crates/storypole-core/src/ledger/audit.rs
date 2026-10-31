@@ -59,10 +59,7 @@ impl LedgerAudit {
 pub fn discover_ledgers(root: &Path) -> Vec<PathBuf> {
     let mut paths = Vec::new();
 
-    let root_ledger = root
-        .join(".gaugeblock")
-        .join("storypole")
-        .join("ledger.jsonl");
+    let root_ledger = gaugeblock_workspace::GaugeblockPaths::at(root).ledger();
     if root_ledger.exists() {
         paths.push(root_ledger);
     }

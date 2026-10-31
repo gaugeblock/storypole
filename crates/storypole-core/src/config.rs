@@ -49,7 +49,7 @@ impl StorypoleConfig {
         root_dir: &Path,
         legacy_path: &Path,
     ) -> Result<Self, StorypoleError> {
-        let unified_path = root_dir.join(".gaugeblock").join("config.toml");
+        let unified_path = gaugeblock_workspace::GaugeblockPaths::at(root_dir).config();
         if unified_path.is_file()
             && let Ok(content) = fs::read_to_string(&unified_path)
         {

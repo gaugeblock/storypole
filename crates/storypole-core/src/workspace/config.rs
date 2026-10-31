@@ -20,7 +20,7 @@ impl WorkspaceConfig {
     /// Attempt to load workspace config from `.gaugeblock/config.toml` or `.storypole/config.toml`.
     pub fn load_from_root(root_dir: &Path) -> Result<Option<Self>, StorypoleError> {
         // 1. Try .gaugeblock/config.toml [workspace]
-        let gb_config = root_dir.join(".gaugeblock").join("config.toml");
+        let gb_config = gaugeblock_workspace::GaugeblockPaths::at(root_dir).config();
         if gb_config.is_file()
             && let Ok(content) = fs::read_to_string(&gb_config)
         {

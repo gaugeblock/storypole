@@ -26,15 +26,15 @@ pub struct UpdateArgs {
     #[arg(long)]
     pub module: Option<String>,
     /// Target file paths
-    #[arg(long = "file")]
+    #[arg(long = "file", value_delimiter = ',')]
     pub files: Vec<String>,
     /// Target code symbols
-    #[arg(long = "symbol")]
+    #[arg(long = "symbol", value_delimiter = ',')]
     pub symbols: Vec<String>,
-    #[arg(long = "label")]
+    #[arg(long = "label", value_delimiter = ',')]
     /// Labels/tags
     pub labels: Vec<String>,
     /// Concrete acceptance criteria
-    #[arg(long = "criterion")]
+    #[arg(long = "criterion", value_delimiter = ',')]
     pub criteria: Vec<String>,
 }

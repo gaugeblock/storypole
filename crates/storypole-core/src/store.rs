@@ -22,8 +22,13 @@ pub struct StorypoleStore {
 impl StorypoleStore {
     /// Resolves the storypole directory, preferring `.gaugeblock/storypole` if present,
     /// falling back to `.storypole`.
+    ///
+    /// The canonical candidate is spelled by `GaugeblockPaths` so the directory has one definition,
+    /// but the *policy* here stays local on purpose: this must work in a scratch directory that is not
+    /// a git repository, where `GaugeblockPaths::discover` deliberately refuses. Storypole stores are
+    /// created in bare temp dirs and before the first commit, so resolution cannot require a checkout.
     pub fn resolve_dot_dir(root_dir: &Path) -> PathBuf {
-        let gb_dir = root_dir.join(".gaugeblock").join("storypole");
+        let gb_dir = gaugeblock_workspace::GaugeblockPaths::at(root_dir).member("storypole");
         if gb_dir.is_dir() {
             gb_dir
         } else {
@@ -35,7 +40,7 @@ impl StorypoleStore {
     /// traversing up parent directories starting from `start_dir`.
     pub fn find_enclosing_store(start_dir: &Path) -> Option<(PathBuf, PathBuf)> {
         for ancestor in start_dir.ancestors() {
-            let gb_dir = ancestor.join(".gaugeblock").join("storypole");
+            let gb_dir = gaugeblock_workspace::GaugeblockPaths::at(ancestor).member("storypole");
             if gb_dir.is_dir() {
                 return Some((ancestor.to_path_buf(), gb_dir));
             }
@@ -110,8 +115,9 @@ impl StorypoleStore {
 
     /// Initialize a new storypole repository at `root_dir`.
     pub fn init(root_dir: &Path, config: StorypoleConfig) -> Result<Self, StorypoleError> {
-        let dot_dir = if root_dir.join(".gaugeblock").is_dir() {
-            root_dir.join(".gaugeblock").join("storypole")
+        let paths = gaugeblock_workspace::GaugeblockPaths::at(root_dir);
+        let dot_dir = if paths.root().is_dir() {
+            paths.member("storypole")
         } else {
             root_dir.join(".storypole")
         };

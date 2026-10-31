@@ -7,131 +7,70 @@ pub mod dispatch_helpers;
 pub mod schema;
 pub mod schema_plan;
 
-use dispatch::dispatch_tool;
+use gaugeblock_mcp::{McpHandler, ToolOutcome};
 use schema::list_tools;
-use serde_json::{Value, json};
-use std::io::{self, BufRead, Write};
+use serde_json::Value;
+use std::cell::RefCell;
+use std::io::{self};
 use std::path::Path;
 use storypole_core::store::StorypoleStore;
 
 /// MCP server version.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Run the stdio JSON-RPC 2.0 MCP server loop over stdin/stdout.
-pub fn run_stdio_server(root_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
-    let mut store = StorypoleStore::open(root_dir)?;
-    let stdin = io::stdin();
-    let mut stdout = io::stdout();
-
-    tracing::info!("Starting storypole-mcp stdio server loop");
-
-    for line_res in stdin.lock().lines() {
-        let line = match line_res {
-            Ok(l) => l,
-            Err(e) => {
-                tracing::error!("Failed to read stdin line: {e}");
-                break;
-            }
-        };
-
-        let trimmed = line.trim();
-        if trimmed.is_empty() {
-            continue;
-        }
-
-        let msg: Value = match serde_json::from_str(trimmed) {
-            Ok(v) => v,
-            Err(e) => {
-                tracing::error!("Failed to parse JSON-RPC message: {e}");
-                continue;
-            }
-        };
-
-        if let Some(resp) = handle_message(&msg, &mut store) {
-            let resp_str = serde_json::to_string(&resp)?;
-            writeln!(stdout, "{resp_str}")?;
-            stdout.flush()?;
-        }
-    }
-
-    Ok(())
+/// `storypole`'s tool surface, owning the store the tools mutate.
+///
+/// The store sits behind a `RefCell` because tool dispatch needs `&mut` and the handler trait hands out
+/// `&self`. One process, one thread, one store - the borrow cannot overlap, because a call finishes
+/// before the next line is read.
+#[derive(Debug)]
+pub struct StorypoleHandler {
+    store: RefCell<StorypoleStore>,
 }
 
-fn handle_message(msg: &Value, store: &mut StorypoleStore) -> Option<Value> {
-    let id = msg.get("id").cloned();
-    let method = msg.get("method").and_then(|m| m.as_str())?;
+impl StorypoleHandler {
+    /// Opens the store at or above `root_dir`.
+    ///
+    /// # Errors
+    ///
+    /// Propagates the store's failure to open.
+    pub fn open(root_dir: &Path) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            store: RefCell::new(StorypoleStore::open(root_dir)?),
+        })
+    }
+}
 
-    match method {
-        "initialize" => {
-            let resp = json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {
-                        "tools": {}
-                    },
-                    "serverInfo": {
-                        "name": "storypole-mcp",
-                        "version": VERSION
-                    }
-                }
-            });
-            Some(resp)
-        }
-        "notifications/initialized" => None,
-        "ping" => Some(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "result": {}
-        })),
-        "tools/list" => Some(json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "result": {
-                "tools": list_tools()
+impl McpHandler for StorypoleHandler {
+    fn server_name(&self) -> &str {
+        "storypole-mcp"
+    }
+
+    fn list_tools(&self) -> Value {
+        Value::Array(list_tools())
+    }
+
+    fn call_tool(&self, name: &str, arguments: &Value) -> ToolOutcome {
+        let mut store = self.store.borrow_mut();
+        match dispatch::dispatch_tool(name, arguments, &mut store) {
+            Ok(value) => {
+                ToolOutcome::Text(serde_json::to_string_pretty(&value).unwrap_or_default())
             }
-        })),
-        "tools/call" => {
-            let params = msg.get("params")?;
-            let name = params.get("name").and_then(|n| n.as_str())?;
-            let default_args = json!({});
-            let args = params.get("arguments").unwrap_or(&default_args);
-
-            let (text, is_error) = match dispatch_tool(name, args, store) {
-                Ok(val) => (
-                    serde_json::to_string_pretty(&val).unwrap_or_default(),
-                    false,
-                ),
-                Err(err) => (format!("Error: {err}"), true),
-            };
-
-            Some(json!({
-                "jsonrpc": "2.0",
-                "id": id,
-                "result": {
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": text
-                        }
-                    ],
-                    "isError": is_error
-                }
-            }))
-        }
-        other => {
-            tracing::warn!("Unsupported method: {other}");
-            id.map(|req_id| {
-                json!({
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "error": {
-                        "code": -32601,
-                        "message": format!("Method not found: {other}")
-                    }
-                })
-            })
+            Err(error) => ToolOutcome::Failed(error.to_string()),
         }
     }
+}
+
+/// Run the stdio JSON-RPC 2.0 MCP server loop over stdin/stdout.
+///
+/// # Errors
+///
+/// Returns the failure to open the store, or the I/O failure on stdin or stdout.
+pub fn run_stdio_server(root_dir: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let handler = StorypoleHandler::open(root_dir)?;
+    tracing::info!("Starting storypole-mcp stdio server loop");
+    let stdin = io::stdin();
+    let mut stdout = io::stdout();
+    gaugeblock_mcp::serve(stdin.lock(), &mut stdout, &handler)?;
+    Ok(())
 }

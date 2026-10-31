@@ -267,6 +267,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gaugeblock-mcp"
+version = "0.1.0-beta.1"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "gaugeblock-workspace"
 version = "0.1.0-beta.1"
 dependencies = [
@@ -673,6 +683,7 @@ dependencies = [
 name = "storypole-mcp"
 version = "0.1.0-beta.5"
 dependencies = [
+ "gaugeblock-mcp",
  "serde_json",
  "storypole-core",
  "tempfile",

@@ -1,103 +1,73 @@
-//! Git inspection and branch checkout utilities for Storypole.
+//! Git provenance: the branch, the commit range and the merge base a verification receipt records.
+//!
+//! The process spawning lives in `gaugeblock-git` (`GB-131` step 6). What stays here is storypole's
+//! policy: every function takes an `Option<&Path>` and degrades to `None` or to the head sha rather
+//! than failing, because a receipt with no git context is still a valid receipt and a task can be
+//! tracked outside a repository.
 
 use std::path::Path;
-use std::process::Command;
 
-/// Resolve the current active git branch name (e.g. `feat/my-branch`), if in a git repository.
+use gaugeblock_git::Repository;
+
+/// Opens the repository at `dir`, or the current directory when absent.
+fn open(dir: Option<&Path>) -> Option<Repository> {
+    Repository::discover(dir.unwrap_or_else(|| Path::new("."))).ok()
+}
+
+/// Resolve the current branch name, if any.
+#[must_use]
 pub fn resolve_current_branch(dir: Option<&Path>) -> Option<String> {
-    let mut cmd = Command::new("git");
-    if let Some(d) = dir {
-        cmd.current_dir(d);
-    }
-    cmd.args(["rev-parse", "--abbrev-ref", "HEAD"]);
-    let out = cmd.output().ok()?;
-    if out.status.success() {
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !s.is_empty() && s != "HEAD" {
-            return Some(s);
-        }
-    }
-    None
+    // A detached HEAD is deliberately `None`: a receipt recording "HEAD" as a branch name would read
+    // as a branch that does not exist.
+    open(dir)?.current_branch().ok().flatten()
 }
 
-/// Resolve the current git HEAD commit SHA-1 hash.
+/// Resolve the current HEAD commit sha, if any.
+#[must_use]
 pub fn resolve_head_commit(dir: Option<&Path>) -> Option<String> {
-    let mut cmd = Command::new("git");
-    if let Some(d) = dir {
-        cmd.current_dir(d);
-    }
-    cmd.args(["rev-parse", "HEAD"]);
-    let out = cmd.output().ok()?;
-    if out.status.success() {
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !s.is_empty() {
-            return Some(s);
-        }
-    }
-    None
+    open(dir)?.head_sha().ok()
 }
 
-/// Checkout an existing branch or create and checkout a new branch.
+/// Check out `branch`, creating it if it does not exist yet.
+///
+/// # Errors
+///
+/// The git error text when neither path works - an invalid name, or a checkout refused because the
+/// working tree would be overwritten.
 pub fn checkout_or_create_branch(dir: Option<&Path>, branch: &str) -> Result<String, String> {
-    let mut cmd_checkout = Command::new("git");
-    if let Some(d) = dir {
-        cmd_checkout.current_dir(d);
-    }
-    cmd_checkout.args(["checkout", branch]);
-    if let Ok(out) = cmd_checkout.output()
-        && out.status.success()
-    {
+    let Some(repo) = open(dir) else {
+        return Err("not a git repository".to_string());
+    };
+    if repo.checkout(branch).is_ok() {
         return Ok(branch.to_string());
     }
-
-    let mut cmd_create = Command::new("git");
-    if let Some(d) = dir {
-        cmd_create.current_dir(d);
-    }
-    cmd_create.args(["checkout", "-b", branch]);
-    let out = cmd_create.output().map_err(|e| e.to_string())?;
-    if out.status.success() {
-        Ok(branch.to_string())
-    } else {
-        Err(String::from_utf8_lossy(&out.stderr).trim().to_string())
-    }
+    repo.checkout_new_branch(branch)
+        .map(|()| branch.to_string())
+        .map_err(|error| error.to_string())
 }
 
-/// Resolve merge-base between a target base branch (e.g. `main`) and `head`.
+/// Resolve the merge base between a base branch (e.g. `main`) and `head`, if any.
+#[must_use]
 pub fn resolve_merge_base(dir: Option<&Path>, base_branch: &str, head: &str) -> Option<String> {
-    let mut cmd = Command::new("git");
-    if let Some(d) = dir {
-        cmd.current_dir(d);
-    }
-    cmd.args(["merge-base", base_branch, head]);
-    if let Ok(out) = cmd.output()
-        && out.status.success()
+    let repo = open(dir)?;
+    if let Ok(base) = repo.merge_base(base_branch, head)
+        && !base.is_empty()
     {
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !s.is_empty() {
-            return Some(s);
-        }
+        return Some(base);
     }
-
-    // Secondary attempt with origin/<base_branch>
-    let mut cmd_origin = Command::new("git");
-    if let Some(d) = dir {
-        cmd_origin.current_dir(d);
-    }
-    cmd_origin.args(["merge-base", &format!("origin/{base_branch}"), head]);
-    if let Ok(out) = cmd_origin.output()
-        && out.status.success()
-    {
-        let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
-        if !s.is_empty() {
-            return Some(s);
-        }
-    }
-
-    None
+    // A local `main` that has never been fetched is common in a fresh clone; the remote-tracking ref
+    // is the fallback that makes the range correct there.
+    let remote_base = format!("origin/{base_branch}");
+    repo.merge_base(&remote_base, head)
+        .ok()
+        .filter(|base| !base.is_empty())
 }
 
-/// Resolve all commit SHAs comprising the delta between `base_sha` and `head_sha`.
+/// Resolve the commit shas in the delta between `base_sha` and `head_sha`, oldest first.
+///
+/// Oldest first is deliberate - a receipt lists commits in the order they were made - and the
+/// underlying `rev-list` answers newest first, so the list is reversed here.
+#[must_use]
 pub fn resolve_commit_shas_between(
     dir: Option<&Path>,
     base_sha: &str,
@@ -106,25 +76,15 @@ pub fn resolve_commit_shas_between(
     if base_sha == head_sha {
         return vec![head_sha.to_string()];
     }
-
-    let mut cmd = Command::new("git");
-    if let Some(d) = dir {
-        cmd.current_dir(d);
-    }
-    cmd.args(["rev-list", "--reverse", &format!("{base_sha}..{head_sha}")]);
-    if let Ok(out) = cmd.output()
-        && out.status.success()
-    {
-        let stdout = String::from_utf8_lossy(&out.stdout);
-        let list: Vec<String> = stdout
-            .lines()
-            .map(|l| l.trim().to_string())
-            .filter(|l| !l.is_empty())
-            .collect();
-        if !list.is_empty() {
-            return list;
+    let Some(repo) = open(dir) else {
+        return vec![head_sha.to_string()];
+    };
+    let range = format!("{base_sha}..{head_sha}");
+    match repo.commits_between(&range) {
+        Ok(mut commits) if !commits.is_empty() => {
+            commits.reverse();
+            commits.into_iter().map(|commit| commit.sha).collect()
         }
+        _ => vec![head_sha.to_string()],
     }
-
-    vec![head_sha.to_string()]
 }

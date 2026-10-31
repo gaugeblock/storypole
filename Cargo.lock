@@ -260,6 +260,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "gaugeblock-git"
+version = "0.1.0-beta.1"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -641,6 +648,7 @@ name = "storypole-core"
 version = "0.1.0-beta.5"
 dependencies = [
  "gaugeblock-contracts",
+ "gaugeblock-git",
  "rusqlite",
  "serde",
  "serde_json",

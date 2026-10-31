@@ -144,7 +144,7 @@ pub struct AddArgs {
     pub title: String,
     #[arg(long)]
     pub desc: Option<String>,
-    #[arg(long, default_value = "feature")]
+    #[arg(long, default_value = "feature", value_parser = crate::task_args::valid_kind)]
     pub kind: String,
     #[arg(long, default_value_t = 3)]
     pub priority: u8,
@@ -172,7 +172,7 @@ pub struct ListArgs {
     pub crate_name: Option<String>,
     #[arg(long)]
     pub status: Option<String>,
-    #[arg(long)]
+    #[arg(long, value_parser = crate::task_args::valid_kind)]
     pub kind: Option<String>,
     #[arg(long)]
     pub label: Option<String>,

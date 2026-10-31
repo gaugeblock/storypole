@@ -28,7 +28,7 @@ pub struct DeferArgs {
     pub title: String,
     #[arg(long)]
     pub desc: Option<String>,
-    #[arg(long, default_value = "bug")]
+    #[arg(long, default_value = "bug", value_parser = valid_kind)]
     pub kind: String,
     #[arg(long)]
     pub from: Option<String>,
@@ -91,4 +91,24 @@ pub struct VerifyArgs {
     pub verifier: Option<String>,
     #[arg(long)]
     pub summary: Option<String>,
+}
+
+/// Kinds a task can be, as the parser accepts them.
+pub(crate) const KIND_NAMES: [&str; 6] =
+    ["epic", "bug", "refactor", "tech_debt", "spike", "feature"];
+
+/// Validates a `--kind` value, for clap.
+///
+/// Unknown values used to become `Feature` silently, so `--kind perf` created a Feature and said
+/// nothing (`GB-196`). A misspelled kind is a mistake to report, not to reinterpret.
+pub(crate) fn valid_kind(value: &str) -> Result<String, String> {
+    let normalised = value.to_lowercase().replace('-', "_");
+    if KIND_NAMES.contains(&normalised.as_str()) {
+        Ok(normalised)
+    } else {
+        Err(format!(
+            "unknown kind `{value}`; expected one of: {}",
+            KIND_NAMES.join(", ")
+        ))
+    }
 }

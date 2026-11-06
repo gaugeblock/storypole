@@ -57,6 +57,12 @@ pub enum Commands {
         identifier: String,
         agent_id: String,
     },
+    /// Return tasks to the backlog when their claim lease has expired
+    Reap {
+        /// Report what would be reaped without changing the ledger
+        #[arg(long)]
+        dry_run: bool,
+    },
     /// Record structured handoff packet and release lease
     Handoff(HandoffArgs),
     /// Defer an out-of-band issue or tech-debt in <5ms

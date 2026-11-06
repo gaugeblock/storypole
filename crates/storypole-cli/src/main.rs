@@ -76,6 +76,7 @@ fn main() -> Result<()> {
                     identifier,
                     agent_id,
                 } => handle_heartbeat(&mut store, &identifier, &agent_id, cli.json)?,
+                Commands::Reap { dry_run } => handle_reap(&mut store, dry_run, cli.json)?,
                 Commands::Handoff(args) => handle_handoff(&mut store, args, cli.json)?,
                 Commands::Defer(args) => handle_defer(&mut store, args, cli.json)?,
                 Commands::Link {

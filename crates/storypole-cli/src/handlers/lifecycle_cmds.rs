@@ -45,6 +45,55 @@ pub fn handle_heartbeat(
     Ok(())
 }
 
+pub fn handle_reap(store: &mut StorypoleStore, dry_run: bool, json: bool) -> Result<()> {
+    // Dry run reports the same set without recording anything: a read that writes would make `list`
+    // mutate the ledger and would fail on a read-only checkout.
+    let reaped = if dry_run {
+        storypole_core::ops::lease::expired_claims(store)?
+    } else {
+        storypole_core::ops::lease::reap_expired_claims(store)?
+    };
+
+    if json {
+        let rows: Vec<serde_json::Value> = reaped
+            .iter()
+            .map(|item| {
+                serde_json::json!({
+                    "ticket_key": item.ticket_key,
+                    "agent_id": item.agent_id,
+                    "expired_at_epoch_ms": item.expired_at_epoch_ms,
+                })
+            })
+            .collect();
+        println!(
+            "{}",
+            serde_json::json!({ "dry_run": dry_run, "count": reaped.len(), "reaped": rows })
+        );
+        return Ok(());
+    }
+
+    if reaped.is_empty() {
+        println!("No expired claim leases; every InProgress task has a live holder.");
+        return Ok(());
+    }
+
+    if dry_run {
+        println!(
+            "[dry-run] {} task(s) would be returned to the backlog:",
+            reaped.len()
+        );
+    } else {
+        println!("Returned {} task(s) to the backlog:", reaped.len());
+    }
+    for item in &reaped {
+        println!(
+            "  {} (agent {}, lease expired at epoch ms {})",
+            item.ticket_key, item.agent_id, item.expired_at_epoch_ms
+        );
+    }
+    Ok(())
+}
+
 pub fn handle_handoff(store: &mut StorypoleStore, args: HandoffArgs, json: bool) -> Result<()> {
     let id = resolve_task_id(store.conn(), &args.identifier)?;
     let packet = HandoffPacket {

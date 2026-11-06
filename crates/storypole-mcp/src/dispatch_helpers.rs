@@ -60,6 +60,7 @@ pub fn parse_kind(val: Option<&str>) -> TaskKind {
         Some("epic") => TaskKind::Epic,
         Some("bug") => TaskKind::Bug,
         Some("refactor") => TaskKind::Refactor,
+        Some("chore") => TaskKind::Chore,
         Some("tech_debt") => TaskKind::TechDebt,
         Some("spike") => TaskKind::Spike,
         _ => TaskKind::Feature,

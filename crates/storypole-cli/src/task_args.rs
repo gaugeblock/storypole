@@ -94,8 +94,15 @@ pub struct VerifyArgs {
 }
 
 /// Kinds a task can be, as the parser accepts them.
-pub(crate) const KIND_NAMES: [&str; 6] =
-    ["epic", "bug", "refactor", "tech_debt", "spike", "feature"];
+pub(crate) const KIND_NAMES: [&str; 7] = [
+    "epic",
+    "bug",
+    "refactor",
+    "tech_debt",
+    "spike",
+    "feature",
+    "chore",
+];
 
 /// Validates a `--kind` value, for clap.
 ///

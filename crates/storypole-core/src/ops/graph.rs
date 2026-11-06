@@ -86,7 +86,7 @@ pub fn defer_issue(
     }
 
     let status = match kind {
-        TaskKind::Bug | TaskKind::TechDebt => TaskStatus::Triage,
+        TaskKind::Bug | TaskKind::TechDebt | TaskKind::Chore => TaskStatus::Triage,
         _ => TaskStatus::Deferred,
     };
 

@@ -1,0 +1,6 @@
+[storypole]
+allowed_crates = []
+allowed_repos = ["storypole"]
+claim_ttl_minutes = 60
+ticket_prefix = "SP"
+verification_commands = []

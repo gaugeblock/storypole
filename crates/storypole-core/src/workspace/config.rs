@@ -18,21 +18,20 @@ pub struct WorkspaceConfig {
 
 impl WorkspaceConfig {
     /// Attempt to load workspace config from `.gaugeblock/config.toml` or `.storypole/config.toml`.
+    ///
+    /// Only the unified read goes through `gaugeblock-workspace` (`GB-189`). `SuiteConfig` owns the
+    /// lookup and the parse of `.gaugeblock/config.toml`, which is the file every tool shares; the two
+    /// legacy paths below are storypole's own files - `.storypole/workspace.toml` is a bare table and
+    /// `.storypole/config.toml` is a per-tool document - so reaching `SuiteConfig` for them would model
+    /// one tool's history as suite policy. They stay, with their order intact, because a checkout that
+    /// predates the unified file still has to load.
     pub fn load_from_root(root_dir: &Path) -> Result<Option<Self>, StorypoleError> {
         // 1. Try .gaugeblock/config.toml [workspace]
-        let gb_config = gaugeblock_workspace::GaugeblockPaths::at(root_dir).config();
-        if gb_config.is_file()
-            && let Ok(content) = fs::read_to_string(&gb_config)
+        if let Ok(suite) = gaugeblock_workspace::SuiteConfig::load(root_dir)
+            && let Some(section) = suite.section("workspace")
+            && let Ok(ws) = section.clone().try_into::<Self>()
         {
-            #[derive(Deserialize)]
-            struct Unified {
-                workspace: Option<WorkspaceConfig>,
-            }
-            if let Ok(u) = toml::from_str::<Unified>(&content)
-                && let Some(ws) = u.workspace
-            {
-                return Ok(Some(ws));
-            }
+            return Ok(Some(ws));
         }
 
         // 2. Try .storypole/workspace.toml

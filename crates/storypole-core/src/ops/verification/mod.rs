@@ -65,7 +65,25 @@ pub fn verify_task(
                     .and_then(|r| store.config().verification_command_for(r))
             });
 
-        let cmd_str = cmd_opt.unwrap_or("cargo test");
+        // `cargo test` is a real check but a much weaker one than a configured fmt+clippy+nextest+docs
+        // chain, and a receipt that does not say which ran makes the two indistinguishable. That silence
+        // is the same defect as `up-to-date` and `verifier: manual` (`GB-269`).
+        let (cmd_str, configured) = match cmd_opt {
+            Some(command) => (command, true),
+            None => ("cargo test", false),
+        };
+        if !configured {
+            let scope = task
+                .scope
+                .crate_name
+                .as_deref()
+                .or(task.scope.repo.as_deref())
+                .unwrap_or("<unscoped>");
+            eprintln!(
+                "warning: no verification command configured for `{scope}`; falling back to \
+                 'cargo test'. This receipt certifies less than a configured run would."
+            );
+        }
         let output = Command::new("sh")
             .arg("-c")
             .arg(cmd_str)
@@ -74,7 +92,13 @@ pub fn verify_task(
             .map_err(|e| StorypoleError::VerificationFailed(e.to_string()))?;
 
         let exit_code = output.status.code();
-        let summary = String::from_utf8_lossy(&output.stdout).to_string();
+        let mut summary = String::from_utf8_lossy(&output.stdout).to_string();
+        if !configured {
+            // Durable, not just a console warning: the receipt is what a later reader trusts.
+            summary = format!(
+                "[fallback: no verification command configured; ran `{cmd_str}`]\n{summary}"
+            );
+        }
 
         if exit_code != Some(0) {
             let stderr = String::from_utf8_lossy(&output.stderr);
@@ -83,11 +107,14 @@ pub fn verify_task(
             )));
         }
 
-        let verifier = if run_compiler {
+        let mut verifier = if run_compiler {
             "miter+storypole-verify".to_string()
         } else {
             "storypole-verify".to_string()
         };
+        if !configured {
+            verifier.push_str(":cargo-test-fallback");
+        }
 
         VerificationReceipt {
             verifier,

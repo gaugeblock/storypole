@@ -45,23 +45,23 @@ impl StorypoleConfig {
 
     /// Load configuration from `.gaugeblock/config.toml` (if `[storypole]` table present)
     /// or fallback to legacy path.
+    ///
+    /// The generic read goes through `gaugeblock-workspace` (`GB-189`): `SuiteConfig` owns the file
+    /// lookup and the TOML parse, and this tool keeps only the *typed* step of turning its own
+    /// `[storypole]` table into `StorypoleConfig`. Parsing the unified document here as well meant two
+    /// readers of one file that could disagree at the edges - the duplicate-parser hazard the crate
+    /// exists to remove. A malformed unified file is not an error here: the legacy fallback is still
+    /// reachable, and refusing to start because an unrelated section is broken would be worse than the
+    /// fallback.
     pub fn load_unified_or_legacy(
         root_dir: &Path,
         legacy_path: &Path,
     ) -> Result<Self, StorypoleError> {
-        let unified_path = gaugeblock_workspace::GaugeblockPaths::at(root_dir).config();
-        if unified_path.is_file()
-            && let Ok(content) = fs::read_to_string(&unified_path)
+        if let Ok(suite) = gaugeblock_workspace::SuiteConfig::load(root_dir)
+            && let Some(section) = suite.section("storypole")
+            && let Ok(config) = section.clone().try_into::<Self>()
         {
-            #[derive(Deserialize)]
-            struct Unified {
-                storypole: Option<StorypoleConfig>,
-            }
-            if let Ok(u) = toml::from_str::<Unified>(&content)
-                && let Some(c) = u.storypole
-            {
-                return Ok(c);
-            }
+            return Ok(config);
         }
         Self::load_from_file(legacy_path)
     }

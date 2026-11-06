@@ -2,8 +2,8 @@
 
 use crate::config::StorypoleConfig;
 use crate::workspace::config::WorkspaceConfig;
+use gaugeblock_workspace::WorkspaceTopology;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::{Path, PathBuf};
 
 /// A member repository discovered within a workspace.
@@ -45,42 +45,32 @@ pub fn discover_members(
         return members;
     }
 
-    // Auto-scan immediate child directories
-    if let Ok(entries) = fs::read_dir(workspace_root) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if !path.is_dir() {
-                continue;
-            }
+    // Auto-scan immediate child directories. The scan itself comes from `gaugeblock-workspace`
+    // (`GB-189`) so the suite root and the member list have one definition; the qualification rule
+    // stays here, because storypole accepts a member that holds `.storypole` or `Cargo.toml` even
+    // when it is not a checkout. Narrowing to `.git` would break a standalone workspace whose
+    // directories were never git repositories, which is a use storypole supports today.
+    let topology = WorkspaceTopology::discover_with(workspace_root, is_storypole_member);
+    topology
+        .members()
+        .iter()
+        .map(|member| inspect_member(&member.name, member.path.clone()))
+        .collect()
+}
 
-            let Some(dir_name_str) = path.file_name().and_then(|n| n.to_str()) else {
-                continue;
-            };
-
-            // Skip hidden, metadata, and build directories
-            if dir_name_str.starts_with('.')
-                || dir_name_str == "target"
-                || dir_name_str == "scripts"
-                || dir_name_str == "docs"
-            {
-                continue;
-            }
-
-            let dir_name = dir_name_str.to_string();
-
-            // Treat directory as a member if it has .storypole, .git, or Cargo.toml
-            let has_storypole = path.join(".storypole").is_dir();
-            let has_git = path.join(".git").is_dir() || path.join(".git").is_file();
-            let has_cargo = path.join("Cargo.toml").is_file();
-
-            if has_storypole || has_git || has_cargo {
-                members.push(inspect_member(&dir_name, path));
-            }
-        }
+/// Whether a directory counts as a storypole workspace member.
+///
+/// Hidden directories are filtered by [`WorkspaceTopology::discover_with`] before this is called.
+fn is_storypole_member(path: &Path) -> bool {
+    if let Some(name) = path.file_name().and_then(|n| n.to_str())
+        && (name == "target" || name == "scripts" || name == "docs")
+    {
+        return false;
     }
-
-    members.sort_by(|a, b| a.name.cmp(&b.name));
-    members
+    path.join(".storypole").is_dir()
+        || path.join(".git").is_dir()
+        || path.join(".git").is_file()
+        || path.join("Cargo.toml").is_file()
 }
 
 fn inspect_member(name: &str, repo_path: PathBuf) -> DiscoveredMember {

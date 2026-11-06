@@ -1050,6 +1050,10 @@ name = "gaugeblock-common"
 version = "0.1.0-beta.1"
 
 [[patch.unused]]
+name = "gaugeblock-inventory"
+version = "0.1.0-beta.1"
+
+[[patch.unused]]
 name = "joiner"
 version = "0.1.0-beta.4"
 
@@ -1063,6 +1067,10 @@ version = "0.1.0-beta.4"
 
 [[patch.unused]]
 name = "joiner-mcp"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
+name = "miter-analysis"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]
@@ -1083,6 +1091,10 @@ version = "0.1.0-beta.4"
 
 [[patch.unused]]
 name = "miter-mcp"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
+name = "miter-polyglot"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]

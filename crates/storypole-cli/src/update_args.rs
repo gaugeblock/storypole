@@ -34,7 +34,15 @@ pub struct UpdateArgs {
     #[arg(long = "label", value_delimiter = ',')]
     /// Labels/tags
     pub labels: Vec<String>,
-    /// Concrete acceptance criteria
-    #[arg(long = "criterion", value_delimiter = ',')]
+    /// Concrete acceptance criteria. Repeatable; commas are NOT a separator, because criteria are prose
+    /// and splitting them silently turns one into several (`GB-250`).
+    #[arg(long = "criterion")]
     pub criteria: Vec<String>,
+    /// Read one acceptance criterion from a file, or `-` for stdin.
+    ///
+    /// The shell never touches the content, so no quoting or escaping rule can mangle it. Three silent
+    /// corruptions in one session came through inline arguments: backticks executed by zsh, quotes eaten
+    /// by a multi-flag commit, and comma-splitting by the delimiter that used to be on `--criterion`.
+    #[arg(long = "criterion-file")]
+    pub criterion_file: Option<String>,
 }

@@ -125,6 +125,9 @@ storypole defer --kind bug --symbol "crate::tokenizer" --title "Fix unexpected E
 
 # Mark task verified and record commit receipts
 storypole verify SP-1 agent-antigravity --summary "Completed unit tests and passes clippy"
+
+# Return tasks to the backlog when a claim lease expires (crashed agent, closed laptop)
+storypole reap --dry-run
 ```
 
 ### Ledger integrity and index reconciliation

@@ -15,11 +15,9 @@ pub fn archive_task(store: &mut StorypoleStore, task_id: Uuid) -> Result<(), Sto
     }
 
     let now = StorypoleStore::now_ms();
-    store.record_event(&LedgerEvent::StatusChanged {
+    store.record_event(&LedgerEvent::TaskArchived {
         task_id,
-        from: task.status,
-        to: TaskStatus::Archived,
-        reason: Some("Archived out of active backlog".to_string()),
+        status: task.status,
         timestamp_ms: now,
     })?;
 
@@ -45,11 +43,8 @@ pub fn unarchive_task(
     };
 
     let now = StorypoleStore::now_ms();
-    store.record_event(&LedgerEvent::StatusChanged {
+    store.record_event(&LedgerEvent::TaskUnarchived {
         task_id,
-        from: task.status,
-        to: target_status,
-        reason: Some("Unarchived back to active backlog".to_string()),
         timestamp_ms: now,
     })?;
 

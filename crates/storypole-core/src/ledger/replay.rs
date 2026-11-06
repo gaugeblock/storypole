@@ -46,6 +46,27 @@ pub fn replay_events(events: &[LedgerEvent]) -> BTreeMap<Uuid, TaskNode> {
                     task.updated_at_epoch_ms = *timestamp_ms;
                 }
             }
+            LedgerEvent::TaskArchived {
+                task_id,
+                status,
+                timestamp_ms,
+            } => {
+                if let Some(task) = tasks.get_mut(task_id) {
+                    // The task keeps the status it earned; only the state changes (GB-179, GB-258).
+                    task.status = *status;
+                    task.archived_at_epoch_ms = Some(*timestamp_ms);
+                    task.updated_at_epoch_ms = *timestamp_ms;
+                }
+            }
+            LedgerEvent::TaskUnarchived {
+                task_id,
+                timestamp_ms,
+            } => {
+                if let Some(task) = tasks.get_mut(task_id) {
+                    task.archived_at_epoch_ms = None;
+                    task.updated_at_epoch_ms = *timestamp_ms;
+                }
+            }
             LedgerEvent::StatusChanged {
                 task_id,
                 to,

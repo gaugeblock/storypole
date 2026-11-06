@@ -1,5 +1,6 @@
 //! Command handlers for `storypole plan` subcommands.
 
+use crate::json_out::print_json;
 use crate::plan_args::{PlanArgs, PlanCommands};
 use anyhow::{Result, anyhow};
 use std::fs;
@@ -61,7 +62,7 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
 
             let updated_plan = set_task_plan(store, id, plan)?;
             if json {
-                println!("{}", serde_json::to_string_pretty(&updated_plan)?);
+                print_json("plan", &serde_json::json!({"plan": updated_plan}))?;
             } else {
                 let path_str = updated_plan
                     .plan_file_path
@@ -82,7 +83,7 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
             let plan = set_plan_step_complete(store, task_id, &step, !undo)
                 .map_err(|e| anyhow!(e.to_string()))?;
             if json {
-                println!("{}", serde_json::to_string_pretty(&plan)?);
+                print_json("plan", &serde_json::json!({"plan": plan}))?;
             } else {
                 let done = plan.steps.iter().filter(|s| s.completed).count();
                 let state = if undo { "reopened" } else { "completed" };
@@ -97,7 +98,7 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
             let task = get_task_by_id(store.conn(), id)?;
             if let Some(ref plan) = task.plan {
                 if json {
-                    println!("{}", serde_json::to_string_pretty(plan)?);
+                    print_json("plan", &serde_json::json!({"plan": plan}))?;
                 } else {
                     println!("Ticket:  {}", task.ticket_key);
                     println!("Summary: {}", plan.summary);

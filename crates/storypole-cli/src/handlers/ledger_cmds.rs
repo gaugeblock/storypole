@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use crate::json_out::print_json;
 use anyhow::{Context, Result};
 use storypole_core::ledger::audit::{audit_ledgers, format_ledger_audit};
 
@@ -11,7 +12,7 @@ pub fn handle_ledger_verify(root_dir: &Path, json: bool) -> Result<()> {
         .with_context(|| format!("Ledger audit failed for {}", root_dir.display()))?;
 
     if json {
-        println!("{}", serde_json::to_string_pretty(&audit)?);
+        print_json("ledger-verify", &serde_json::json!({"audit": audit}))?;
     } else {
         print!("{}", format_ledger_audit(&audit));
     }
@@ -80,7 +81,10 @@ pub fn handle_ledger_reconcile(root_dir: &Path, json: bool) -> Result<()> {
             "index": index_counts,
             "deltas": deltas.iter().map(|(s, l, i)| serde_json::json!({"status": s, "ledger": l, "index": i})).collect::<Vec<_>>(),
         });
-        println!("{}", serde_json::to_string_pretty(&payload)?);
+        print_json(
+            "ledger-reconcile",
+            &serde_json::json!({"reconcile": payload}),
+        )?;
     } else {
         println!(
             "{:<12} {:>8} {:>8} {:>8}",

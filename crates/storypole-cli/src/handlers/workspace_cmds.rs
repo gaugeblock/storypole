@@ -1,5 +1,6 @@
 //! Handlers for multi-repository workspace commands: list, init, and distribute.
 
+use crate::json_out::print_json;
 use anyhow::Result;
 use std::path::Path;
 use storypole_core::config::StorypoleConfig;
@@ -29,7 +30,10 @@ pub fn canonical_prefix_for(repo_name: &str) -> &'static str {
 pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
     let ws = StorypoleWorkspaceStore::open(dir)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&ws.members())?);
+        print_json(
+            "workspace-list",
+            &serde_json::json!({"members": ws.members()}),
+        )?;
         return Ok(());
     }
 
@@ -109,7 +113,10 @@ pub fn handle_workspace_init(dir: &Path, json: bool) -> Result<()> {
     }
 
     if json {
-        println!("{}", serde_json::to_string_pretty(&initialized)?);
+        print_json(
+            "workspace-init",
+            &serde_json::json!({"initialized": initialized}),
+        )?;
     } else {
         println!("Initialized {} member repositories:", initialized.len());
         for (name, prefix) in initialized {

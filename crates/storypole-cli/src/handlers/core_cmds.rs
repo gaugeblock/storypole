@@ -2,6 +2,7 @@
 
 use crate::args::*;
 use crate::format::*;
+use crate::json_out::print_json;
 use anyhow::{Result, anyhow};
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -25,7 +26,7 @@ pub fn handle_init(dir: &Path, args: InitArgs, json: bool) -> Result<()> {
     };
     let store = StorypoleStore::init(dir, config)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(store.config())?);
+        print_json("init", &serde_json::json!({"config": store.config()}))?;
     } else {
         println!(
             "Initialized Storypole store at '{}' (prefix: {})",
@@ -58,7 +59,7 @@ pub fn handle_add(store: &mut StorypoleStore, args: AddArgs, json: bool) -> Resu
     };
     let task = add_task(store, params)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&task)?);
+        print_json("add", &serde_json::json!({"task": task}))?;
     } else {
         println!(
             "Created task {} [{:?}] P{}: {}",
@@ -81,7 +82,10 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
     };
     let tasks = query_tasks(store.conn(), &filter)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&tasks)?);
+        print_json(
+            "list",
+            &serde_json::json!({"count": tasks.len(), "tasks": tasks}),
+        )?;
     } else {
         print!("{}", format_task_table(&tasks));
     }
@@ -94,7 +98,7 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
     let all_tasks = get_all_tasks(store.conn())?;
     let briefing = build_task_briefing(&task, &all_tasks, store.config(), StorypoleStore::now_ms());
     if json {
-        println!("{}", serde_json::to_string_pretty(&briefing)?);
+        print_json("show", &serde_json::json!({"briefing": briefing}))?;
     } else {
         print!("{}", format_task_briefing(&briefing));
     }
@@ -114,7 +118,7 @@ pub fn handle_next(store: &mut StorypoleStore, args: NextArgs, json: bool) -> Re
     match briefing_opt {
         Some(b) => {
             if json {
-                println!("{}", serde_json::to_string_pretty(&b)?);
+                print_json("next", &serde_json::json!({"briefing": b}))?;
             } else {
                 print!("{}", format_task_briefing(&b));
             }
@@ -154,7 +158,7 @@ pub fn handle_defer(store: &mut StorypoleStore, args: DeferArgs, json: bool) -> 
         args.captured_by,
     )?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&task)?);
+        print_json("defer", &serde_json::json!({"task": task}))?;
     } else {
         println!(
             "Deferred task captured: {} [{:?}] {}",
@@ -187,7 +191,7 @@ pub fn handle_split(store: &mut StorypoleStore, args: SplitArgs, json: bool) -> 
     let id = resolve_task_id(store.conn(), &args.identifier)?;
     let children = split_task(store, id, args.child_titles, args.sequential)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&children)?);
+        print_json("split", &serde_json::json!({"children": children}))?;
     } else {
         println!(
             "Split task {} into {} subtasks:",
@@ -204,7 +208,10 @@ pub fn handle_split(store: &mut StorypoleStore, args: SplitArgs, json: bool) -> 
 pub fn handle_graph(store: &StorypoleStore, _format: &str, json: bool) -> Result<()> {
     let tasks: BTreeMap<Uuid, _> = get_all_tasks(store.conn())?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&tasks)?);
+        print_json(
+            "graph",
+            &serde_json::json!({"count": tasks.len(), "tasks": tasks}),
+        )?;
     } else {
         print!("{}", format_mermaid_graph(&tasks));
     }

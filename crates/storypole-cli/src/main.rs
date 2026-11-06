@@ -5,6 +5,7 @@
 mod args;
 mod format;
 mod handlers;
+mod json_out;
 mod plan_args;
 mod task_args;
 mod update_args;

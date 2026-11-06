@@ -2,6 +2,7 @@
 
 use crate::args::*;
 use crate::format::format_task_briefing;
+use crate::json_out::print_json;
 use anyhow::{Result, anyhow};
 use storypole_core::index::query::resolve_task_id;
 use storypole_core::model::decision::HandoffPacket;
@@ -21,7 +22,7 @@ pub fn handle_claim(
     let id = resolve_task_id(store.conn(), ident)?;
     let briefing = claim_task(store, id, agent_id, branch)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&briefing)?);
+        print_json("claim", &serde_json::json!({"briefing": briefing}))?;
     } else {
         println!("Task {ident} claimed by {agent_id}. Briefing:\n");
         print!("{}", format_task_briefing(&briefing));
@@ -232,7 +233,7 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
         args.compiler,
     )?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&receipt)?);
+        print_json("verify", &serde_json::json!({"receipt": receipt}))?;
     } else {
         let branch_info = receipt
             .git_branch

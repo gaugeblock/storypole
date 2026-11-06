@@ -1,5 +1,6 @@
 //! Handler for `storypole update`.
 
+use crate::json_out::print_json;
 use crate::update_args::UpdateArgs;
 use anyhow::Result;
 use storypole_core::StorypoleStore;
@@ -77,7 +78,7 @@ pub fn handle_update(store: &mut StorypoleStore, args: UpdateArgs, json: bool) -
     update_task(store, id, params)?;
     let updated = get_task_by_id(store.conn(), id)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&updated)?);
+        print_json("update", &serde_json::json!({"task": updated}))?;
     } else {
         println!(
             "Updated task {} [{:?}] P{}: {}",

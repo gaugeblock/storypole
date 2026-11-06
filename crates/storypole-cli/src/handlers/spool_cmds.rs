@@ -2,6 +2,7 @@
 
 use std::path::Path;
 
+use crate::json_out::print_json;
 use anyhow::{Context, Result};
 use storypole_core::store::StorypoleStore;
 use storypole_core::telemetry::{migrate_spool, normalize_spool_text, spool_path};
@@ -39,7 +40,7 @@ pub fn handle_spool_migrate(
             "migrated": migrated,
             "dry_run": dry_run,
         });
-        println!("{}", serde_json::to_string_pretty(&payload)?);
+        print_json("spool-migrate", &serde_json::json!({"migration": payload}))?;
         return Ok(());
     }
 

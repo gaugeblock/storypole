@@ -70,6 +70,25 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
     Ok(())
 }
 
+/// The verification command a member repository must pass, keyed by repo name (`GB-268`).
+///
+/// The field is a **lookup map**, not a list of checks: `verification_command_for` resolves it by crate
+/// name first, then repo name, and `verify` falls back to a hardcoded `cargo test` when nothing matches.
+/// So the shape is one entry per repo holding a single `sh -c` command, chained with `&&` so it stops at
+/// the first broken check. An empty map meant every task verified with `cargo test` alone: the gate
+/// described in `AGENTS.md` was never wired to this field, which is why it looked present and was absent.
+pub(crate) fn default_verification_commands(repo: &str) -> Vec<(String, String)> {
+    vec![(
+        repo.to_string(),
+        format!(
+            "cargo fmt --all -- --check && \
+             cargo clippy --workspace --all-targets -- -D warnings && \
+             cargo nextest run --workspace && \
+             chalkline docs check -d {repo}"
+        ),
+    )]
+}
+
 pub fn handle_workspace_init(dir: &Path, json: bool) -> Result<()> {
     let ws = StorypoleWorkspaceStore::open(dir)?;
     let mut initialized = Vec::new();
@@ -81,6 +100,7 @@ pub fn handle_workspace_init(dir: &Path, json: bool) -> Result<()> {
                 ticket_prefix: prefix.to_string(),
                 allowed_repos: vec![member.name.clone()],
                 claim_ttl_minutes: 60,
+                verification_commands: default_verification_commands(&member.name),
                 ..Default::default()
             };
             StorypoleStore::init(&member.repo_path, config)?;

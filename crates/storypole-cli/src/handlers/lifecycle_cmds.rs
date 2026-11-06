@@ -221,7 +221,16 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
     } else {
         None
     };
-    let receipt = verify_task(store, id, override_receipt, args.run, args.compiler)?;
+    // Executing is the default (`GB-272`): a certification command that can return exit_code 0 without
+    // running anything produces receipts that look like proof. `--manual` is the explicit opt-out.
+    let run_command = !args.manual;
+    let receipt = verify_task(
+        store,
+        id,
+        override_receipt,
+        run_command || args.run,
+        args.compiler,
+    )?;
     if json {
         println!("{}", serde_json::to_string_pretty(&receipt)?);
     } else {

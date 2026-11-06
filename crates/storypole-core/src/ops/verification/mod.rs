@@ -63,7 +63,11 @@ pub fn verify_task(
                     .repo
                     .as_deref()
                     .and_then(|r| store.config().verification_command_for(r))
-            });
+            })
+            // Unscoped task: no crate and no repo, which is normal for harness-level work. Without this,
+            // neither lookup above is called at all and the reserved `default` entry is unreachable
+            // (`GB-272`). The target cannot match a real key, so resolution lands on `default`.
+            .or_else(|| store.config().verification_command_for("\u{0}unscoped"));
 
         // `cargo test` is a real check but a much weaker one than a configured fmt+clippy+nextest+docs
         // chain, and a receipt that does not say which ran makes the two indistinguishable. That silence
@@ -142,6 +146,12 @@ pub fn verify_task(
             commit_shas: Vec::new(),
         }
     } else {
+        // Nothing was executed. The receipt already says `manual`, which is honest, but a caller who
+        // expected certification will read `exit_code: Some(0)` and stop looking (`GB-272`).
+        eprintln!(
+            "warning: recording a MANUAL attestation - nothing was executed. Pass --run to execute the \
+             configured verification command, or --compiler for miter diagnostics."
+        );
         VerificationReceipt {
             verifier: "manual".to_string(),
             command: "n/a".to_string(),

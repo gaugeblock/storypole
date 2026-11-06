@@ -83,10 +83,18 @@ pub struct DecideArgs {
 #[derive(Debug, Args)]
 pub struct VerifyArgs {
     pub identifier: String,
+    /// Accepted for compatibility; execution is now the default.
     #[arg(long)]
     pub run: bool,
     #[arg(long)]
     pub compiler: bool,
+    /// Record a human attestation instead of executing the configured gate.
+    ///
+    /// The default is to execute, because a command whose purpose is certification should not be able to
+    /// return `exit_code: 0` having run nothing - that was `GB-272`, and it produced receipts that looked
+    /// like proof while being a statement of intent.
+    #[arg(long)]
+    pub manual: bool,
     #[arg(long)]
     pub verifier: Option<String>,
     #[arg(long)]

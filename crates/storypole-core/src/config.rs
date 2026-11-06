@@ -84,10 +84,19 @@ impl StorypoleConfig {
     }
 
     /// Resolve configured verification command for a crate or repo name.
+    ///
+    /// Falls back to a reserved `default` entry before returning `None`, so an unscoped task - one with no
+    /// crate and no repo, which is common for harness-level work - resolves to a suite gate instead of the
+    /// hardcoded `cargo test` that fails wherever there is no manifest (`GB-272`).
     pub fn verification_command_for(&self, target: &str) -> Option<&str> {
         self.verification_commands
             .iter()
             .find(|(k, _)| k == target)
+            .or_else(|| {
+                self.verification_commands
+                    .iter()
+                    .find(|(k, _)| k == "default")
+            })
             .map(|(_, cmd)| cmd.as_str())
     }
 

@@ -1,5 +1,6 @@
 //! Human-friendly table and graph formatting utilities.
 
+use crate::format_decisions::render_task_decisions;
 use std::collections::BTreeMap;
 use storypole_core::model::events::TaskContextBriefing;
 use storypole_core::model::task::{EdgeKind, TaskNode, TaskStatus};
@@ -116,6 +117,8 @@ pub fn format_task_briefing(b: &TaskContextBriefing) -> String {
             ));
         }
     }
+
+    render_task_decisions(&mut out, &t.decisions);
 
     if !b.related_tasks_summary.is_empty() {
         out.push_str("\nRelated / Blocking Tasks:\n");

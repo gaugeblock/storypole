@@ -4,6 +4,7 @@
 
 mod args;
 mod format;
+mod format_decisions;
 mod handlers;
 mod json_out;
 mod plan_args;

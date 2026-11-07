@@ -38,6 +38,8 @@ pub enum Commands {
     LedgerVerify,
     /// Compare the unified index against the ledger replay
     LedgerReconcile,
+    /// Inspect the repository configuration
+    Config(ConfigArgs),
     List(ListArgs),
     /// Show full context briefing for a task
     Show {
@@ -202,4 +204,18 @@ pub struct NextArgs {
     pub exclude_file_collisions: bool,
     #[arg(long)]
     pub claim: Option<String>,
+}
+
+/// Arguments for `storypole config`.
+#[derive(Debug, Args)]
+pub struct ConfigArgs {
+    #[command(subcommand)]
+    pub command: ConfigCommand,
+}
+
+/// What to do with the configuration.
+#[derive(Debug, Subcommand)]
+pub enum ConfigCommand {
+    /// Report settings that are present but wrong (`GB-273`)
+    Check,
 }

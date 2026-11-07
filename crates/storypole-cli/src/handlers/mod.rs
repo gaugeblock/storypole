@@ -1,6 +1,7 @@
 //! CLI subcommand handlers.
 
 pub mod archive_cmds;
+pub mod config_cmds;
 pub mod core_cmds;
 pub mod ledger_cmds;
 pub mod lifecycle_cmds;
@@ -10,6 +11,7 @@ pub mod update_cmd;
 pub mod workspace_cmds;
 
 pub use archive_cmds::*;
+pub use config_cmds::handle_config;
 pub use core_cmds::*;
 pub use ledger_cmds::*;
 pub use lifecycle_cmds::*;

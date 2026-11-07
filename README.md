@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-0.1.0--beta.4-blue.svg)](https://gaugeblock.dev)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 [![gaugeblock](https://img.shields.io/badge/suite-gaugeblock-orange.svg)](https://github.com/gaugeblock)
-[![Documentation](https://img.shields.io/badge/docs-9--doc%20topology-green.svg)](ARCHITECTURE.md)
+[![Documentation](https://img.shields.io/badge/docs-9--doc%20topology-green.svg)](docs/ARCHITECTURE.md)
 
 Part of the **[`gaugeblock`](https://gaugeblock.dev)** neurosymbolic code synthesis ecosystem.
 
@@ -172,12 +172,12 @@ storypole spool migrate
 
 `storypole` maintains 100% compliance with the canonical 9-Document Architecture:
 * **[`README.md`](./README.md):** Public elevator pitch, command reference, and MCP integration.
-* **[`CONTRIBUTING.md`](./CONTRIBUTING.md):** Contributor onboarding, toolchain setup, and verification gates.
-* **[`PRODUCT.md`](./PRODUCT.md):** User personas, JTBD, and neurosymbolic task orchestration value.
-* **[`ARCHITECTURE.md`](./ARCHITECTURE.md):** Internal sub-crate topologies, SQLite projection, and store synchronization.
-* **[`SPEC.md`](./SPEC.md):** Formal event schemas, ledger serialization contracts, and state transition rules.
-* **[`DESIGN.md`](./DESIGN.md):** Architectural Decision Records (ADRs) and trade-off analyses.
-* **[`ROADMAP.md`](./ROADMAP.md):** Strategic milestones, upcoming capabilities, and horizons.
+* **[`CONTRIBUTING.md`](docs/CONTRIBUTING.md):** Contributor onboarding, toolchain setup, and verification gates.
+* **[`PRODUCT.md`](docs/PRODUCT.md):** User personas, JTBD, and neurosymbolic task orchestration value.
+* **[`ARCHITECTURE.md`](docs/ARCHITECTURE.md):** Internal sub-crate topologies, SQLite projection, and store synchronization.
+* **[`SPEC.md`](docs/SPEC.md):** Formal event schemas, ledger serialization contracts, and state transition rules.
+* **[`DESIGN.md`](docs/DESIGN.md):** Architectural Decision Records (ADRs) and trade-off analyses.
+* **[`ROADMAP.md`](docs/ROADMAP.md):** Strategic milestones, upcoming capabilities, and horizons.
 * **[`CHANGELOG.md`](./CHANGELOG.md):** Chronological historical release logs and unreleased entries.
 * **[`AGENTS.md`](./AGENTS.md):** Operational directives, 250-line file ceiling, and verification matrix.
 

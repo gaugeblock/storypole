@@ -1,0 +1,38 @@
+# Document locations (`GB-275`). README stays at the root as the shopfront and crates.io readme;
+# CHANGELOG and AGENTS stay because tooling and agents read them at conventional paths.
+
+[docs.readme]
+path = "README.md"
+required = true
+
+[docs.contributing]
+path = "docs/CONTRIBUTING.md"
+required = true
+
+[docs.product]
+path = "docs/PRODUCT.md"
+required = true
+
+[docs.architecture]
+path = "docs/ARCHITECTURE.md"
+required = true
+
+[docs.spec]
+path = "docs/SPEC.md"
+required = true
+
+[docs.design]
+path = "docs/DESIGN.md"
+required = true
+
+[docs.roadmap]
+path = "docs/ROADMAP.md"
+required = true
+
+[docs.changelog]
+path = "CHANGELOG.md"
+required = true
+
+[docs.agents]
+path = "AGENTS.md"
+required = true

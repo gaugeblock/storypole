@@ -659,6 +659,7 @@ dependencies = [
  "anyhow",
  "clap",
  "gaugeblock-contracts",
+ "gaugeblock-workspace",
  "serde",
  "serde_json",
  "storypole-core",

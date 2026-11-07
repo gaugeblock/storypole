@@ -12,6 +12,8 @@ name = "storypole"
 path = "src/main.rs"
 
 [dependencies]
+# WorkspaceTopology for fleet-wide commands (GB-273).
+gaugeblock-workspace = "0.1.0-beta.1"
 # Shared --json envelope (GB-274); the CLI emits it rather than owning the shape.
 gaugeblock-contracts = "0.1.0-beta.1"
 storypole-core = { path = "../storypole-core", version = "0.1.0-beta.5" }

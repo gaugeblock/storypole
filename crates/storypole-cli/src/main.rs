@@ -59,7 +59,7 @@ fn main() -> Result<()> {
                 Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
                 Commands::LedgerVerify => handle_ledger_verify(&root_dir, cli.json)?,
                 Commands::LedgerReconcile => handle_ledger_reconcile(&root_dir, cli.json)?,
-                Commands::Config(args) => handle_config(&store, args.command, cli.json)?,
+                Commands::Config(args) => handle_config(&store, &root_dir, args.command, cli.json)?,
                 Commands::List(args) => handle_list(&store, args, cli.json)?,
                 Commands::Show { identifier } => handle_show(&store, &identifier, cli.json)?,
                 Commands::Next(args) => handle_next(&mut store, args, cli.json)?,

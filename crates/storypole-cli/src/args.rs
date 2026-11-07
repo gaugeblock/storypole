@@ -217,5 +217,17 @@ pub struct ConfigArgs {
 #[derive(Debug, Subcommand)]
 pub enum ConfigCommand {
     /// Report settings that are present but wrong (`GB-273`)
-    Check,
+    Check(ConfigCheckArgs),
+}
+
+/// Arguments for `storypole config check`.
+#[derive(Debug, Args)]
+pub struct ConfigCheckArgs {
+    /// Audit every repository in the workspace, discovered through `WorkspaceTopology`.
+    ///
+    /// Membership comes from the topology, never a glob - the same rule as `benchwork tidy --workspace`
+    /// (`GB-263`). A repository with no configuration is skipped rather than reported, because not being
+    /// adopted yet is not a defect.
+    #[arg(long, default_value_t = false)]
+    pub workspace: bool,
 }

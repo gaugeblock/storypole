@@ -78,6 +78,10 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
 ///
 /// The field is a **lookup map**, not a list of checks: `verification_command_for` resolves it by crate
 /// name first, then repo name, and `verify` falls back to a hardcoded `cargo test` when nothing matches.
+///
+/// `miter audit` is in the chain because the 250-line limit has been breached and repaired by hand twice
+/// (`GB-220`, then `GB-291` with nine files) while the check lived only in miter's own documentation. A rule
+/// that is remembered is a rule that is eventually forgotten; a rule in the chain fails the build instead.
 /// So the shape is one entry per repo holding a single `sh -c` command, chained with `&&` so it stops at
 /// the first broken check. An empty map meant every task verified with `cargo test` alone: the gate
 /// described in `AGENTS.md` was never wired to this field, which is why it looked present and was absent.
@@ -88,6 +92,7 @@ pub(crate) fn default_verification_commands(repo: &str) -> Vec<(String, String)>
             "cargo fmt --all -- --check && \
              cargo clippy --workspace --all-targets -- -D warnings && \
              cargo nextest run --workspace && \
+             miter audit --path . --threshold 250 && \
              chalkline docs check -d {repo}"
         ),
     )]

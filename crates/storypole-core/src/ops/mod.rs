@@ -7,6 +7,7 @@ pub mod handoff;
 pub mod lease;
 pub mod mutations;
 pub mod plan_ops;
+pub mod revision;
 pub mod scope;
 pub mod ticket_lock;
 pub mod verification;

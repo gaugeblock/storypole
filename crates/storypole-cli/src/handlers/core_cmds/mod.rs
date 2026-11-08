@@ -98,9 +98,25 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
     let all_tasks = get_all_tasks(store.conn())?;
     let briefing = build_task_briefing(&task, &all_tasks, store.config(), StorypoleStore::now_ms());
     if json {
-        print_json("show", &serde_json::json!({"briefing": briefing}))?;
+        print_json(
+            "show",
+            &serde_json::json!({
+                "briefing": briefing,
+                // Non-null when the receipt names commits `main` never received: the ledger's strongest
+                // claim pointing at work that exists nowhere else (`GB-325`).
+                "unmerged_receipt": storypole_core::ops::revision::unmerged_receipt_warning(
+                    store.root_dir(),
+                    &task,
+                ),
+            }),
+        )?;
     } else {
         print!("{}", format_task_briefing(&briefing));
+        if let Some(warning) =
+            storypole_core::ops::revision::unmerged_receipt_warning(store.root_dir(), &task)
+        {
+            eprintln!("{warning}");
+        }
     }
     Ok(())
 }

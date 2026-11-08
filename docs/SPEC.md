@@ -30,6 +30,28 @@
 * Mutual links collapse to a single entry, and the wire shape stays `(ticket_key, title, status)` so consumers such as the benchwork inspector render invariantly.
 * Resolved decisions inherit across the same link set, so a child briefing also carries its parent epic's resolved decisions.
 
+### Invariant 5: A Receipt Names What It Measured (`GB-316`)
+A verification receipt MUST record the repository it measured (`repo`), the configuration key whose
+chain ran (`chain_key`), the branch, and the commit range. `repo: None` states that the receipt does not
+know which repository it measured — it is a finding, not a default — and a chain that fell back to
+`default` is named as `default` rather than left indistinguishable from a match.
+
+Three consequences are load-bearing:
+
+* `verify` refuses to certify a task that names a member's files while carrying no repository scope, and
+  the error names the candidate. A receipt about the wrong tree is well-formed and exit-zero, so it
+  cannot be spotted afterwards; refusing is visible, certifying the wrong tree is not.
+* Scope is resolved once — explicit argument, persisted scope, the task's files, the task's symbols, the
+  working directory, then harness — and persisted at claim beside the branch. `verify` reads that
+  decision instead of making its own, so the two cannot disagree.
+* `storypole show` warns when a receipt's head commit is not reachable from `main` in the repository the
+  receipt names. A receipt is written before the merge, so this is asked later; two tickets were once
+  certified with their commits stranded on branches `main` never received (`GB-250`, `GB-302`).
+
+The store's location follows the same rule: a member repository's own ledger wins when it holds one, the
+suite's canonical ledger is used when the suite declares that member, and a directory holding only an
+index is a stub rather than a store (`GB-324`).
+
 ---
 
 ## 2. System State Machines

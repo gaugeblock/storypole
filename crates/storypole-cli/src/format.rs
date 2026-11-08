@@ -91,9 +91,20 @@ pub fn format_task_briefing(b: &TaskContextBriefing) -> String {
         } else {
             String::new()
         };
+        // Which repository and which chain the receipt measured (`GB-316`). Without these two a receipt
+        // for member work and a receipt for harness work read the same, which is how four tickets were
+        // certified against the wrong tree (`GB-313`).
+        let repo_str = match receipt.repo.as_deref() {
+            Some(repo) => format!(" [repo: {repo}]"),
+            None => " [repo: unscoped]".to_string(),
+        };
+        let chain_str = match receipt.chain_key.as_deref() {
+            Some(key) => format!(" [chain: {key}]"),
+            None => String::new(),
+        };
         out.push_str(&format!(
-            "Receipt:     verified by {} (exit: {:?}){}{}\n",
-            receipt.verifier, receipt.exit_code, branch_str, commits_str
+            "Receipt:     verified by {} (exit: {:?}){}{}{}{}\n",
+            receipt.verifier, receipt.exit_code, repo_str, branch_str, commits_str, chain_str
         ));
     }
 

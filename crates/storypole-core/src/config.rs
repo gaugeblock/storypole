@@ -100,6 +100,24 @@ impl StorypoleConfig {
             .map(|(_, cmd)| cmd.as_str())
     }
 
+    /// The verification chain that would run for `target`, together with the key it matched.
+    ///
+    /// [`Self::verification_command_for`] answers "which command", which is enough to run one and not
+    /// enough to describe it: the lookup falls back to `default`, so a task asking for `miter` and a
+    /// task asking for an unknown name both receive a command and no receipt could tell them apart.
+    #[must_use]
+    pub fn verification_chain_for(&self, target: &str) -> Option<(&str, &str)> {
+        self.verification_commands
+            .iter()
+            .find(|(k, _)| k == target)
+            .or_else(|| {
+                self.verification_commands
+                    .iter()
+                    .find(|(k, _)| k == "default")
+            })
+            .map(|(key, cmd)| (key.as_str(), cmd.as_str()))
+    }
+
     /// Validate whether the given repo and crate are permitted by this configuration.
     pub fn validate_scope(
         &self,

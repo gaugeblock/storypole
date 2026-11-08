@@ -50,30 +50,38 @@ pub fn verify_task(
         None
     };
 
+    let mut chain_used: Option<String> = None;
     let mut receipt = if let Some(r) = receipt_override {
         r
     } else if run_command {
-        let cmd_opt = task
+        let chain_opt = task
             .scope
             .crate_name
             .as_deref()
-            .and_then(|c| store.config().verification_command_for(c))
+            .and_then(|c| store.config().verification_chain_for(c))
             .or_else(|| {
                 task.scope
                     .repo
                     .as_deref()
-                    .and_then(|r| store.config().verification_command_for(r))
+                    .and_then(|r| store.config().verification_chain_for(r))
             })
             // Unscoped task: no crate and no repo, which is normal for harness-level work. Without this,
             // neither lookup above is called at all and the reserved `default` entry is unreachable
             // (`GB-272`). The target cannot match a real key, so resolution lands on `default`.
-            .or_else(|| store.config().verification_command_for("\u{0}unscoped"));
+            .or_else(|| store.config().verification_chain_for("\u{0}unscoped"));
 
         // `cargo test` is a real check but a much weaker one than a configured fmt+clippy+nextest+docs
         // chain, and a receipt that does not say which ran makes the two indistinguishable. That silence
         // is the same defect as `up-to-date` and `verifier: manual` (`GB-269`).
-        let (cmd_str, configured) = match cmd_opt {
-            Some(command) => (command, true),
+        //
+        // The key is kept beside the command for the same reason: `verification_chain_for` falls back to
+        // `default`, so a task asking for `miter` and a task asking for a name nobody configured both
+        // receive a command, and only the key says which happened (`GB-316`).
+        let (cmd_str, configured) = match chain_opt {
+            Some((key, command)) => {
+                chain_used = Some(key.to_string());
+                (command, true)
+            }
             None => ("cargo test", false),
         };
         if !configured {
@@ -131,6 +139,8 @@ pub fn verify_task(
             base_commit_sha: None,
             head_commit_sha: None,
             commit_shas: Vec::new(),
+            repo: None,
+            chain_key: None,
         }
     } else if run_compiler {
         VerificationReceipt {
@@ -144,6 +154,8 @@ pub fn verify_task(
             base_commit_sha: None,
             head_commit_sha: None,
             commit_shas: Vec::new(),
+            repo: None,
+            chain_key: None,
         }
     } else {
         // Nothing was executed. The receipt already says `manual`, which is honest, but a caller who
@@ -163,8 +175,20 @@ pub fn verify_task(
             base_commit_sha: None,
             head_commit_sha: None,
             commit_shas: Vec::new(),
+            repo: None,
+            chain_key: None,
         }
     };
+
+    // Which repository and which chain this receipt describes (`GB-316`). `repo` comes from the task's
+    // placement, so a member ticket's receipt can never name the harness; `chain_key` is the
+    // configuration entry that actually ran, because falling back to `default` was otherwise invisible.
+    if receipt.repo.is_none() {
+        receipt.repo = task.scope.repo.clone();
+    }
+    if receipt.chain_key.is_none() {
+        receipt.chain_key = chain_used;
+    }
 
     if receipt.git_branch.is_none() {
         receipt.git_branch = git_branch;

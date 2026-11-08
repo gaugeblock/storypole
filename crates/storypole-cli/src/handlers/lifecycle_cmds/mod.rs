@@ -145,6 +145,8 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
             base_commit_sha: None,
             head_commit_sha: None,
             commit_shas: Vec::new(),
+            repo: None,
+            chain_key: None,
         })
     } else {
         None
@@ -176,8 +178,20 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
             .diagnostic_count
             .map(|d| format!(", diagnostics: {d}"))
             .unwrap_or_default();
+        // The repository and chain are reported on the same line as the branch: a reader who asked for
+        // `miter` verification needs to see whether the member chain or the harness chain ran (`GB-316`).
+        let repo_info = receipt
+            .repo
+            .as_deref()
+            .map(|r| format!(" on repo '{r}'"))
+            .unwrap_or_else(|| " on no repository".to_string());
+        let chain_info = receipt
+            .chain_key
+            .as_deref()
+            .map(|c| format!(", chain: {c}"))
+            .unwrap_or_default();
         println!(
-            "Verified task {} successfully (verifier: {}, exit_code: {:?}{diag_info}{branch_info}{commits_info})",
+            "Verified task {} successfully (verifier: {}, exit_code: {:?}{diag_info}{repo_info}{branch_info}{commits_info}{chain_info})",
             args.identifier, receipt.verifier, receipt.exit_code
         );
     }

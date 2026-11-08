@@ -7,7 +7,9 @@ use std::fs;
 use storypole_core::StorypoleStore;
 use storypole_core::index::query::{get_task_by_id, resolve_task_id};
 use storypole_core::model::plan::{PlanStep, TaskPlan};
-use storypole_core::ops::plan_ops::{set_plan_step_complete, set_task_plan};
+use storypole_core::ops::plan_ops::{
+    PlanUpdate, next_step, plan_progress, set_plan_step_complete, set_task_plan_with,
+};
 
 /// Dispatch `storypole plan` subcommands.
 pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Result<()> {
@@ -17,6 +19,8 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
             file,
             summary,
             steps,
+            replace,
+            force,
         } => {
             let id = resolve_task_id(store.conn(), &identifier)?;
             if !file.exists() {
@@ -60,7 +64,15 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                 updated_at_epoch_ms: 0,
             };
 
-            let updated_plan = set_task_plan(store, id, plan)?;
+            // Merging is the default: a partial update must not erase the rest of the plan, and a
+            // completed step is never dropped unless the caller asks for it (`GB-321`).
+            let update = if replace {
+                PlanUpdate::Replace
+            } else {
+                PlanUpdate::Merge
+            };
+            let updated_plan = set_task_plan_with(store, id, plan, update, force)
+                .map_err(|e| anyhow!(e.to_string()))?;
             if json {
                 print_json("plan", &serde_json::json!({"plan": updated_plan}))?;
             } else {
@@ -68,9 +80,10 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                     .plan_file_path
                     .as_deref()
                     .unwrap_or(".storypole/plans/<KEY>.md");
+                let (done, total) = plan_progress(&updated_plan);
                 println!(
-                    "Attached plan to {identifier} with {} steps. Saved to {path_str}",
-                    updated_plan.steps.len()
+                    "Attached plan to {identifier} with {total} steps ({done} complete). Saved to \
+                     {path_str}"
                 );
             }
         }
@@ -93,6 +106,45 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                 );
             }
         }
+        PlanCommands::Next { identifier } => {
+            let id = resolve_task_id(store.conn(), &identifier)?;
+            let task = get_task_by_id(store.conn(), id)?;
+            let Some(plan) = task.plan.as_ref() else {
+                return Err(anyhow!("No plan attached to {identifier}."));
+            };
+            let (done, total) = plan_progress(plan);
+            let next = next_step(plan);
+            if json {
+                print_json(
+                    "plan",
+                    &serde_json::json!({
+                        "ticket": task.ticket_key,
+                        "completed": done,
+                        "total": total,
+                        "next": next.map(|step| serde_json::json!({
+                            "step_id": step.step_id,
+                            "title": step.title,
+                            "verification_gate": step.verification_gate,
+                        })),
+                    }),
+                )?;
+            } else {
+                match next {
+                    Some(step) => {
+                        println!("Next: {} - {}", step.step_id, step.title);
+                        if let Some(gate) = step.verification_gate.as_deref() {
+                            println!("Gate: {gate}");
+                        }
+                        println!("Progress: {done}/{total} step(s) complete");
+                    }
+                    // Every step complete is a statement about the plan, not an absence: saying "nothing
+                    // found" would read as a failure to look (`GB-321`).
+                    None => println!(
+                        "Every step is complete on {identifier} ({done}/{total}); the plan is done."
+                    ),
+                }
+            }
+        }
         PlanCommands::Show { identifier } => {
             let id = resolve_task_id(store.conn(), &identifier)?;
             let task = get_task_by_id(store.conn(), id)?;
@@ -106,7 +158,8 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                         println!("File:    {p}");
                     }
                     if !plan.steps.is_empty() {
-                        println!("\nSteps:");
+                        let (done, total) = plan_progress(plan);
+                        println!("\nSteps ({done}/{total} complete):");
                         for step in &plan.steps {
                             let check = if step.completed { "[x]" } else { "[ ]" };
                             let gate = step

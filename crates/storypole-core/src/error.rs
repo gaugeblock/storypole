@@ -72,6 +72,18 @@ pub enum StorypoleError {
     #[error("Scope validation failed: {0}")]
     ScopeViolation(String),
 
+    /// An update would drop plan steps that are already complete (`GB-321`).
+    ///
+    /// Completion is evidence that something happened, so losing it is a decision rather than a side
+    /// effect. The message names the steps, because "plan updated" while six recorded steps vanished is
+    /// what this replaces.
+    #[error(
+        "updating the plan for {ticket} would drop completed step(s): {}; pass --force to drop them, or \
+         use --step to keep them in the plan",
+        steps.join(", ")
+    )]
+    PlanStepLoss { ticket: String, steps: Vec<String> },
+
     /// Verification failed or missing receipt.
     #[error("Verification error: {0}")]
     VerificationFailed(String),

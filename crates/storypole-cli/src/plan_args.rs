@@ -25,6 +25,12 @@ pub enum PlanCommands {
         /// Plan steps in the format "<step_id>|<title>|<verification_gate>"
         #[arg(long = "step")]
         steps: Vec<String>,
+        /// Replace the whole plan instead of merging into it
+        #[arg(long)]
+        replace: bool,
+        /// Allow the update to drop steps that are already complete
+        #[arg(long)]
+        force: bool,
     },
     /// Mark one plan step complete, or reopen it with --undo
     Step {
@@ -35,6 +41,11 @@ pub enum PlanCommands {
         /// Reopen the step instead of completing it
         #[arg(long)]
         undo: bool,
+    },
+    /// Print the next unfinished step, and the gate that closes it
+    Next {
+        /// Task ticket key, slug, or UUID
+        identifier: String,
     },
     /// Display the attached plan for a task
     Show {

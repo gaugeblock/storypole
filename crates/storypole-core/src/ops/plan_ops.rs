@@ -3,12 +3,111 @@
 use crate::error::StorypoleError;
 use crate::index::query::get_task_by_id;
 use crate::model::LedgerEvent;
-use crate::model::plan::TaskPlan;
+use crate::model::plan::{PlanStep, TaskPlan};
 use crate::store::StorypoleStore;
 use std::fs;
 use uuid::Uuid;
 
-/// Attach or update a TaskPlan on a task, persisting markdown to `.storypole/plans/<KEY>.md`.
+/// How a `plan set` treats the plan that is already attached (`GB-321`).
+///
+/// The distinction is about *content*, never about *history*: a step's completion is evidence that
+/// something happened, so it survives every update regardless of mode. Dropping a completed step is
+/// therefore its own decision, taken explicitly.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum PlanUpdate {
+    /// Steps the new plan does not mention are kept. The default, because the common case is adding a
+    /// step or correcting a summary, not restating the whole plan.
+    #[default]
+    Merge,
+    /// The new plan is the whole plan. Steps it does not mention are dropped, unless they are complete -
+    /// that needs `force`.
+    Replace,
+}
+
+/// Replaces or merges a task's plan (`GB-321`).
+///
+/// # Errors
+///
+/// [`StorypoleError::PlanStepLoss`] when the update would drop a completed step and `force` is false.
+pub fn set_task_plan_with(
+    store: &mut StorypoleStore,
+    task_id: Uuid,
+    mut plan: TaskPlan,
+    update: PlanUpdate,
+    force: bool,
+) -> Result<TaskPlan, StorypoleError> {
+    let task = get_task_by_id(store.conn(), task_id)?;
+    if let Some(existing) = task.plan.as_ref() {
+        plan.steps = reconcile_steps(&task.ticket_key, &existing.steps, plan.steps, update, force)?;
+    }
+    set_task_plan(store, task_id, plan)
+}
+
+/// Combines the recorded steps with the incoming ones, keeping completion and refusing silent loss.
+fn reconcile_steps(
+    ticket: &str,
+    existing: &[PlanStep],
+    mut incoming: Vec<PlanStep>,
+    update: PlanUpdate,
+    force: bool,
+) -> Result<Vec<PlanStep>, StorypoleError> {
+    // Completion is carried forward for every step that survives, in both modes: an update describes
+    // what the plan *is*, not what has been achieved.
+    for step in &mut incoming {
+        if let Some(previous) = existing.iter().find(|old| old.step_id == step.step_id) {
+            step.completed = previous.completed;
+        }
+    }
+
+    let dropped: Vec<String> = existing
+        .iter()
+        .filter(|old| !incoming.iter().any(|new| new.step_id == old.step_id))
+        .filter(|old| old.completed)
+        .map(|old| old.step_id.clone())
+        .collect();
+    if !dropped.is_empty() && !force {
+        return Err(StorypoleError::PlanStepLoss {
+            ticket: ticket.to_string(),
+            steps: dropped,
+        });
+    }
+
+    if update == PlanUpdate::Merge {
+        // Steps the new plan does not mention are kept, so a partial update cannot quietly erase the
+        // rest of the plan - which is exactly what happened when `plan set` replaced wholesale.
+        for old in existing {
+            if !incoming.iter().any(|new| new.step_id == old.step_id) {
+                incoming.push(old.clone());
+            }
+        }
+    }
+
+    Ok(incoming)
+}
+
+/// The next unfinished step, in plan order (`GB-321`).
+///
+/// `None` means every step is complete, which is a statement about the plan rather than an absence.
+#[must_use]
+pub fn next_step(plan: &TaskPlan) -> Option<&PlanStep> {
+    plan.steps.iter().find(|step| !step.completed)
+}
+
+/// How much of a plan is done, as `(completed, total)`.
+#[must_use]
+pub fn plan_progress(plan: &TaskPlan) -> (usize, usize) {
+    let done = plan.steps.iter().filter(|step| step.completed).count();
+    (done, plan.steps.len())
+}
+
+/// Attaches or updates a task's plan, replacing whatever was recorded.
+///
+/// Prefer [`set_task_plan_with`]: this is the wholesale write it delegates to, and calling it directly
+/// discards step completion (`GB-321`).
+///
+/// # Errors
+///
+/// [`StorypoleError`] when the task is unknown or the plan file cannot be written.
 pub fn set_task_plan(
     store: &mut StorypoleStore,
     task_id: Uuid,

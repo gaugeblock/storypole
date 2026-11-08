@@ -98,6 +98,36 @@ fn a_harness_receipt_does_not_claim_a_repository_or_a_member_chain() {
 }
 
 #[test]
+fn a_repository_chain_is_reached_even_when_the_crate_has_none() {
+    // The defect this pins: the lookup fell back to `default` on the crate key, so a task naming both a
+    // crate and a repository never reached the repository's chain and the harness chain ran instead.
+    let tmp = tempdir().expect("tempdir");
+    let mut store = fixture(tmp.path());
+
+    let task = add_task(
+        &mut store,
+        CreateTaskParams {
+            title: "Crate without a chain".into(),
+            scope: TaskScope {
+                crate_name: Some("miter-core".into()),
+                repo: Some("miter".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("add task");
+
+    let receipt = verify_task(&mut store, task.id, None, true, false).expect("verify");
+
+    assert_eq!(
+        receipt.chain_key.as_deref(),
+        Some("miter"),
+        "the repository chain is reached after the crate lookup misses"
+    );
+}
+
+#[test]
 fn two_receipts_from_different_chains_do_not_read_the_same() {
     let tmp = tempdir().expect("tempdir");
     let mut store = fixture(tmp.path());

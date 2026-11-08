@@ -100,22 +100,34 @@ impl StorypoleConfig {
             .map(|(_, cmd)| cmd.as_str())
     }
 
-    /// The verification chain that would run for `target`, together with the key it matched.
+    /// The verification chain configured for exactly `target`, or `None`.
     ///
-    /// [`Self::verification_command_for`] answers "which command", which is enough to run one and not
-    /// enough to describe it: the lookup falls back to `default`, so a task asking for `miter` and a
-    /// task asking for an unknown name both receive a command and no receipt could tell them apart.
+    /// Exact on purpose. The earlier lookup fell back to `default` on the *first* key it was given, so
+    /// a task with a crate and a repository always received the default chain and the repository key
+    /// was never consulted - the harness chain ran for `GB-317`, whose repository has its own
+    /// (`GB-316`). Callers try each key exactly, then fall back once, deliberately.
     #[must_use]
-    pub fn verification_chain_for(&self, target: &str) -> Option<(&str, &str)> {
+    pub fn verification_chain_exact(&self, target: &str) -> Option<(&str, &str)> {
         self.verification_commands
             .iter()
             .find(|(k, _)| k == target)
-            .or_else(|| {
-                self.verification_commands
-                    .iter()
-                    .find(|(k, _)| k == "default")
-            })
             .map(|(key, cmd)| (key.as_str(), cmd.as_str()))
+    }
+
+    /// The reserved `default` chain, if the configuration declares one.
+    #[must_use]
+    pub fn verification_chain_default(&self) -> Option<(&str, &str)> {
+        self.verification_chain_exact("default")
+    }
+
+    /// The verification chain that would run for `target`, together with the key it matched.
+    ///
+    /// [`Self::verification_command_for`] answers "which command", which is enough to run one and not
+    /// enough to describe it: this keeps the matched key so a receipt can name it.
+    #[must_use]
+    pub fn verification_chain_for(&self, target: &str) -> Option<(&str, &str)> {
+        self.verification_chain_exact(target)
+            .or_else(|| self.verification_chain_default())
     }
 
     /// Validate whether the given repo and crate are permitted by this configuration.

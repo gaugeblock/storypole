@@ -52,17 +52,19 @@ pub(super) fn build(
             .scope
             .crate_name
             .as_deref()
-            .and_then(|c| store.config().verification_chain_for(c))
+            .and_then(|c| store.config().verification_chain_exact(c))
             .or_else(|| {
                 task.scope
                     .repo
                     .as_deref()
-                    .and_then(|r| store.config().verification_chain_for(r))
+                    .and_then(|r| store.config().verification_chain_exact(r))
             })
-            // Unscoped task: no crate and no repo, which is normal for harness-level work. Without this,
-            // neither lookup above is called at all and the reserved `default` entry is unreachable
-            // (`GB-272`). The target cannot match a real key, so resolution lands on `default`.
-            .or_else(|| store.config().verification_chain_for("\u{0}unscoped"));
+            // The `default` fallback is taken once, after both exact lookups, and it is the only reason
+            // a task with neither a crate nor a repository still has a chain (`GB-272`). Taking the
+            // fallback per lookup was a real defect: a task naming both matched `default` on the crate
+            // and never reached its own repository's chain, so the harness chain ran for member work
+            // (`GB-316`).
+            .or_else(|| store.config().verification_chain_default());
 
         // `cargo test` is a real check but a much weaker one than a configured fmt+clippy+nextest+docs
         // chain, and a receipt that does not say which ran makes the two indistinguishable. That silence

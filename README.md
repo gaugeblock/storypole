@@ -172,7 +172,7 @@ storypole spool migrate
 
 `storypole` maintains 100% compliance with the canonical 9-Document Architecture:
 * **[`README.md`](./README.md):** Public elevator pitch, command reference, and MCP integration.
-* **[`CONTRIBUTING.md`](docs/CONTRIBUTING.md):** Contributor onboarding, toolchain setup, and verification gates.
+* **[`CONTRIBUTING.md`](CONTRIBUTING.md):** Contributor onboarding, toolchain setup, and verification gates.
 * **[`PRODUCT.md`](docs/PRODUCT.md):** User personas, JTBD, and neurosymbolic task orchestration value.
 * **[`ARCHITECTURE.md`](docs/ARCHITECTURE.md):** Internal sub-crate topologies, SQLite projection, and store synchronization.
 * **[`SPEC.md`](docs/SPEC.md):** Formal event schemas, ledger serialization contracts, and state transition rules.

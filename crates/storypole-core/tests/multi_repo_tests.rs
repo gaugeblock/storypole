@@ -5,6 +5,7 @@
 //! ancestor's, so work in the child is recorded in the parent's ledger and nothing reports it. With one
 //! repository per test that behaviour is invisible, because there is no ancestor to inherit from.
 
+//! multi-repo: two repositories in scope, which is the only way to see cross-repository behaviour.
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use std::fs;

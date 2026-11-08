@@ -53,29 +53,11 @@ impl StorypoleStore {
     }
 
     /// Open an existing storypole repository at or above `start_dir`.
+    ///
+    /// Where the store is, and which of several plausible stores wins, is [`crate::store_locate`]'s
+    /// decision: it is the only place that knows a stub from a ledger and the suite from its members.
     pub fn open(start_dir: &Path) -> Result<Self, StorypoleError> {
-        let (root_dir, dot_dir) = match Self::find_enclosing_store(start_dir) {
-            Some(pair) => pair,
-            None => {
-                let fallback = Self::resolve_dot_dir(start_dir);
-                return Err(StorypoleError::Uninitialized(fallback));
-            }
-        };
-
-        // The upward search must not cross into another repository (`GB-305`). It walks so that a command
-        // run from `src/deep/` finds the store at the repository root, which is the behaviour worth keeping;
-        // but it also walks out of a nested repository into its parent's store, and then the child's work is
-        // recorded in the parent's ledger with nothing to indicate it. Git already knows which repository a
-        // directory belongs to, so the two answers are compared rather than one being trusted.
-        if let Ok(paths) = gaugeblock_workspace::GaugeblockPaths::discover(start_dir)
-            && let Ok(store_root) = std::fs::canonicalize(&root_dir)
-            && let Ok(caller_root) = std::fs::canonicalize(paths.suite_root())
-            && store_root != caller_root
-        {
-            return Err(StorypoleError::Uninitialized(Self::resolve_dot_dir(
-                start_dir,
-            )));
-        }
+        let (root_dir, dot_dir) = crate::store_locate::locate(start_dir)?;
 
         let config_path = dot_dir.join("config.toml");
 

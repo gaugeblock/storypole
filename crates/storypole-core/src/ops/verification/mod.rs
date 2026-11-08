@@ -8,9 +8,7 @@ use self::capture_trace::capture_trace;
 use self::target::{resolve_target_dir, run_miter_verify};
 use crate::dag::is_task_dependency_ready;
 use crate::error::StorypoleError;
-use crate::git::{
-    resolve_commit_shas_between, resolve_current_branch, resolve_head_commit, resolve_merge_base,
-};
+use crate::git::{resolve_current_branch, resolve_head_commit};
 use crate::index::query::{get_all_tasks, get_task_by_id};
 use crate::model::LedgerEvent;
 use crate::model::decision::VerificationReceipt;
@@ -52,17 +50,13 @@ pub fn verify_task(
 
     let git_branch = resolve_current_branch(Some(&target_dir));
     let head_commit_sha = resolve_head_commit(Some(&target_dir));
-    let base_commit_sha = task
-        .active_claim
-        .as_ref()
-        .and_then(|c| c.base_commit_sha.clone())
-        .or_else(|| resolve_merge_base(Some(&target_dir), "main", "HEAD"))
-        .or_else(|| head_commit_sha.clone());
-    let commit_shas = match (&base_commit_sha, &head_commit_sha) {
-        (Some(base), Some(head)) => resolve_commit_shas_between(Some(&target_dir), base, head),
-        (None, Some(head)) => vec![head.clone()],
-        _ => Vec::new(),
-    };
+    let (base_commit_sha, commit_shas) = crate::ops::revision::branch_delta(
+        &target_dir,
+        task.active_claim
+            .as_ref()
+            .and_then(|c| c.base_commit_sha.as_deref()),
+        head_commit_sha.as_deref(),
+    );
 
     let diagnostic_count = if run_compiler && receipt_override.is_none() {
         Some(run_miter_verify(&target_dir)?)
@@ -102,6 +96,15 @@ pub fn verify_task(
     }
     if receipt.commit_shas.is_empty() {
         receipt.commit_shas = commit_shas;
+    }
+    // A receipt covering one commit because no base could be named says so, rather than letting the
+    // count read as a small change (`GB-326`).
+    if receipt.base_commit_sha.is_none() && !receipt.commit_shas.is_empty() {
+        receipt.summary = format!(
+            "{}\n{}",
+            crate::ops::revision::unbounded_window_note(),
+            receipt.summary
+        );
     }
 
     store.record_event(&LedgerEvent::TaskVerified {

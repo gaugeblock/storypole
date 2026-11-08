@@ -79,7 +79,9 @@ pub fn handle_workspace_list(dir: &Path, json: bool) -> Result<()> {
 /// The field is a **lookup map**, not a list of checks: `verification_command_for` resolves it by crate
 /// name first, then repo name, and `verify` falls back to a hardcoded `cargo test` when nothing matches.
 ///
-/// `miter audit` is in the chain because the 250-line limit has been breached and repaired by hand twice
+/// `miter audit` is in the chain twice over: the 250-line limit has been breached and repaired by hand twice
+/// (`GB-220`, `GB-291`), and `--paths` enforces that a crate naming `.gaugeblock` depends on
+/// `gaugeblock-workspace` (`GB-304`) - a rule that was broken in six crates while every one of them compiled.
 /// (`GB-220`, then `GB-291` with nine files) while the check lived only in miter's own documentation. A rule
 /// that is remembered is a rule that is eventually forgotten; a rule in the chain fails the build instead.
 /// So the shape is one entry per repo holding a single `sh -c` command, chained with `&&` so it stops at
@@ -92,7 +94,7 @@ pub(crate) fn default_verification_commands(repo: &str) -> Vec<(String, String)>
             "cargo fmt --all -- --check && \
              cargo clippy --workspace --all-targets -- -D warnings && \
              cargo nextest run --workspace && \
-             miter audit --path . --threshold 250 && \
+             miter audit --path . --threshold 250 --paths && \
              chalkline docs check -d {repo}"
         ),
     )]

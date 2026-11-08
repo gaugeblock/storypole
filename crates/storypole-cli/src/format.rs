@@ -38,6 +38,31 @@ pub fn format_task_table(tasks: &[TaskNode]) -> String {
 }
 
 /// Format a rich task context briefing into human-readable text.
+/// Renders a ticket's description for `show` (`GB-312`).
+///
+/// The field every `update` edits was the one field `show` never printed, so a reader had to reach into
+/// the ledger to find out what a ticket said - which happened twice in one session before this existed.
+/// Lines are indented to keep the key/value column readable, and blank lines are preserved because a
+/// description's paragraphs carry meaning.
+#[must_use]
+pub fn format_description(description: &str) -> String {
+    if description.trim().is_empty() {
+        return String::new();
+    }
+    let mut out = String::from("Description:\n");
+    for line in description.lines() {
+        if line.trim().is_empty() {
+            out.push('\n');
+        } else {
+            out.push_str(&format!("  {line}\n"));
+        }
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests;
+
 pub fn format_task_briefing(b: &TaskContextBriefing) -> String {
     let t = &b.task;
     let mut out = String::new();
@@ -67,6 +92,7 @@ pub fn format_task_briefing(b: &TaskContextBriefing) -> String {
     if let Some(ref cmd) = b.verification_command {
         out.push_str(&format!("Verify Cmd:  {cmd}\n"));
     }
+    out.push_str(&format_description(&t.description));
 
     if let Some(ref claim) = t.active_claim {
         let branch_info = claim

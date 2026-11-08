@@ -9,6 +9,7 @@ use std::fs;
 use std::path::Path;
 
 use storypole_core::config::StorypoleConfig;
+use storypole_core::index::query::get_task_by_id;
 use storypole_core::model::task::TaskScope;
 use storypole_core::ops::mutations::{CreateTaskParams, add_task};
 use storypole_core::ops::workflow::{claim_task, resolve_task_repo};
@@ -105,6 +106,85 @@ fn test_workspace_store_resolves_the_scoped_member_only() {
     assert!(
         resolve_task_repo(store.root_dir(), &unscoped).is_none(),
         "a harness-level task belongs to no repository"
+    );
+}
+
+#[test]
+fn test_claim_places_an_unscoped_member_task_and_persists_it() {
+    let root = tempdir().expect("tempdir");
+    init_repo(root.path());
+    init_repo(&root.path().join("alpha"));
+    fs::create_dir_all(root.path().join(".gaugeblock").join("storypole")).expect("store dir");
+
+    let mut store = StorypoleStore::init(root.path(), StorypoleConfig::default()).expect("init");
+    fs::remove_dir_all(root.path().join(".storypole")).ok();
+
+    // No repo scope, but the task says what it will touch - which is the only clue a claim has.
+    let task = add_task(
+        &mut store,
+        CreateTaskParams {
+            title: "Unscoped but placed".into(),
+            scope: TaskScope {
+                target_files: vec!["alpha/src/lib.rs".into()],
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("add task");
+    assert_eq!(task.scope.repo, None, "the task starts unscoped");
+
+    claim_task(&mut store, task.id, "tester", None).expect("claim task");
+
+    let claimed = get_task_by_id(store.conn(), task.id).expect("read task");
+    assert_eq!(
+        claimed.scope.repo.as_deref(),
+        Some("alpha"),
+        "claim places the task in the member its files name and persists it"
+    );
+}
+
+#[test]
+fn test_a_claim_records_the_member_branch_not_the_harness_branch() {
+    // The receipt defect in miniature (GB-313): before placement, the lease recorded the branch of a
+    // repository the ticket has nothing to do with.
+    let root = tempdir().expect("tempdir");
+    init_repo(root.path());
+    init_repo(&root.path().join("alpha"));
+    fs::create_dir_all(root.path().join(".gaugeblock").join("storypole")).expect("store dir");
+
+    let mut store = StorypoleStore::init(root.path(), StorypoleConfig::default()).expect("init");
+    fs::remove_dir_all(root.path().join(".storypole")).ok();
+
+    let task = add_task(
+        &mut store,
+        CreateTaskParams {
+            title: "Placed claim".into(),
+            scope: TaskScope {
+                target_files: vec!["alpha/src/lib.rs".into()],
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("add task");
+
+    let briefing =
+        claim_task(&mut store, task.id, "tester", Some("feat/placed")).expect("claim task");
+    let claim = briefing
+        .task
+        .active_claim
+        .as_ref()
+        .expect("the lease is recorded");
+    assert_eq!(
+        claim.git_branch.as_deref(),
+        Some("feat/placed"),
+        "the lease names the member branch"
+    );
+    assert_eq!(
+        current_branch(&root.path().join("alpha")),
+        "feat/placed",
+        "and the branch was created in the member, not the harness"
     );
 }
 

@@ -10,8 +10,8 @@
 
 use std::fs;
 use std::path::Path;
-use storypole_core::store::StorypoleStore;
 use storypole_core::StorypoleConfig;
+use storypole_core::store::StorypoleStore;
 use tempfile::tempdir;
 
 /// Runs git in `dir`, asserting success so a broken fixture cannot masquerade as a product defect.
@@ -65,13 +65,12 @@ fn a_nested_repository_without_a_store_is_not_silently_recorded_in_its_parent() 
 
     // The defect this asserts against: an upward walk finds the parent's store and the child's work lands in
     // the parent's ledger, with the ledger looking exactly as it should.
-    match opened {
-        Ok(store) => assert_ne!(
+    // Refusing is the correct outcome too: nothing is recorded anywhere, which is visible.
+    if let Ok(store) = opened {
+        assert_ne!(
             store.ledger_path(),
             parent_store.ledger_path(),
             "a nested repository must not adopt its parent's ledger"
-        ),
-        // Refusing is the correct outcome: nothing is recorded anywhere, which is visible.
-        Err(_) => {}
+        );
     }
 }

@@ -23,12 +23,14 @@ fn fixture(root: &Path) -> StorypoleStore {
     fs::write(root.join("miter").join("Cargo.toml"), "[workspace]\n").expect("manifest");
     fs::create_dir_all(root.join(".gaugeblock").join("storypole")).expect("store dir");
 
-    let mut config = StorypoleConfig::default();
     // `true` exits 0 without producing output: the chain identity is what is under test, not the work.
-    config.verification_commands = vec![
-        ("miter".to_string(), "true".to_string()),
-        ("default".to_string(), "true".to_string()),
-    ];
+    let config = StorypoleConfig {
+        verification_commands: vec![
+            ("miter".to_string(), "true".to_string()),
+            ("default".to_string(), "true".to_string()),
+        ],
+        ..StorypoleConfig::default()
+    };
     let store = StorypoleStore::init(root, config).expect("init");
     fs::remove_dir_all(root.join(".storypole")).ok();
     store

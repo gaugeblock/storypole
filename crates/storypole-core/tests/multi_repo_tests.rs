@@ -10,8 +10,8 @@
 
 use std::fs;
 use std::path::Path;
-use storypole_core::store::StorypoleStore;
 use storypole_core::StorypoleConfig;
+use storypole_core::store::StorypoleStore;
 use tempfile::tempdir;
 
 /// Runs git in `dir`, asserting success so a broken fixture cannot masquerade as a product defect.

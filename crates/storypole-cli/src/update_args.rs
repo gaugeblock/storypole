@@ -10,9 +10,18 @@ pub struct UpdateArgs {
     /// New title for the task
     #[arg(long)]
     pub title: Option<String>,
-    /// New description for the task
-    #[arg(long)]
+    /// New description for the task, replacing whatever is there
+    #[arg(long, conflicts_with_all = ["append_desc", "append_desc_file"])]
     pub desc: Option<String>,
+    /// Append a paragraph to the task's description instead of replacing it
+    #[arg(long)]
+    pub append_desc: Option<String>,
+    /// Append to the description from a file, or `-` for stdin
+    ///
+    /// The shell never touches the content, which matters for the same reason as `--criterion-file`: a
+    /// description is prose, and three silent corruptions in one session came through inline arguments.
+    #[arg(long)]
+    pub append_desc_file: Option<String>,
     /// New priority (1-5)
     #[arg(long)]
     pub priority: Option<u8>,

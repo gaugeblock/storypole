@@ -76,6 +76,23 @@ pub enum StorypoleError {
     #[error("Verification error: {0}")]
     VerificationFailed(String),
 
+    /// Verification of member work that the task does not say belongs to a member (`GB-316`).
+    ///
+    /// Refusing is the point. The alternative - certifying the harness for work that lives in a member -
+    /// produces a receipt that is well-formed, exit-zero, and about the wrong tree; four tickets were
+    /// certified that way before this existed (`GB-313`).
+    #[error(
+        "task {ticket} names {repo} work (from {derived_from}) but has no repository scope, so verifying \
+         it would certify {harness} instead; set it with `storypole update {ticket} --repo {repo}` or \
+         pass --repo explicitly"
+    )]
+    UnscopedMemberWork {
+        ticket: String,
+        repo: String,
+        derived_from: String,
+        harness: String,
+    },
+
     /// Storypole repository uninitialized.
     #[error("Storypole repository not found at '{0}'. Run 'storypole init' first.")]
     Uninitialized(PathBuf),

@@ -26,6 +26,37 @@ fn storypole_member(path: &std::path::Path) -> bool {
     path.join(".git").exists() || path.join("Cargo.toml").exists()
 }
 
+/// Derives where a task belongs, without recording anything (`GB-316`).
+///
+/// `claim` persists what this returns; `verify` refuses to certify when it disagrees with the task. One
+/// function so the two cannot answer differently - a placement that `verify` would not accept is a
+/// placement that should not have been made.
+pub(crate) fn detect_scope(store: &StorypoleStore, task: &crate::model::TaskNode) -> ResolvedScope {
+    if store.root_dir().join(".storypole").is_dir() {
+        // A member store owns its tasks outright; there is nothing to place and nothing to refuse.
+        return ResolvedScope {
+            repo: None,
+            source: crate::ops::scope::ScopeSource::Harness,
+        };
+    }
+    let members: Vec<String> =
+        gaugeblock_workspace::WorkspaceTopology::discover_with(store.root_dir(), storypole_member)
+            .members()
+            .iter()
+            .map(|member| member.name.clone())
+            .collect();
+    let caller_dir = std::env::current_dir().ok();
+    resolve_scope(
+        None,
+        task.scope.repo.as_deref(),
+        &task.scope.target_files,
+        &task.scope.target_symbols,
+        &members,
+        caller_dir.as_deref(),
+        store.root_dir(),
+    )
+}
+
 /// Places a task in a member repository, persisting the derivation (`GB-316`).
 ///
 /// A member store owns its tasks outright, so there is nothing to place. A workspace store owns no
@@ -38,26 +69,7 @@ pub(crate) fn place_task(
     store: &mut StorypoleStore,
     task: crate::model::TaskNode,
 ) -> Result<crate::model::TaskNode, StorypoleError> {
-    if store.root_dir().join(".storypole").is_dir() {
-        return Ok(task);
-    }
-    let members: Vec<String> =
-        gaugeblock_workspace::WorkspaceTopology::discover_with(store.root_dir(), storypole_member)
-            .members()
-            .iter()
-            .map(|member| member.name.clone())
-            .collect();
-    let caller_dir = std::env::current_dir().ok();
-    let resolved: ResolvedScope = resolve_scope(
-        None,
-        task.scope.repo.as_deref(),
-        &task.scope.target_files,
-        &task.scope.target_symbols,
-        &members,
-        caller_dir.as_deref(),
-        store.root_dir(),
-    );
-
+    let resolved = detect_scope(store, &task);
     let Some(repo) = resolved.repo else {
         return Ok(task);
     };

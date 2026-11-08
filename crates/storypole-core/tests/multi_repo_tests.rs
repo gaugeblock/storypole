@@ -34,6 +34,97 @@ fn repo_with_store(root: &Path) -> StorypoleStore {
     StorypoleStore::init(root, StorypoleConfig::default()).expect("init store")
 }
 
+/// A suite that declares `members` and holds a storypole ledger at its root.
+fn suite_with_members(root: &Path, members: &[&str]) -> StorypoleStore {
+    // The store must live in `.gaugeblock/storypole` for the suite layout to exist at all: `init` picks
+    // `.storypole` when that directory is absent, which is the standalone shape.
+    fs::create_dir_all(root.join(".gaugeblock").join("storypole")).expect("suite store dir");
+    let store = StorypoleStore::init(root, StorypoleConfig::default()).expect("init suite store");
+    fs::remove_dir_all(root.join(".storypole")).ok();
+    let list: Vec<String> = members.iter().map(|m| format!("\"{m}\"")).collect();
+    fs::write(
+        root.join(".gaugeblock").join("config.toml"),
+        format!("[suite]\nmembers = [{}]\n", list.join(", ")),
+    )
+    .expect("suite declaration");
+    store
+}
+
+#[test]
+fn a_member_repository_reads_the_suite_ledger_rather_than_its_own_stub() {
+    // The defect: a member carries `.gaugeblock/storypole` holding an index and no ledger, so the upward
+    // walk found it first and opened an empty store. `storypole verify` then reported "task not found"
+    // from inside the repository where the work lives (`GB-316`).
+    let tmp = tempdir().expect("tempdir");
+    let suite_store = suite_with_members(tmp.path(), &["miter"]);
+
+    let member = tmp.path().join("miter");
+    fs::create_dir_all(member.join(".git")).expect("member checkout");
+    fs::create_dir_all(member.join(".gaugeblock").join("storypole")).expect("stub dir");
+    fs::write(
+        member
+            .join(".gaugeblock")
+            .join("storypole")
+            .join("index.sqlite"),
+        b"",
+    )
+    .expect("stub index");
+    let deep = member.join("crates").join("engine");
+    fs::create_dir_all(&deep).expect("deep dir");
+
+    let opened = StorypoleStore::open(&deep).expect("a member can open the suite's store");
+
+    assert_eq!(
+        opened.ledger_path(),
+        suite_store.ledger_path(),
+        "a stub is not a store, so the member reads the suite ledger"
+    );
+    assert_eq!(
+        opened.root_dir(),
+        tmp.path(),
+        "and it knows which suite it is in"
+    );
+}
+
+#[test]
+fn a_member_with_a_ledger_of_its_own_keeps_it() {
+    // The other side: a member repository used on its own has its own backlog, and the suite above it
+    // must not take that over.
+    let tmp = tempdir().expect("tempdir");
+    let _suite = suite_with_members(tmp.path(), &["miter"]);
+
+    let member = tmp.path().join("miter");
+    fs::create_dir_all(member.join(".git")).expect("member checkout");
+    let own = repo_with_store(&member);
+    fs::write(own.ledger_path(), "").expect("own ledger");
+
+    let opened = StorypoleStore::open(&member).expect("opens");
+
+    assert_eq!(
+        opened.ledger_path(),
+        own.ledger_path(),
+        "a member holding a ledger keeps it: the suite does not overwrite intent"
+    );
+}
+
+#[test]
+fn a_suite_that_declares_no_members_answers_for_none() {
+    // The safe direction: a repository that cannot prove it belongs somewhere keeps its own ledger.
+    let tmp = tempdir().expect("tempdir");
+    let _suite_store = repo_with_store(tmp.path());
+    let member = tmp.path().join("miter");
+    fs::create_dir_all(member.join(".git")).expect("member checkout");
+    let own = repo_with_store(&member);
+
+    let opened = StorypoleStore::open(&member).expect("opens");
+
+    assert_eq!(
+        opened.ledger_path(),
+        own.ledger_path(),
+        "no declaration means no adoption"
+    );
+}
+
 #[test]
 fn sibling_repositories_do_not_share_a_ledger() {
     let tmp = tempdir().expect("tempdir");

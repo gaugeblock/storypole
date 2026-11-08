@@ -116,4 +116,8 @@ pub enum StorypoleError {
     /// Ledger file is corrupted or unreadable.
     #[error("Corrupt ledger at line {line}: {reason}")]
     CorruptLedger { line: usize, reason: String },
+
+    /// A ticket record could not be read, written or locked (`GB-329`).
+    #[error("Ticket record at '{path}': {reason}")]
+    TicketRecord { path: PathBuf, reason: String },
 }

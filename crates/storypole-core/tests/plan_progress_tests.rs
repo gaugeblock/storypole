@@ -82,6 +82,41 @@ fn a_partial_update_keeps_the_steps_it_does_not_mention() {
 }
 
 #[test]
+fn a_partial_merge_keeps_completed_steps_and_does_not_refuse() {
+    // Found by running the new refusal against a real six-step plan: it fired on a merge that was about
+    // to keep every step, because loss was measured before the union (`GB-321`).
+    let tmp = tempdir().expect("tempdir");
+    let mut store = store_at(tmp.path());
+    let id = task(&mut store);
+    set_task_plan_with(
+        &mut store,
+        id,
+        plan(vec![step("one"), step("two"), step("three")]),
+        PlanUpdate::Merge,
+        false,
+    )
+    .expect("attach");
+    set_plan_step_complete(&mut store, id, "one", true).expect("complete one");
+
+    let updated = set_task_plan_with(
+        &mut store,
+        id,
+        plan(vec![step("two")]),
+        PlanUpdate::Merge,
+        false,
+    )
+    .expect("a merge keeps the steps it does not mention, so nothing is lost");
+
+    assert!(
+        updated
+            .steps
+            .iter()
+            .any(|s| s.step_id == "one" && s.completed)
+    );
+    assert_eq!(updated.steps.len(), 3);
+}
+
+#[test]
 fn completion_survives_an_update_that_restates_the_step() {
     let tmp = tempdir().expect("tempdir");
     let mut store = store_at(tmp.path());

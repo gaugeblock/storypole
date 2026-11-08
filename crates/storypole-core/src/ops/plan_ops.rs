@@ -59,6 +59,19 @@ fn reconcile_steps(
         }
     }
 
+    if update == PlanUpdate::Merge {
+        // Steps the new plan does not mention are kept, so a partial update cannot quietly erase the
+        // rest of the plan - which is exactly what happened when `plan set` replaced wholesale.
+        for old in existing {
+            if !incoming.iter().any(|new| new.step_id == old.step_id) {
+                incoming.push(old.clone());
+            }
+        }
+    }
+
+    // Loss is measured against the *result*, not the input. Measuring it against the input refused a
+    // merge that was about to keep every step, because the union had not run yet - caught by running
+    // the new refusal against a real six-step plan, not by its tests (`GB-321`).
     let dropped: Vec<String> = existing
         .iter()
         .filter(|old| !incoming.iter().any(|new| new.step_id == old.step_id))
@@ -70,16 +83,6 @@ fn reconcile_steps(
             ticket: ticket.to_string(),
             steps: dropped,
         });
-    }
-
-    if update == PlanUpdate::Merge {
-        // Steps the new plan does not mention are kept, so a partial update cannot quietly erase the
-        // rest of the plan - which is exactly what happened when `plan set` replaced wholesale.
-        for old in existing {
-            if !incoming.iter().any(|new| new.step_id == old.step_id) {
-                incoming.push(old.clone());
-            }
-        }
     }
 
     Ok(incoming)

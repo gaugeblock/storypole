@@ -90,7 +90,7 @@ pub fn apply(
     }
 
     // Phase 2: the new records must reproduce the ledger's tasks, or nothing else happens.
-    verify(state, &destinations)?;
+    verify(state, plan, &destinations)?;
 
     // Phase 3: only now is the original superseded.
     let archive = archive_ledger(source_dot)?;
@@ -121,10 +121,16 @@ fn destination_of(
 ///
 /// The comparison is over fields a reader would see, not over event bytes: the migration is allowed to change
 /// how history is stored, and is not allowed to change what it says.
-fn verify(state: &LoadedState, destinations: &BTreeSet<PathBuf>) -> Result<(), StorypoleError> {
+fn verify(
+    state: &LoadedState,
+    plan: &Plan,
+    destinations: &BTreeSet<PathBuf>,
+) -> Result<(), StorypoleError> {
     let mut wanted: BTreeMap<Uuid, String> = BTreeMap::new();
-    for task in state.tasks.values() {
-        wanted.insert(task.id, fingerprint(task));
+    for assignment in &plan.assignments {
+        if let Some(task) = state.tasks.get(&assignment.task_id) {
+            wanted.insert(task.id, fingerprint(task));
+        }
     }
 
     for destination in destinations {
@@ -142,15 +148,9 @@ fn verify(state: &LoadedState, destinations: &BTreeSet<PathBuf>) -> Result<(), S
                         ),
                     });
                 }
-                None => {
-                    return Err(StorypoleError::MigrationDivergence {
-                        ticket: task.ticket_key.clone(),
-                        detail: format!(
-                            "{} holds task {id}, which the ledger did not",
-                            destination.display()
-                        ),
-                    });
-                }
+                // Not in this plan: a ticket an earlier migration already placed here. Only this
+                // run's assignments are its responsibility (`GB-331`).
+                None => {}
             }
         }
     }
@@ -160,10 +160,11 @@ fn verify(state: &LoadedState, destinations: &BTreeSet<PathBuf>) -> Result<(), S
     for destination in destinations {
         replayed.extend(state::load(destination)?.tasks.keys().copied());
     }
-    for (id, task) in &state.tasks {
+    for assignment in &plan.assignments {
+        let id = &assignment.task_id;
         if !replayed.contains(id) {
             return Err(StorypoleError::MigrationDivergence {
-                ticket: task.ticket_key.clone(),
+                ticket: assignment.ticket_key.clone(),
                 detail: format!("task {id} was not written to any destination"),
             });
         }

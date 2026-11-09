@@ -63,3 +63,31 @@ fn an_existing_legacy_store_still_opens() {
     assert_eq!(store.dot_dir(), legacy);
     assert_eq!(store.storage_mode(), StorageMode::Ledger);
 }
+
+#[test]
+fn a_repository_with_gaugeblock_but_no_store_gets_the_canonical_directory() {
+    // The shape `common` has: `.gaugeblock` exists for docs.toml, and nothing else. The old fallback returned
+    // `.storypole` here, so a migration would have created a legacy store in a repository that never had one.
+    let temp = TempDir::new().unwrap();
+    fs::create_dir_all(temp.path().join(".gaugeblock")).unwrap();
+    fs::write(temp.path().join(".gaugeblock").join("docs.toml"), "").unwrap();
+
+    let dot = StorypoleStore::resolve_dot_dir(temp.path());
+
+    assert_eq!(
+        dot,
+        temp.path().join(".gaugeblock").join("storypole"),
+        "a new store belongs in the canonical location"
+    );
+}
+
+#[test]
+fn a_repository_with_only_a_legacy_directory_keeps_it() {
+    let temp = TempDir::new().unwrap();
+    fs::create_dir_all(temp.path().join(".storypole")).unwrap();
+
+    assert_eq!(
+        StorypoleStore::resolve_dot_dir(temp.path()),
+        temp.path().join(".storypole")
+    );
+}

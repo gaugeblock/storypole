@@ -2,9 +2,6 @@
 
 use crate::config::StorypoleConfig;
 use crate::error::StorypoleError;
-use crate::index::{open_and_sync_index, open_and_sync_records};
-use crate::ledger::append_event;
-use crate::model::LedgerEvent;
 use crate::storage_mode::{StorageMode, sync_index};
 use rusqlite::Connection;
 use std::fs;
@@ -31,12 +28,17 @@ impl StorypoleStore {
     /// a git repository, where `GaugeblockPaths::discover` deliberately refuses. Storypole stores are
     /// created in bare temp dirs and before the first commit, so resolution cannot require a checkout.
     pub fn resolve_dot_dir(root_dir: &Path) -> PathBuf {
-        let gb_dir = gaugeblock_workspace::GaugeblockPaths::at(root_dir).member("storypole");
-        if gb_dir.is_dir() {
-            gb_dir
-        } else {
-            root_dir.join(".storypole")
+        let canonical = gaugeblock_workspace::GaugeblockPaths::at(root_dir).member("storypole");
+        if canonical.is_dir() {
+            return canonical;
         }
+        // Legacy only when it is actually there: an unconditional fallback created `.storypole` in every
+        // repository that has `.gaugeblock` for other reasons, which misfiled seven tickets (`GB-331`).
+        let legacy = root_dir.join(".storypole");
+        if legacy.is_dir() {
+            return legacy;
+        }
+        canonical
     }
 
     /// Discover the nearest enclosing repository containing `.gaugeblock/storypole` or `.storypole`,
@@ -195,44 +197,6 @@ impl StorypoleStore {
         self.dot_dir.join("index.sqlite")
     }
 
-    /// Record a ledger event, sync SQLite index, and persist to disk.
-    pub fn record_event(&mut self, event: &LedgerEvent) -> Result<(), StorypoleError> {
-        match self.mode {
-            StorageMode::Ledger => {
-                let ledger = self.ledger_path();
-                append_event(&ledger, event)?;
-                self.conn = open_and_sync_index(&self.sqlite_path(), &ledger)?;
-            }
-            StorageMode::Records => {
-                // One target only. Writing both layouts would be the divergence GB-79 documents.
-                crate::store_records::record_event(&self.conn, &self.dot_dir, event)?;
-                self.conn = open_and_sync_records(&self.sqlite_path(), &self.dot_dir)?;
-            }
-        }
-        Ok(())
-    }
-
-    /// Records the creation of a task, reporting whether the ticket key was free (`GB-345`).
-    ///
-    /// In records mode the record is published exclusively, so a caller that gets `false` retries with the
-    /// next key instead of overwriting another process's ticket. The ledger has no exclusive append, so it
-    /// answers `true` and the residual duplicate-key risk stays a known limitation of that layout.
-    pub fn record_creation(&mut self, event: &LedgerEvent) -> Result<bool, StorypoleError> {
-        match self.mode {
-            StorageMode::Ledger => {
-                self.record_event(event)?;
-                Ok(true)
-            }
-            StorageMode::Records => {
-                let created = crate::store_records::create_task(&self.dot_dir, event)?;
-                if created {
-                    self.conn = open_and_sync_records(&self.sqlite_path(), &self.dot_dir)?;
-                }
-                Ok(created)
-            }
-        }
-    }
-
     /// Which layout this store reads and writes.
     pub fn storage_mode(&self) -> StorageMode {
         self.mode
@@ -246,3 +210,5 @@ impl StorypoleStore {
             .unwrap_or(0)
     }
 }
+
+mod writes;

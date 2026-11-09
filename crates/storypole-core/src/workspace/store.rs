@@ -81,6 +81,9 @@ impl StorypoleWorkspaceStore {
         for (name, store) in &self.member_stores {
             sources.push((name.clone(), store));
         }
+        // Members come from a HashMap, so without this the duplicate-task message names the same pair in a
+        // different order on every run - a report that changes wording is a report people stop trusting.
+        sources.sort_by(|a, b| a.0.cmp(&b.0));
 
         let mut seen: BTreeMap<Uuid, String> = BTreeMap::new();
         for (label, store) in &sources {

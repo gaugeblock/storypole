@@ -88,6 +88,26 @@
       "scope": null,
       "acceptance_criteria": null,
       "timestamp_ms": 1794212639679
+    },
+    {
+      "event": "task_verified",
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794212684118,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "5bca943e8066a9a6f15a29e1402df5f447e47b0f",
+        "commit_shas": [
+          "5bca943e8066a9a6f15a29e1402df5f447e47b0f"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
     }
   ]
 }

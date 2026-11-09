@@ -164,3 +164,41 @@ fn a_record_named_for_a_different_ticket_is_reported() {
     let error = storypole_core::tickets::read_all(store.dot_dir()).unwrap_err();
     assert!(error.to_string().contains("named GB-999"), "{error}");
 }
+
+#[test]
+fn a_second_creation_on_the_same_key_is_refused_rather_than_overwriting() {
+    // GB-345: two processes can choose the same ticket number, so publication has to decide a winner instead
+    // of letting the later write replace the earlier ticket. `create` answers false; the caller retries.
+    let temp = TempDir::new().unwrap();
+    let store = records_store(&temp);
+    let first = Uuid::from_u128(31);
+    let second = Uuid::from_u128(32);
+
+    let mine = storypole_core::tickets::TicketRecord::new(
+        task(first, "GB-31"),
+        vec![LedgerEvent::TaskCreated {
+            task: task(first, "GB-31"),
+        }],
+    );
+    let theirs = storypole_core::tickets::TicketRecord::new(
+        task(second, "GB-31"),
+        vec![LedgerEvent::TaskCreated {
+            task: task(second, "GB-31"),
+        }],
+    );
+    let path = storypole_core::tickets::path(store.dot_dir(), "GB-31").unwrap();
+
+    assert!(
+        storypole_core::tickets::create(&path, &mine).unwrap(),
+        "first wins"
+    );
+    assert!(
+        !storypole_core::tickets::create(&path, &theirs).unwrap(),
+        "second is told it lost rather than silently replacing the first"
+    );
+    assert_eq!(
+        storypole_core::tickets::read(&path).unwrap().ticket.id,
+        first,
+        "the winning ticket is still the one on disk"
+    );
+}

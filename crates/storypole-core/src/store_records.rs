@@ -62,3 +62,23 @@ fn carried_key(event: &LedgerEvent) -> Option<&str> {
         _ => None,
     }
 }
+
+/// Publishes the record for a newly created task, refusing to replace an existing ticket (`GB-345`).
+///
+/// Returns `false` when the key is already taken, which the caller answers by choosing the next one.
+///
+/// # Errors
+///
+/// [`StorypoleError::TicketRecord`] when the event does not carry a whole task or the record cannot be written.
+pub fn create_task(dot_dir: &Path, event: &LedgerEvent) -> Result<bool, StorypoleError> {
+    let key = carried_key(event).ok_or_else(|| StorypoleError::TicketRecord {
+        path: tickets::dir(dot_dir),
+        reason: "only a creation event can publish a new record".to_string(),
+    })?;
+    let task = match event {
+        LedgerEvent::TaskCreated { task } | LedgerEvent::DeferredItemCaptured { task, .. } => task,
+        _ => unreachable!("carried_key established the variant"),
+    };
+    let record = tickets::TicketRecord::new(task.clone(), vec![event.clone()]);
+    tickets::create(&tickets::path(dot_dir, key)?, &record)
+}

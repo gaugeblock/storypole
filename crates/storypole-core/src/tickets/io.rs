@@ -129,3 +129,56 @@ fn seed_record(key: &str, event: &LedgerEvent) -> Option<TicketRecord> {
         _ => None,
     }
 }
+
+/// Publishes a new record, refusing to replace an existing one (`GB-345`).
+///
+/// The file is written completely first and then hard-linked into place. A hard link is atomic and fails when
+/// the destination exists, so the operating system picks exactly one winner per key: two processes that chose
+/// the same ticket number cannot overwrite each other, and the loser learns it lost.
+///
+/// Returns `false` when the target already exists - a collision for the caller to retry with the next key,
+/// not an error, because nothing is wrong with either request.
+///
+/// # Errors
+///
+/// [`StorypoleError::TicketRecord`] when the record cannot be written or linked into place.
+pub fn create(path: &Path, record: &TicketRecord) -> Result<bool, StorypoleError> {
+    let parent = path.parent().ok_or_else(|| StorypoleError::TicketRecord {
+        path: path.to_path_buf(),
+        reason: "record path has no parent directory".to_string(),
+    })?;
+    fs::create_dir_all(parent).map_err(|e| StorypoleError::TicketRecord {
+        path: parent.to_path_buf(),
+        reason: e.to_string(),
+    })?;
+
+    let stem = path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("record");
+    let seq = WRITE_SEQ.fetch_add(1, Ordering::Relaxed);
+    let temp = parent.join(format!(".{stem}.{}.{seq}.new", std::process::id()));
+
+    let bytes = serde_json::to_vec_pretty(record).map_err(|e| StorypoleError::TicketRecord {
+        path: path.to_path_buf(),
+        reason: e.to_string(),
+    })?;
+    if let Err(e) = fs::write(&temp, &bytes) {
+        let _ = fs::remove_file(&temp);
+        return Err(StorypoleError::TicketRecord {
+            path: temp,
+            reason: e.to_string(),
+        });
+    }
+
+    let linked = fs::hard_link(&temp, path);
+    let _ = fs::remove_file(&temp);
+    match linked {
+        Ok(()) => Ok(true),
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
+        Err(e) => Err(StorypoleError::TicketRecord {
+            path: path.to_path_buf(),
+            reason: e.to_string(),
+        }),
+    }
+}

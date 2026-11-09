@@ -9,6 +9,11 @@
 
 use std::path::Path;
 
+use rusqlite::Connection;
+
+use crate::error::StorypoleError;
+use crate::index::{open_and_sync_index, open_and_sync_records};
+
 use crate::tickets;
 
 /// The authoritative ticket layout for one store.
@@ -33,6 +38,22 @@ impl StorageMode {
             Self::Ledger
         }
     }
+}
+
+/// Opens the index for whichever layout `dot_dir` uses.
+///
+/// Lives here rather than in `store.rs` because the choice is the mode's, and because that file is at its
+/// line limit.
+pub(crate) fn sync_index(
+    sqlite_path: &Path,
+    dot_dir: &Path,
+) -> Result<(Connection, StorageMode), StorypoleError> {
+    let mode = StorageMode::detect(dot_dir);
+    let conn = match mode {
+        StorageMode::Records => open_and_sync_records(sqlite_path, dot_dir)?,
+        StorageMode::Ledger => open_and_sync_index(sqlite_path, &dot_dir.join("ledger.jsonl"))?,
+    };
+    Ok((conn, mode))
 }
 
 #[cfg(test)]

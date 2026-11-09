@@ -91,7 +91,7 @@ fn event_count(dot: &Path, key: &str) -> usize {
 }
 
 #[test]
-#[ignore = "GB-345: concurrent add mints one key twice and the second record overwrites the first"]
+#[ignore = "GB-347: each worktree owns its store by design (ADR 0009), so this measures branch-local keys, not a race"]
 fn two_worktrees_creating_tickets_lose_neither() {
     let temp = TempDir::new().unwrap();
     let Some((main, linked)) = records_suite(temp.path()) else {

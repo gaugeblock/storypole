@@ -5,7 +5,7 @@ use crate::error::StorypoleError;
 use crate::index::{open_and_sync_index, open_and_sync_records};
 use crate::ledger::append_event;
 use crate::model::LedgerEvent;
-use crate::storage_mode::StorageMode;
+use crate::storage_mode::{StorageMode, sync_index};
 use rusqlite::Connection;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -212,6 +212,27 @@ impl StorypoleStore {
         Ok(())
     }
 
+    /// Records the creation of a task, reporting whether the ticket key was free (`GB-345`).
+    ///
+    /// In records mode the record is published exclusively, so a caller that gets `false` retries with the
+    /// next key instead of overwriting another process's ticket. The ledger has no exclusive append, so it
+    /// answers `true` and the residual duplicate-key risk stays a known limitation of that layout.
+    pub fn record_creation(&mut self, event: &LedgerEvent) -> Result<bool, StorypoleError> {
+        match self.mode {
+            StorageMode::Ledger => {
+                self.record_event(event)?;
+                Ok(true)
+            }
+            StorageMode::Records => {
+                let created = crate::store_records::create_task(&self.dot_dir, event)?;
+                if created {
+                    self.conn = open_and_sync_records(&self.sqlite_path(), &self.dot_dir)?;
+                }
+                Ok(created)
+            }
+        }
+    }
+
     /// Which layout this store reads and writes.
     pub fn storage_mode(&self) -> StorageMode {
         self.mode
@@ -224,17 +245,4 @@ impl StorypoleStore {
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0)
     }
-}
-
-/// Opens the index for whichever layout `dot_dir` uses.
-fn sync_index(
-    sqlite_path: &Path,
-    dot_dir: &Path,
-) -> Result<(Connection, StorageMode), StorypoleError> {
-    let mode = StorageMode::detect(dot_dir);
-    let conn = match mode {
-        StorageMode::Records => open_and_sync_records(sqlite_path, dot_dir)?,
-        StorageMode::Ledger => open_and_sync_index(sqlite_path, &dot_dir.join("ledger.jsonl"))?,
-    };
-    Ok((conn, mode))
 }

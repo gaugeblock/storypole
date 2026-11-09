@@ -32,7 +32,7 @@ pub mod order;
 #[cfg(test)]
 mod tests;
 
-pub use io::{append_event, read, write};
+pub use io::{append_event, create, read, write};
 pub use lock::TicketLock;
 pub use order::{event_timestamp, order_events, task_id_of_event};
 

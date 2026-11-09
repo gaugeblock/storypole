@@ -12,6 +12,7 @@ pub mod leases;
 pub mod ledger;
 pub mod model;
 pub mod ops;
+pub mod state;
 pub mod storage_mode;
 pub mod store;
 mod store_locate;

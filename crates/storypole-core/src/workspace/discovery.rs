@@ -67,7 +67,10 @@ fn is_storypole_member(path: &Path) -> bool {
     {
         return false;
     }
+    // Both layouts: a member is discovered by its store, and the canonical one lives under `.gaugeblock`
+    // since GB-344, so checking only `.storypole` silently stopped finding members.
     path.join(".storypole").is_dir()
+        || path.join(".gaugeblock").join("storypole").is_dir()
         || path.join(".git").is_dir()
         || path.join(".git").is_file()
         || path.join("Cargo.toml").is_file()

@@ -42,9 +42,7 @@ fn task(id: Uuid, key: &str) -> TaskNode {
 
 /// A store whose layout is records: initialise, then create the directory the migration would create.
 fn records_store(temp: &TempDir) -> StorypoleStore {
-    // `.gaugeblock` has to exist before init, or init falls back to the legacy `.storypole` directory and
-    // the tickets directory we then create belongs to a different store.
-    fs::create_dir_all(temp.path().join(".gaugeblock")).expect("suite state directory");
+    // No pre-creation of `.gaugeblock` any more: init writes there itself since GB-344.
     StorypoleStore::init(temp.path(), StorypoleConfig::default()).expect("init");
     fs::create_dir_all(
         temp.path()

@@ -49,12 +49,16 @@ fn test_set_task_plan_persistence() {
     let updated_plan = set_task_plan(&mut store, task.id, plan).expect("set_task_plan");
     assert_eq!(
         updated_plan.plan_file_path,
-        Some(format!(".storypole/plans/{}.md", task.ticket_key))
+        Some(format!(
+            ".gaugeblock/storypole/plans/{}.md",
+            task.ticket_key
+        ))
     );
 
     let plan_file_on_disk = tmp
         .path()
-        .join(".storypole")
+        .join(".gaugeblock")
+        .join("storypole")
         .join("plans")
         .join(format!("{}.md", task.ticket_key));
     assert!(

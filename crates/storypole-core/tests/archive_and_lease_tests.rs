@@ -40,7 +40,13 @@ fn new_task(store: &mut StorypoleStore) -> Uuid {
 }
 
 fn ledger_text(dir: &TempDir) -> String {
-    fs::read_to_string(dir.path().join(".storypole").join("ledger.jsonl")).expect("ledger")
+    fs::read_to_string(
+        dir.path()
+            .join(".gaugeblock")
+            .join("storypole")
+            .join("ledger.jsonl"),
+    )
+    .expect("ledger")
 }
 
 /// Puts a task `InProgress` under a lease that expired at `expires_at_epoch_ms`.

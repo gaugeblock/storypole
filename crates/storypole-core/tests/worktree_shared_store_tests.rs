@@ -154,3 +154,36 @@ fn two_agents_in_two_worktrees_lose_no_event() {
     );
     assert_eq!(stored.replay().unwrap().status, TaskStatus::InProgress);
 }
+
+#[test]
+fn the_store_opens_from_a_worktree_and_lands_on_the_main_checkout() {
+    // GB-346: the ancestor walk cannot see a sibling worktree, so before this fix a command run from a
+    // worktree either failed or built a second store. ADR 0001 says state follows the git common dir;
+    // GaugeblockPaths already did, and the store now agrees with it.
+    let temp = TempDir::new().unwrap();
+    let Some(linked) = repo_with_worktree(&temp) else {
+        eprintln!("git worktree unavailable; skipping");
+        return;
+    };
+    let main = temp.path().join("main");
+    let main_store = storypole_core::store::StorypoleStore::init(
+        &main,
+        storypole_core::config::StorypoleConfig::default(),
+    )
+    .expect("init in the main checkout");
+
+    let from_worktree =
+        storypole_core::store::StorypoleStore::open(&linked).expect("open from worktree");
+
+    // Both answers name one directory; macOS reaches it as /var and git reports /private/var, so the
+    // comparison canonicalises rather than comparing spellings (the trap GB-327 hit).
+    assert_eq!(
+        fs::canonicalize(from_worktree.dot_dir()).unwrap(),
+        fs::canonicalize(main_store.dot_dir()).unwrap(),
+        "one repository, one store, whichever checkout asks"
+    );
+    assert!(
+        !linked.join(".gaugeblock").exists(),
+        "and no second store was created in the worktree"
+    );
+}

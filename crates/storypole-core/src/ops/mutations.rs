@@ -47,6 +47,12 @@ pub fn slugify(title: &str) -> String {
     slug.trim_end_matches('-').to_string()
 }
 
+/// How many ticket numbers one creation will try before giving up.
+///
+/// Generous because a retry costs one index read, and cheap because contention is the only thing that
+/// consumes an attempt.
+const MAX_KEY_ATTEMPTS: u64 = 64;
+
 /// Create and persist a new task node.
 pub fn add_task(
     store: &mut StorypoleStore,
@@ -58,8 +64,9 @@ pub fn add_task(
     )?;
 
     let prefix = store.config().ticket_prefix.clone();
-    let max_num = get_max_ticket_number(store.conn(), &prefix)?;
-    let ticket_key = format!("{}-{}", prefix, max_num + 1);
+    // The key is chosen here and published below, so two processes can choose the same one. The record is
+    // published exclusively and the loser retries from the next number (`GB-345`).
+    let mut ticket_key = String::new();
     let now = StorypoleStore::now_ms();
     let id = Uuid::new_v4();
     let slug = format!("{}-{}", slugify(&params.title), &id.to_string()[..6]);
@@ -70,7 +77,7 @@ pub fn add_task(
         TaskStatus::Blocked
     });
 
-    let task = TaskNode {
+    let mut task = TaskNode {
         id,
         ticket_key,
         slug,
@@ -97,8 +104,21 @@ pub fn add_task(
         validate_no_cycle(&all_tasks, task.id, edge.target_id, edge.kind)?;
     }
 
-    store.record_event(&LedgerEvent::TaskCreated { task: task.clone() })?;
-    Ok(task)
+    let mut highest = get_max_ticket_number(store.conn(), &prefix)?;
+    for _ in 0..MAX_KEY_ATTEMPTS {
+        highest += 1;
+        ticket_key = format!("{prefix}-{highest}");
+        task.ticket_key = ticket_key.clone();
+        if store.record_creation(&LedgerEvent::TaskCreated { task: task.clone() })? {
+            return Ok(task);
+        }
+    }
+    Err(StorypoleError::TicketRecord {
+        path: store.dot_dir().to_path_buf(),
+        reason: format!(
+            "no free {prefix} key after {MAX_KEY_ATTEMPTS} attempts; another writer holds every              candidate and none is retryable"
+        ),
+    })
 }
 
 /// Update fields on an existing task node.

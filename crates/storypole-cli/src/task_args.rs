@@ -4,6 +4,7 @@
 //! from `crate::args`, so every existing import path keeps working.
 
 use clap::Args;
+use storypole_core::model::task::TaskKind;
 
 #[derive(Debug, Args)]
 pub struct HandoffArgs {
@@ -101,31 +102,22 @@ pub struct VerifyArgs {
     pub summary: Option<String>,
 }
 
-/// Kinds a task can be, as the parser accepts them.
-pub(crate) const KIND_NAMES: [&str; 8] = [
-    "epic",
-    "bug",
-    "refactor",
-    "tech_debt",
-    "spike",
-    "feature",
-    "chore",
-    "docs",
-];
+/// Kinds a task can be, derived from the contract so the two cannot drift (`GB-343`).
+pub(crate) fn kind_names() -> Vec<&'static str> {
+    TaskKind::ALL.into_iter().map(TaskKind::as_str).collect()
+}
 
 /// Validates a `--kind` value, for clap.
 ///
 /// Unknown values used to become `Feature` silently, so `--kind perf` created a Feature and said
 /// nothing (`GB-196`). A misspelled kind is a mistake to report, not to reinterpret.
 pub(crate) fn valid_kind(value: &str) -> Result<String, String> {
-    let normalised = value.to_lowercase().replace('-', "_");
-    if KIND_NAMES.contains(&normalised.as_str()) {
-        Ok(normalised)
-    } else {
-        Err(format!(
+    match TaskKind::from_wire(value) {
+        Some(kind) => Ok(kind.as_str().to_string()),
+        None => Err(format!(
             "unknown kind `{value}`; expected one of: {}",
-            KIND_NAMES.join(", ")
-        ))
+            kind_names().join(", ")
+        )),
     }
 }
 
@@ -147,11 +139,26 @@ mod kind_tests {
     }
 
     #[test]
-    fn an_unknown_kind_lists_docs_among_the_choices() {
-        let message = valid_kind("perf").unwrap_err();
+    fn every_kind_the_contract_declares_is_accepted() {
+        // The drift this replaces: the CLI kept its own array, so a kind could exist in the contract and be
+        // rejected by the tool that creates tasks (`GB-343`).
+        for kind in storypole_core::model::task::TaskKind::ALL {
+            assert_eq!(valid_kind(kind.as_str()).unwrap(), kind.as_str());
+        }
+    }
+
+    #[test]
+    fn an_unknown_kind_lists_the_accepted_kinds() {
+        // The probe must stay a value no kind claims: perf was unknown until GB-343 and is now valid,
+        // which is how this test failed the moment the kinds were added.
+        let message = valid_kind("nonsense").unwrap_err();
         assert!(
             message.contains("docs"),
             "the error names what is accepted: {message}"
+        );
+        assert!(
+            message.contains("build"),
+            "including kinds added after this test was written: {message}"
         );
         assert!(
             message.contains("unknown kind"),

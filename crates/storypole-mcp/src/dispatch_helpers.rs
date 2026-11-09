@@ -56,16 +56,9 @@ pub fn parse_scope(val: &Value) -> TaskScope {
 }
 
 pub fn parse_kind(val: Option<&str>) -> TaskKind {
-    match val {
-        Some("epic") => TaskKind::Epic,
-        Some("bug") => TaskKind::Bug,
-        Some("refactor") => TaskKind::Refactor,
-        Some("chore") => TaskKind::Chore,
-        Some("docs") => TaskKind::Docs,
-        Some("tech_debt") => TaskKind::TechDebt,
-        Some("spike") => TaskKind::Spike,
-        _ => TaskKind::Feature,
-    }
+    // Derived from the contract like every other parser (`GB-343`).
+    val.and_then(TaskKind::from_wire)
+        .unwrap_or(TaskKind::Feature)
 }
 
 pub fn parse_edge_kind(val: &str) -> Result<EdgeKind, StorypoleError> {

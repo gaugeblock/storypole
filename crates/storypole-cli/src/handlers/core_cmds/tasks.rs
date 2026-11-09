@@ -88,16 +88,8 @@ pub fn handle_graph(store: &StorypoleStore, _format: &str, json: bool) -> Result
 }
 
 pub(super) fn parse_kind(s: &str) -> TaskKind {
-    match s.to_lowercase().as_str() {
-        "epic" => TaskKind::Epic,
-        "bug" => TaskKind::Bug,
-        "refactor" => TaskKind::Refactor,
-        "tech_debt" | "techdebt" | "tech-debt" => TaskKind::TechDebt,
-        "chore" => TaskKind::Chore,
-        "docs" => TaskKind::Docs,
-        "spike" => TaskKind::Spike,
-        _ => TaskKind::Feature,
-    }
+    // One tolerant parse for the whole suite (`GB-343`); an unknown value keeps the historical default.
+    TaskKind::from_wire(s).unwrap_or(TaskKind::Feature)
 }
 
 pub(super) fn parse_status(s: &str) -> TaskStatus {

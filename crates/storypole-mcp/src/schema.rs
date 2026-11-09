@@ -2,6 +2,14 @@
 
 use serde_json::{Value, json};
 
+/// The kinds a client may send, taken from the contract so the schema cannot advertise a stale list.
+fn task_kind_enum() -> Vec<&'static str> {
+    storypole_core::model::task::TaskKind::ALL
+        .into_iter()
+        .map(storypole_core::model::task::TaskKind::as_str)
+        .collect()
+}
+
 /// Enumerate all MCP tools exposed by the Storypole server.
 pub fn list_tools() -> Vec<Value> {
     let mut tools = vec![
@@ -40,7 +48,7 @@ pub fn list_tools() -> Vec<Value> {
                 "properties": {
                     "title": { "type": "string" },
                     "description": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["feature", "bug", "refactor", "tech_debt", "spike", "epic", "chore", "docs"] },
+                    "kind": { "type": "string", "enum": task_kind_enum() },
                     "priority": { "type": "integer", "minimum": 1, "maximum": 5 },
                     "repo": { "type": "string" },
                     "crate_name": { "type": "string" },
@@ -93,7 +101,7 @@ pub fn list_tools() -> Vec<Value> {
                 "properties": {
                     "title": { "type": "string" },
                     "description": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["bug", "tech_debt", "spike", "feature", "docs"] },
+                    "kind": { "type": "string", "enum": task_kind_enum() },
                     "discovered_from": { "type": "string" },
                     "captured_by": { "type": "string" },
                     "repo": { "type": "string" },

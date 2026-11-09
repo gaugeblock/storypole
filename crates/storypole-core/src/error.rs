@@ -125,6 +125,10 @@ pub enum StorypoleError {
     )]
     PlanIncomplete { ticket: String, steps: Vec<String> },
 
+    /// A migration's records did not reproduce the ledger they came from (`GB-331`).
+    #[error("migration divergence for {ticket}: {detail}")]
+    MigrationDivergence { ticket: String, detail: String },
+
     /// A ticket record could not be read, written or locked (`GB-329`).
     #[error("Ticket record at '{path}': {reason}")]
     TicketRecord { path: PathBuf, reason: String },

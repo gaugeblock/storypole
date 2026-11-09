@@ -9,6 +9,8 @@
 //! and the acceptance test is a differential replay: replaying the resulting records must produce the same task
 //! states as replaying the ledger they came from.
 
+pub mod apply;
+
 use std::collections::BTreeMap;
 
 use uuid::Uuid;

@@ -187,3 +187,36 @@ fn the_store_opens_from_a_worktree_and_lands_on_the_main_checkout() {
         "and no second store was created in the worktree"
     );
 }
+
+#[test]
+fn two_worktrees_allocate_different_ticket_numbers() {
+    // GB-347: numbers were the highest in the local index plus one, and each worktree has its own index, so
+    // two branches both minted SP-1 for different tickets and collided at merge. The counter lives in the git
+    // dir, which every checkout of one repository shares and nothing tracks.
+    let temp = TempDir::new().unwrap();
+    let Some(linked) = repo_with_worktree(&temp) else {
+        eprintln!("git worktree unavailable; skipping");
+        return;
+    };
+    let main = temp.path().join("main");
+
+    let main_keys = storypole_core::ticket_keys::shared_dir(&main).expect("shared dir from main");
+    let linked_keys =
+        storypole_core::ticket_keys::shared_dir(&linked).expect("shared dir from worktree");
+    // Allocate first: the directory is created on demand, so canonicalising before it exists fails.
+
+    let first = storypole_core::ticket_keys::allocate(&main_keys, 0, "SP").unwrap();
+
+    assert_eq!(
+        fs::canonicalize(&main_keys).unwrap(),
+        fs::canonicalize(&linked_keys).unwrap(),
+        "one repository, one counter, whichever checkout asks"
+    );
+    let second = storypole_core::ticket_keys::allocate(&linked_keys, 0, "SP").unwrap();
+
+    assert_eq!(
+        (first, second),
+        (1, 2),
+        "two branches take two numbers instead of both taking SP-1"
+    );
+}

@@ -65,6 +65,7 @@ pub fn expired_claims(store: &StorypoleStore) -> Result<Vec<ReapedClaim>, Storyp
 pub fn reap_expired_claims(store: &mut StorypoleStore) -> Result<Vec<ReapedClaim>, StorypoleError> {
     let now = StorypoleStore::now_ms();
     let tasks = get_all_tasks(store.conn())?;
+    let lease_dir = crate::leases::dir_for_store(store.root_dir(), store.dot_dir());
     let mut reaped = Vec::new();
 
     for (task_id, task) in &tasks {
@@ -77,6 +78,9 @@ pub fn reap_expired_claims(store: &mut StorypoleStore) -> Result<Vec<ReapedClaim
         if !claim.is_expired(now) {
             continue;
         }
+
+        // The shared lease goes with the branch-local one, or the ticket stays blocked in every other checkout.
+        let _ = crate::leases::force_release(&lease_dir, &task.ticket_key);
 
         store.record_event(&LedgerEvent::TaskReleased {
             task_id: *task_id,

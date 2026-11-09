@@ -17,11 +17,8 @@ use uuid::Uuid;
 
 use crate::ops::scope::{ResolvedScope, resolve_scope};
 
-/// What counts as a member for storypole's purposes (`GB-189`).
-///
-/// A checkout is a member, and so is a directory that only holds a manifest: storypole is usable
-/// standalone, where the repositories of a workspace are not necessarily git clones. The shared
-/// topology takes the rule as a parameter precisely so each consumer can state its own.
+/// What counts as a member for storypole's purposes (`GB-189`): a checkout, or a directory that only holds a
+/// manifest, because storypole runs standalone where a workspace's repositories need not be git clones.
 fn storypole_member(path: &std::path::Path) -> bool {
     path.join(".git").exists() || path.join("Cargo.toml").exists()
 }
@@ -138,6 +135,8 @@ pub fn claim_task(
             expires_at: claim.lease_expires_at_epoch_ms,
         });
     }
+
+    crate::leases::claim_for(store, &task.ticket_key, agent_id, task_id)?;
 
     // Placement happens before the lease, because the lease records the branch and base commit of the
     // repository that owns the work - and until the scope is set, nothing knows which repository that

@@ -1,36 +1,33 @@
-//! Two clients, two worktrees, one ticket store (`GB-329`).
+//! Two clients, two worktrees, one repository (`GB-329`, ADR 0009).
 //!
-//! The unit tests prove the lock across threads; this proves it across processes, which is what parallel
-//! agents actually are. ADR 0001 resolves `.gaugeblock` through the git common dir, so both checkouts write
-//! the same files - the interesting question is whether two concurrent invocations lose an event.
+//! What the phase change actually guarantees, measured through the built binary:
+//!
+//! * **Records follow the branch.** Each checkout writes its own `tickets/*.json`, because git checks out
+//!   tracked files per working tree. Two branches holding two ticket sets is the design, not divergence.
+//! * **Numbers and leases are shared.** Both come from the git directory, so two branches cannot mint the same
+//!   key and cannot take the same ticket - the two collisions that made parallel agents unsafe.
 //!
 //! multi-repo: creates real worktrees and runs the built binary from each.
-//!
-//! Both tests are ignored because they failed on their first run against two real defects, and a failing
-//! test cannot be committed as an expected result. They stay here, ignored and named: the reproduction is
-//! the expensive part, and each reason names the ticket that has to fix it.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use std::thread;
 
 use tempfile::TempDir;
 
 const BIN: &str = env!("CARGO_BIN_EXE_storypole");
 
-/// Runs the built binary in `cwd`, returning success and its combined output.
-fn run(cwd: &Path, args: &[&str]) -> (bool, String) {
-    let out = Command::new(BIN)
+/// Runs the built binary in `cwd`, returning whether it succeeded.
+fn run(cwd: &Path, args: &[&str]) -> bool {
+    Command::new(BIN)
         .current_dir(cwd)
         .args(args)
         .output()
-        .expect("run storypole");
-    let mut text = String::from_utf8_lossy(&out.stdout).to_string();
-    text.push_str(&String::from_utf8_lossy(&out.stderr));
-    (out.status.success(), text)
+        .expect("run storypole")
+        .status
+        .success()
 }
 
 fn git(cwd: &Path, args: &[&str]) -> bool {
@@ -42,7 +39,11 @@ fn git(cwd: &Path, args: &[&str]) -> bool {
         .unwrap_or(false)
 }
 
-/// A records-mode repository plus a linked worktree, or `None` when git refuses.
+/// A records-mode repository plus one linked worktree cut from its first commit.
+///
+/// The commit matters: a worktree holds tracked state as of that commit, which is what makes the seeded
+/// ticket visible to both checkouts while the lease stays visible for a different reason - it lives in the git
+/// directory, outside the branch entirely.
 fn records_suite(temp: &Path) -> Option<(PathBuf, PathBuf)> {
     let main = temp.join("main");
     fs::create_dir_all(&main).ok()?;
@@ -51,12 +52,12 @@ fn records_suite(temp: &Path) -> Option<(PathBuf, PathBuf)> {
     }
     git(&main, &["config", "user.email", "t@example.com"]);
     git(&main, &["config", "user.name", "Test"]);
-
-    let (ok, out) = run(&main, &["init"]);
-    assert!(ok, "storypole init failed: {out}");
-    // The migration's job, done by hand here: the directory is what selects records mode.
+    assert!(run(&main, &["init"]), "storypole init failed");
     fs::create_dir_all(main.join(".gaugeblock/storypole/tickets")).ok()?;
 
+    if !run(&main, &["add", "the shared ticket", "--kind", "docs"]) {
+        return None;
+    }
     git(&main, &["add", "-A"]);
     if !git(&main, &["commit", "-q", "-m", "seed"]) {
         return None;
@@ -71,9 +72,8 @@ fn records_suite(temp: &Path) -> Option<(PathBuf, PathBuf)> {
     Some((main, linked))
 }
 
-fn ticket_files(dot: &Path) -> Vec<String> {
-    let dir = dot.join("tickets");
-    let mut names: Vec<String> = fs::read_dir(dir)
+fn ticket_files(checkout: &Path) -> Vec<String> {
+    let mut names: Vec<String> = fs::read_dir(checkout.join(".gaugeblock/storypole/tickets"))
         .expect("tickets directory")
         .filter_map(Result::ok)
         .map(|entry| entry.file_name().to_string_lossy().to_string())
@@ -83,101 +83,63 @@ fn ticket_files(dot: &Path) -> Vec<String> {
     names
 }
 
-fn event_count(dot: &Path, key: &str) -> usize {
-    let path = dot.join("tickets").join(format!("{key}.json"));
-    let record: serde_json::Value =
-        serde_json::from_slice(&fs::read(&path).expect("record")).expect("record json");
-    record["events"].as_array().expect("events").len()
-}
-
 #[test]
-#[ignore = "GB-347: each worktree owns its store by design (ADR 0009), so this measures branch-local keys, not a race"]
-fn two_worktrees_creating_tickets_lose_neither() {
+fn a_ticket_created_in_each_checkout_gets_its_own_file_and_its_own_number() {
     let temp = TempDir::new().unwrap();
     let Some((main, linked)) = records_suite(temp.path()) else {
         eprintln!("git worktree unavailable; skipping");
         return;
     };
-    let dot = main.join(".gaugeblock/storypole");
-
-    let from_main = {
-        let main = main.clone();
-        thread::spawn(move || run(&main, &["add", "from the main checkout", "--kind", "docs"]))
-    };
-    let from_linked = {
-        let linked = linked.clone();
-        thread::spawn(move || run(&linked, &["add", "from agent b", "--kind", "docs"]))
-    };
-    let (ok_main, out_main) = from_main.join().unwrap();
-    let (ok_linked, out_linked) = from_linked.join().unwrap();
-
-    assert!(ok_main, "main checkout could not add: {out_main}");
-    assert!(ok_linked, "agent-b checkout could not add: {out_linked}");
-
-    let files = ticket_files(&dot);
-    assert_eq!(files.len(), 2, "two tickets, two files: {files:?}");
-    assert_eq!(
-        fs::read(dot.join("ledger.jsonl")).unwrap().len(),
-        0,
-        "records mode writes no ledger"
-    );
-
-    let (listed, table) = run(&main, &["list"]);
-    assert!(listed, "list failed: {table}");
-    assert_eq!(
-        table.matches(".json").count() + table.lines().filter(|l| l.contains("docs")).count(),
-        2,
-        "both tickets are visible from the main checkout:\n{table}"
-    );
-}
-
-#[test]
-#[ignore = "GB-333: tracked records are per branch by design (ADR 0009), so two worktrees must share leases, not records"]
-fn concurrent_updates_to_one_ticket_keep_every_event() {
-    let temp = TempDir::new().unwrap();
-    let Some((main, linked)) = records_suite(temp.path()) else {
-        eprintln!("git worktree unavailable; skipping");
-        return;
-    };
-    let dot = main.join(".gaugeblock/storypole");
-    let (ok, out) = run(&main, &["add", "the contended ticket", "--kind", "docs"]);
-    assert!(ok, "add failed: {out}");
-    let key = ticket_files(&dot)
-        .first()
-        .map(|name| name.trim_end_matches(".json").to_string())
-        .expect("one ticket");
-
-    let handles: Vec<_> = (0..8)
-        .map(|n| {
-            let cwd = if n % 2 == 0 {
-                main.clone()
-            } else {
-                linked.clone()
-            };
-            let key = key.clone();
-            thread::spawn(move || {
-                run(
-                    &cwd,
-                    &["update", &key, "--priority", &((n % 5) + 1).to_string()],
-                )
-            })
-        })
-        .collect();
-    let mut failures = Vec::new();
-    for handle in handles {
-        let (ok, out) = handle.join().unwrap();
-        if !ok {
-            failures.push(out);
-        }
-    }
 
     assert!(
-        failures.is_empty(),
-        "every update should succeed: {failures:?}"
+        run(&linked, &["add", "from agent b", "--kind", "docs"]),
+        "agent-b must be able to create a ticket in its own checkout"
+    );
+
+    let in_main = ticket_files(&main);
+    let in_linked = ticket_files(&linked);
+    assert_eq!(
+        in_main,
+        vec!["SP-1.json"],
+        "the committed ticket only: {in_main:?}"
     );
     assert_eq!(
-        event_count(&dot, &key),
-        9,
-        "one creation and eight updates, none lost or overwritten"
+        in_linked,
+        vec!["SP-1.json", "SP-2.json"],
+        "the worktree starts from the commit and adds its own: {in_linked:?}"
+    );
+}
+
+#[test]
+fn a_lease_taken_in_one_checkout_blocks_the_other() {
+    // The end-to-end proof for GB-333: the ticket is visible in both checkouts because it was committed, and
+    // the lease is visible in both because it lives outside the branch. Without the shared lease this claim
+    // would succeed and two agents would work the same ticket.
+    let temp = TempDir::new().unwrap();
+    let Some((main, linked)) = records_suite(temp.path()) else {
+        eprintln!("git worktree unavailable; skipping");
+        return;
+    };
+
+    assert!(
+        run(&main, &["claim", "SP-1", "agent-a"]),
+        "agent-a claims in the main checkout"
+    );
+
+    let refused = Command::new(BIN)
+        .current_dir(&linked)
+        .args(["claim", "SP-1", "agent-b"])
+        .output()
+        .expect("run storypole from the worktree");
+    let text = String::from_utf8_lossy(&refused.stderr).to_string()
+        + &String::from_utf8_lossy(&refused.stdout);
+
+    assert!(
+        !refused.status.success(),
+        "the second claim must fail: {text}"
+    );
+    assert!(
+        text.contains("another checkout"),
+        "and must say the lease is held elsewhere, not merely 'in use': {text}"
     );
 }

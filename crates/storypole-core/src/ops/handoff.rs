@@ -18,6 +18,10 @@ pub fn heartbeat(
     agent_id: &str,
 ) -> Result<u64, StorypoleError> {
     let task = get_task_by_id(store.conn(), task_id)?;
+    // A handoff releases the shared lease: the next agent may be in another worktree (`GB-333`).
+    if let Some(dir) = crate::leases::dir_for(store.root_dir()) {
+        let _ = crate::leases::force_release(&dir, &task.ticket_key);
+    }
     let now = StorypoleStore::now_ms();
 
     let claim = match task.active_claim {

@@ -101,8 +101,8 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
         Err(error) => {
             match storypole_core::workspace::lookup::locate_ticket(store.root_dir(), ident) {
                 Some(dot) => {
-                    // `<repo>/.gaugeblock/storypole`, so the checkout worth suggesting is three ancestors up.
-                    let repo = dot.ancestors().nth(3).unwrap_or(&dot);
+                    // `<repo>/.gaugeblock/storypole`: counting from the store, the checkout is `nth(2)`.
+                    let repo = dot.ancestors().nth(2).unwrap_or(&dot);
                     anyhow::bail!(
                         "{ident} belongs to the store at {}; re-run with --dir {}",
                         dot.display(),

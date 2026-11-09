@@ -125,6 +125,12 @@ pub enum StorypoleError {
     )]
     PlanIncomplete { ticket: String, steps: Vec<String> },
 
+    /// A manual receipt was offered for a task that has an executable verification chain (`GB-334`).
+    #[error(
+        "{ticket} has an executable verification chain ({chain}); a manual receipt attests less than the\n         chain already could, so run the chain or say --verifier explicitly if it cannot run"
+    )]
+    ManualReceiptWithChain { ticket: String, chain: String },
+
     /// A migration's records did not reproduce the ledger they came from (`GB-331`).
     #[error("migration divergence for {ticket}: {detail}")]
     MigrationDivergence { ticket: String, detail: String },

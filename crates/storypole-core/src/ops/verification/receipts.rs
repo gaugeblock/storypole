@@ -46,6 +46,30 @@ pub(super) fn build(
     } = request;
     let mut chain_used: Option<String> = None;
     let receipt = if let Some(r) = receipt_override {
+        // A manual receipt on a task that has an executable chain attests less than the chain already could, and
+        // `GB-57` is what that looks like: verified with 0 of 6 steps on a manual receipt while a chain was
+        // configured and never run (`GB-334`). The lookup mirrors the one below deliberately - it is the same
+        // question, asked before the branch that would otherwise skip it.
+        if r.verifier == "manual" {
+            let chain = task
+                .scope
+                .crate_name
+                .as_deref()
+                .and_then(|c| store.config().verification_chain_exact(c))
+                .or_else(|| {
+                    task.scope
+                        .repo
+                        .as_deref()
+                        .and_then(|r| store.config().verification_chain_exact(r))
+                })
+                .or_else(|| store.config().verification_chain_default());
+            if let Some((key, _command)) = chain {
+                return Err(StorypoleError::ManualReceiptWithChain {
+                    ticket: task.ticket_key.clone(),
+                    chain: key.to_string(),
+                });
+            }
+        }
         r
     } else if run_command {
         let chain_opt = task

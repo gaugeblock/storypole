@@ -40,7 +40,7 @@ pub fn list_tools() -> Vec<Value> {
                 "properties": {
                     "title": { "type": "string" },
                     "description": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["feature", "bug", "refactor", "tech_debt", "spike", "epic", "chore"] },
+                    "kind": { "type": "string", "enum": ["feature", "bug", "refactor", "tech_debt", "spike", "epic", "chore", "docs"] },
                     "priority": { "type": "integer", "minimum": 1, "maximum": 5 },
                     "repo": { "type": "string" },
                     "crate_name": { "type": "string" },
@@ -93,7 +93,7 @@ pub fn list_tools() -> Vec<Value> {
                 "properties": {
                     "title": { "type": "string" },
                     "description": { "type": "string" },
-                    "kind": { "type": "string", "enum": ["bug", "tech_debt", "spike", "feature"] },
+                    "kind": { "type": "string", "enum": ["bug", "tech_debt", "spike", "feature", "docs"] },
                     "discovered_from": { "type": "string" },
                     "captured_by": { "type": "string" },
                     "repo": { "type": "string" },

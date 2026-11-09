@@ -14,6 +14,7 @@ pub mod ops;
 pub mod store;
 mod store_locate;
 pub mod telemetry;
+pub mod tickets;
 pub mod workspace;
 
 pub use config::StorypoleConfig;

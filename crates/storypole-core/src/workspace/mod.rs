@@ -2,6 +2,7 @@
 
 pub mod config;
 pub mod discovery;
+pub mod lookup;
 pub mod store;
 
 pub use config::WorkspaceConfig;

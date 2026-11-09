@@ -93,7 +93,26 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
 }
 
 pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()> {
-    let id = resolve_task_id(store.conn(), ident)?;
+    let id = match resolve_task_id(store.conn(), ident) {
+        Ok(id) => id,
+        // A ticket lives in exactly one repository since ADR 0009, so "not found" here may simply mean the
+        // caller is in the wrong directory. Saying which directory is the difference between a dead end and an
+        // instruction (`GB-330`).
+        Err(error) => {
+            match storypole_core::workspace::lookup::locate_ticket(store.root_dir(), ident) {
+                Some(dot) => {
+                    // `<repo>/.gaugeblock/storypole`, so the checkout worth suggesting is three ancestors up.
+                    let repo = dot.ancestors().nth(3).unwrap_or(&dot);
+                    anyhow::bail!(
+                        "{ident} belongs to the store at {}; re-run with --dir {}",
+                        dot.display(),
+                        repo.display()
+                    )
+                }
+                None => return Err(error.into()),
+            }
+        }
+    };
     let task = get_task_by_id(store.conn(), id)?;
     let all_tasks = get_all_tasks(store.conn())?;
     let briefing = build_task_briefing(&task, &all_tasks, store.config(), StorypoleStore::now_ms());

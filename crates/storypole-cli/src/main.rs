@@ -22,6 +22,11 @@ use storypole_core::store::StorypoleStore;
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    // One span per invocation, so the panel can answer what the suite did rather than only what inference cost
+    // (`GB-339`). Opened before any work and closed with the outcome; it cannot fail the command.
+    let command = std::env::args().nth(1).filter(|arg| !arg.starts_with('-'));
+    let invocation = gaugeblock_workspace::InvocationSpan::start("storypole", command.as_deref());
+
     let filter = if cli.json { "error" } else { "warn" };
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -126,5 +131,6 @@ fn main() -> Result<()> {
         }
     }
 
+    invocation.finish(true);
     Ok(())
 }

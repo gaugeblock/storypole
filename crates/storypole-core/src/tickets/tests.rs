@@ -195,3 +195,47 @@ fn the_lock_is_released_once_the_append_finishes() {
     );
     assert_eq!(read(&path).unwrap().events.len(), 3);
 }
+
+#[test]
+fn a_published_record_leaves_no_claim_behind() {
+    // The claim is the exclusion primitive, and the rename is what publishes; if the claim survived, the key
+    // would stay reserved for a writer that already finished.
+    let temp = tempdir().unwrap();
+    let id = Uuid::from_u128(41);
+    let record = TicketRecord::new(task(id, "GB-41", 10), vec![created(id, "GB-41", 10)]);
+    let path = super::path(temp.path(), "GB-41").unwrap();
+
+    assert!(super::io::create(&path, &record).unwrap());
+
+    let leftovers: Vec<String> = fs::read_dir(super::dir(temp.path()))
+        .unwrap()
+        .filter_map(Result::ok)
+        .map(|entry| entry.file_name().to_string_lossy().to_string())
+        .filter(|name| name.contains("claim") || name.contains(".new") || name.contains(".tmp"))
+        .collect();
+    assert!(
+        leftovers.is_empty(),
+        "nothing is left behind: {leftovers:?}"
+    );
+    assert!(path.is_file(), "and the record is published");
+}
+
+#[test]
+fn a_claim_from_a_dead_writer_is_taken_over() {
+    // A process killed between reserving the key and publishing would otherwise strand the ticket number
+    // forever. The threshold is a parameter so this does not sleep for the production thirty seconds.
+    let temp = tempdir().unwrap();
+    let id = Uuid::from_u128(42);
+    let record = TicketRecord::new(task(id, "GB-42", 10), vec![created(id, "GB-42", 10)]);
+    let path = super::path(temp.path(), "GB-42").unwrap();
+    fs::create_dir_all(super::dir(temp.path())).unwrap();
+    let claim = super::dir(temp.path()).join(".GB-42.claim");
+    fs::write(&claim, b"dead pid").unwrap();
+
+    assert!(
+        super::io::create_with_stale_after(&path, &record, 0).unwrap(),
+        "an abandoned claim is not ownership"
+    );
+    assert!(path.is_file(), "and the record is published anyway");
+    assert!(!claim.exists(), "with the claim cleared");
+}

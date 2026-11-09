@@ -80,6 +80,14 @@ impl Drop for TicketLock {
 
 /// Whether the lock file is old enough to be a dead process's.
 fn is_stale(path: &Path) -> bool {
+    is_stale_after(path, STALE_MS)
+}
+
+/// Whether `path` has not been touched for longer than `stale_after_ms`.
+///
+/// Shared with record publication, which uses the same reasoning for its claim file and takes the threshold
+/// as a parameter so a test can force the takeover instead of sleeping for thirty seconds.
+pub(crate) fn is_stale_after(path: &Path, stale_after_ms: u64) -> bool {
     let Ok(meta) = fs::metadata(path) else {
         return false;
     };
@@ -89,5 +97,8 @@ fn is_stale(path: &Path) -> bool {
     let Ok(age) = SystemTime::now().duration_since(modified) else {
         return false;
     };
-    age.as_millis() as u64 > STALE_MS
+    // Greater-or-equal rather than greater: as_millis truncates, so a file created microseconds ago
+    // reports an age of zero and a zero threshold would never fire. At thirty seconds it makes no
+    // difference.
+    age.as_millis() as u64 >= stale_after_ms
 }

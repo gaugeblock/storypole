@@ -1,0 +1,83 @@
+{
+  "ticket": {
+    "id": "b02e3ca2-0106-40e1-a276-b57003d3f714",
+    "ticket_key": "GB-335",
+    "slug": "receipts-carry-the-change-they-verified-not-only-a-commit-range-b02e3c",
+    "title": "Receipts carry the change they verified, not only a commit range",
+    "description": "Receipts record branch and commit window (GB-316), so the diff needs no new capture: git diff base..head. Two weaknesses. The window is the right unit for what a task changed but not for individual failed attempts. And a window of SHAs can be orphaned by rebase, squash or force-push, turning a record into a dangling pointer: the suite already has 44 edges whose target no longer resolves. So the receipt stores the diff content hash and the diff itself at verify time, and verification asserts that both ends of the window are still reachable, reporting orphaning honestly rather than silently. This is also what makes plan-to-implementation pairs usable without a checkout at an exact SHA.",
+    "kind": "feature",
+    "status": "ready",
+    "priority": 2,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "a receipt survives a rebase of its branch with its diff hash intact; an orphaned window is reported, not passed over"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167014863,
+    "updated_at_epoch_ms": 1794167014929
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "b02e3ca2-0106-40e1-a276-b57003d3f714",
+        "ticket_key": "GB-335",
+        "slug": "receipts-carry-the-change-they-verified-not-only-a-commit-range-b02e3c",
+        "title": "Receipts carry the change they verified, not only a commit range",
+        "description": "Receipts record branch and commit window (GB-316), so the diff needs no new capture: git diff base..head. Two weaknesses. The window is the right unit for what a task changed but not for individual failed attempts. And a window of SHAs can be orphaned by rebase, squash or force-push, turning a record into a dangling pointer: the suite already has 44 edges whose target no longer resolves. So the receipt stores the diff content hash and the diff itself at verify time, and verification asserts that both ends of the window are still reachable, reporting orphaning honestly rather than silently. This is also what makes plan-to-implementation pairs usable without a checkout at an exact SHA.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "a receipt survives a rebase of its branch with its diff hash intact; an orphaned window is reported, not passed over"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167014863,
+        "updated_at_epoch_ms": 1794167014863
+      }
+    },
+    {
+      "event": "edge_added",
+      "task_id": "b02e3ca2-0106-40e1-a276-b57003d3f714",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794167014929
+    }
+  ]
+}

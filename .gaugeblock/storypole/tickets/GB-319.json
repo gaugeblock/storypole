@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "100bb5d2-7e38-4970-9238-c0a04ec15ef6",
+    "ticket_key": "GB-319",
+    "slug": "plan-set-silently-replaces-the-whole-plan-so-a-summary-only-update-drops-every-recorded-step-100bb5",
+    "title": "plan set silently replaces the whole plan, so a summary-only update drops every recorded step",
+    "description": "",
+    "kind": "tech_debt",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-cli",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_cli::handlers::plan_cmds"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794108876811,
+    "updated_at_epoch_ms": 1794108876811
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "100bb5d2-7e38-4970-9238-c0a04ec15ef6",
+        "ticket_key": "GB-319",
+        "slug": "plan-set-silently-replaces-the-whole-plan-so-a-summary-only-update-drops-every-recorded-step-100bb5",
+        "title": "plan set silently replaces the whole plan, so a summary-only update drops every recorded step",
+        "description": "",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-cli",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::plan_cmds"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794108876811,
+        "updated_at_epoch_ms": 1794108876811
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

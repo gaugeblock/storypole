@@ -1,0 +1,83 @@
+{
+  "ticket": {
+    "id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+    "ticket_key": "GB-336",
+    "slug": "adr-0009-amends-worktree-resolution-adr-0010-records-the-ticket-record-contract-d54f15",
+    "title": "ADR 0009 amends worktree resolution; ADR 0010 records the ticket record contract",
+    "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.",
+    "kind": "chore",
+    "status": "ready",
+    "priority": 1,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "both ADRs accepted; ADR 0001 carries a superseded-in-part note pointing at 0009; the adapter contract states what is deliberately out of scope"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167026453,
+    "updated_at_epoch_ms": 1794167026611
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+        "ticket_key": "GB-336",
+        "slug": "adr-0009-amends-worktree-resolution-adr-0010-records-the-ticket-record-contract-d54f15",
+        "title": "ADR 0009 amends worktree resolution; ADR 0010 records the ticket record contract",
+        "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.",
+        "kind": "chore",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "both ADRs accepted; ADR 0001 carries a superseded-in-part note pointing at 0009; the adapter contract states what is deliberately out of scope"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167026453,
+        "updated_at_epoch_ms": 1794167026453
+      }
+    },
+    {
+      "event": "edge_added",
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794167026611
+    }
+  ]
+}

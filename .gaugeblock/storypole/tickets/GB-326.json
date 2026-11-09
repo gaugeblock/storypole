@@ -1,0 +1,131 @@
+{
+  "ticket": {
+    "id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+    "ticket_key": "GB-326",
+    "slug": "the-receipt-commit-window-collapses-to-the-head-commit-when-merge-base-resolution-returns-nothing-5d2f3d",
+    "title": "the receipt commit window collapses to the HEAD commit when merge-base resolution returns nothing",
+    "description": "OBSERVED 2026-11-07: GB-302's receipt reads `[1 commit(s)]` for a one-commit change, and so did GB-325's - but for the wrong reason. `commit_shas` degrades to just the HEAD commit whenever base..head resolves empty, which happens when the claim's base commit IS HEAD (a ticket claimed or re-claimed after its work is committed). The count is not false so much as narrower than it looks. FIXED in 2bf55df: the base is now the widest valid candidate among the claim base and the merge-base against main, and a window that cannot be named says so in the receipt summary.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::verification"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794116827987,
+      "git_branch": "main",
+      "base_commit_sha": "2bf55dff19a8a075ce983c6a832820c29dc61089",
+      "head_commit_sha": "2bf55dff19a8a075ce983c6a832820c29dc61089",
+      "commit_shas": [
+        "2bf55dff19a8a075ce983c6a832820c29dc61089"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
+    "created_at_epoch_ms": 1794111281341,
+    "updated_at_epoch_ms": 1794119334095
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+        "ticket_key": "GB-326",
+        "slug": "the-receipt-commit-window-collapses-to-the-head-commit-when-merge-base-resolution-returns-nothing-5d2f3d",
+        "title": "the receipt commit window collapses to the HEAD commit when merge-base resolution returns nothing",
+        "description": "",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::verification"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794111281341,
+        "updated_at_epoch_ms": 1794111281341
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794116827344,
+        "lease_expires_at_epoch_ms": 1794120427344,
+        "git_branch": "main",
+        "base_commit_sha": "2bf55dff19a8a075ce983c6a832820c29dc61089"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794116827344
+    },
+    {
+      "event": "task_verified",
+      "task_id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794116827987,
+        "git_branch": "main",
+        "base_commit_sha": "2bf55dff19a8a075ce983c6a832820c29dc61089",
+        "head_commit_sha": "2bf55dff19a8a075ce983c6a832820c29dc61089",
+        "commit_shas": [
+          "2bf55dff19a8a075ce983c6a832820c29dc61089"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5d2f3df2-2006-4009-a40a-f2c45633cdd7",
+      "title": null,
+      "description": "OBSERVED 2026-11-07: GB-302's receipt reads `[1 commit(s)]` for a one-commit change, and so did GB-325's - but for the wrong reason. `commit_shas` degrades to just the HEAD commit whenever base..head resolves empty, which happens when the claim's base commit IS HEAD (a ticket claimed or re-claimed after its work is committed). The count is not false so much as narrower than it looks. FIXED in 2bf55df: the base is now the widest valid candidate among the claim base and the merge-base against main, and a window that cannot be named says so in the receipt summary.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794119334095
+    }
+  ]
+}

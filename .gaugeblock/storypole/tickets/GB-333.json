@@ -1,0 +1,213 @@
+{
+  "ticket": {
+    "id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+    "ticket_key": "GB-333",
+    "slug": "move-claim-leases-into-the-derived-layer-so-worktrees-share-them-77bc05",
+    "title": "Move claim leases into the derived layer so worktrees share them",
+    "description": "A claim recorded in a tracked branch-local ticket file is invisible to another worktree until merge, which is right for a branch and wrong for a lease: two agents must not take the same ticket. Leases therefore live in the derived, untracked layer (git common dir, TTL, reaped), while the ticket file keeps the claim as history. Same split as index and telemetry: tracked source follows the branch, derived coordination follows the checkout. Rejected alternatives: worktree-local tickets with no shared lease view, which double books; and leases kept in the branch, which makes claims invisible until merge and wastes parallel work.\n\nCORRECTED 2026-11-08, after measuring instead of theorising.\n\nThe symptom was real; the cause was not what this ticket said. A linked worktree carries its own copies of\ntracked files - measured: ledger.jsonl has different inodes in main (56762556) and in agent-b (56762621) -\nso .gaugeblock/storypole is checked out per branch and the ancestor walk correctly found the worktree's own\ncopy. It reported Task not found because that copy held a ledger with no tickets: the tickets were created\non another branch after the commit the worktree was cut from.\n\nSo the failure was ADR 0009 working as intended (tracked source follows the branch), not a resolution bug.\n\nThe genuine gap, which IS fixed (f05a136): when a checkout has no local .gaugeblock at all, the ancestor walk\neither failed or built a second store. Resolution now consults the git common dir, after the caller's own\nstore and before the suite fallback, and accepts it only when it is the same repository.\n\nWHAT THIS TICKET SHOULD NOW OWN: the derived layer still resolves to the working tree instead of the common\ndir. Two worktrees therefore keep two index.sqlite files and would keep two lease registries, which is\nwasteful for the index and wrong for leases - a claim in one worktree must be visible in the other before any\nmerge. That is GB-333's requirement arriving from a different direction, and the two should be decided\nonce: derived state resolves through the common dir, tracked state follows the branch.\n\nDONE 2026-11-08 (commit 89ec9c2), under ADR 0009, on branch feat/gb-347-shared-keys.\n\nLeases live in the git directory beside the ticket-number counter: shared by every checkout of a repository,\nnever tracked, and with no way for a worktree to hold a private copy. The ticket file still records that a claim\nhappened, because that is branch history.\n\nKept deliberately: an expired lease is taken over rather than refused (a dead agent must not hold work\nhostage), renewing your own lease is granted, release only succeeds for the holder while handoff and reaping\nforce-release, and every mutation takes an exclusive lock with the same stale-takeover rule as the record store.\n\nThe conflict message distinguishes 'held by agent-a' from 'held by agent-a in another checkout', because those\nare different situations to the person reading it.\n\nBranching note, recorded rather than tidied away: this was built on the GB-347 branch rather than its own, so\none branch now carries two verified tickets. The stack is the same either way; when it merges in dependency\norder the commits keep their tickets in their footers.\n\nStill owed by GB-329, which is why it stays Blocked: its gate is two clients in two checkouts sharing a lease\nend to end, and the pieces now exist but that test has not been rewritten to drive them.",
+    "kind": "refactor",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      },
+      {
+        "kind": "blocked_by",
+        "target_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+        "target_ticket_key": "GB-346"
+      },
+      {
+        "kind": "related_to",
+        "target_id": "61e75907-bb95-4d66-af27-3e4c4869358b",
+        "target_ticket_key": "GB-347",
+        "target_repo": "storypole"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "two worktrees claiming one ticket: the second is refused naming the first worktree; an expired lease is reaped without modifying the ticket file"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794204939624,
+      "git_branch": "feat/gb-347-shared-keys",
+      "base_commit_sha": "4d59a59256ad0c1121c4931df8904ff2350a0ca3",
+      "head_commit_sha": "89ec9c20a125c900ed6e984ef93a374178c08d72",
+      "commit_shas": [
+        "04d0f5e9b17b4c55a4615182c58bcb0d62f1f20e",
+        "cdeb457d807521a1bd566e50c5f29f98289c0cce",
+        "bb3f59dd803c43ff42ea2f6147556d8a96945afe",
+        "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+        "f05a13686a67c0de312e9019f72c908a9be4dfe1",
+        "17672a99df9a5fcaa63202edf75af3820095ce57",
+        "6d40a0cec89955a0cb7fd5cbc7ba98e96a426a71",
+        "bd6c144dcfb32c5b6cc7f9e17c52ec782ed11ed0",
+        "89ec9c20a125c900ed6e984ef93a374178c08d72"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
+    "created_at_epoch_ms": 1794167014578,
+    "updated_at_epoch_ms": 1794204974826
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+        "ticket_key": "GB-333",
+        "slug": "move-claim-leases-into-the-derived-layer-so-worktrees-share-them-77bc05",
+        "title": "Move claim leases into the derived layer so worktrees share them",
+        "description": "A claim recorded in a tracked branch-local ticket file is invisible to another worktree until merge, which is right for a branch and wrong for a lease: two agents must not take the same ticket. Leases therefore live in the derived, untracked layer (git common dir, TTL, reaped), while the ticket file keeps the claim as history. Same split as index and telemetry: tracked source follows the branch, derived coordination follows the checkout. Rejected alternatives: worktree-local tickets with no shared lease view, which double books; and leases kept in the branch, which makes claims invisible until merge and wastes parallel work.",
+        "kind": "refactor",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "two worktrees claiming one ticket: the second is refused naming the first worktree; an expired lease is reaped without modifying the ticket file"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167014578,
+        "updated_at_epoch_ms": 1794167014578
+      }
+    },
+    {
+      "event": "edge_added",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794167014657
+    },
+    {
+      "event": "edge_added",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "edge": {
+        "kind": "blocked_by",
+        "target_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+        "target_ticket_key": "GB-346"
+      },
+      "timestamp_ms": 1794202495932
+    },
+    {
+      "event": "status_changed",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "from": "ready",
+      "to": "blocked",
+      "reason": "Blocked by unverified task GB-346",
+      "timestamp_ms": 1794202495932
+    },
+    {
+      "event": "task_updated",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "title": null,
+      "description": "A claim recorded in a tracked branch-local ticket file is invisible to another worktree until merge, which is right for a branch and wrong for a lease: two agents must not take the same ticket. Leases therefore live in the derived, untracked layer (git common dir, TTL, reaped), while the ticket file keeps the claim as history. Same split as index and telemetry: tracked source follows the branch, derived coordination follows the checkout. Rejected alternatives: worktree-local tickets with no shared lease view, which double books; and leases kept in the branch, which makes claims invisible until merge and wastes parallel work.\n\nCORRECTED 2026-11-08, after measuring instead of theorising.\n\nThe symptom was real; the cause was not what this ticket said. A linked worktree carries its own copies of\ntracked files - measured: ledger.jsonl has different inodes in main (56762556) and in agent-b (56762621) -\nso .gaugeblock/storypole is checked out per branch and the ancestor walk correctly found the worktree's own\ncopy. It reported Task not found because that copy held a ledger with no tickets: the tickets were created\non another branch after the commit the worktree was cut from.\n\nSo the failure was ADR 0009 working as intended (tracked source follows the branch), not a resolution bug.\n\nThe genuine gap, which IS fixed (f05a136): when a checkout has no local .gaugeblock at all, the ancestor walk\neither failed or built a second store. Resolution now consults the git common dir, after the caller's own\nstore and before the suite fallback, and accepts it only when it is the same repository.\n\nWHAT THIS TICKET SHOULD NOW OWN: the derived layer still resolves to the working tree instead of the common\ndir. Two worktrees therefore keep two index.sqlite files and would keep two lease registries, which is\nwasteful for the index and wrong for leases - a claim in one worktree must be visible in the other before any\nmerge. That is GB-333's requirement arriving from a different direction, and the two should be decided\nonce: derived state resolves through the common dir, tracked state follows the branch.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794202958403
+    },
+    {
+      "event": "edge_added",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "edge": {
+        "kind": "related_to",
+        "target_id": "61e75907-bb95-4d66-af27-3e4c4869358b",
+        "target_ticket_key": "GB-347",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794204200848
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794204932416,
+        "lease_expires_at_epoch_ms": 1794208532416,
+        "git_branch": "feat/gb-347-shared-keys",
+        "base_commit_sha": "89ec9c20a125c900ed6e984ef93a374178c08d72"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "from": "blocked",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794204932416
+    },
+    {
+      "event": "task_verified",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794204939624,
+        "git_branch": "feat/gb-347-shared-keys",
+        "base_commit_sha": "4d59a59256ad0c1121c4931df8904ff2350a0ca3",
+        "head_commit_sha": "89ec9c20a125c900ed6e984ef93a374178c08d72",
+        "commit_shas": [
+          "04d0f5e9b17b4c55a4615182c58bcb0d62f1f20e",
+          "cdeb457d807521a1bd566e50c5f29f98289c0cce",
+          "bb3f59dd803c43ff42ea2f6147556d8a96945afe",
+          "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+          "f05a13686a67c0de312e9019f72c908a9be4dfe1",
+          "17672a99df9a5fcaa63202edf75af3820095ce57",
+          "6d40a0cec89955a0cb7fd5cbc7ba98e96a426a71",
+          "bd6c144dcfb32c5b6cc7f9e17c52ec782ed11ed0",
+          "89ec9c20a125c900ed6e984ef93a374178c08d72"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "77bc05a9-617a-46a7-9b6f-b71f84146eff",
+      "title": null,
+      "description": "A claim recorded in a tracked branch-local ticket file is invisible to another worktree until merge, which is right for a branch and wrong for a lease: two agents must not take the same ticket. Leases therefore live in the derived, untracked layer (git common dir, TTL, reaped), while the ticket file keeps the claim as history. Same split as index and telemetry: tracked source follows the branch, derived coordination follows the checkout. Rejected alternatives: worktree-local tickets with no shared lease view, which double books; and leases kept in the branch, which makes claims invisible until merge and wastes parallel work.\n\nCORRECTED 2026-11-08, after measuring instead of theorising.\n\nThe symptom was real; the cause was not what this ticket said. A linked worktree carries its own copies of\ntracked files - measured: ledger.jsonl has different inodes in main (56762556) and in agent-b (56762621) -\nso .gaugeblock/storypole is checked out per branch and the ancestor walk correctly found the worktree's own\ncopy. It reported Task not found because that copy held a ledger with no tickets: the tickets were created\non another branch after the commit the worktree was cut from.\n\nSo the failure was ADR 0009 working as intended (tracked source follows the branch), not a resolution bug.\n\nThe genuine gap, which IS fixed (f05a136): when a checkout has no local .gaugeblock at all, the ancestor walk\neither failed or built a second store. Resolution now consults the git common dir, after the caller's own\nstore and before the suite fallback, and accepts it only when it is the same repository.\n\nWHAT THIS TICKET SHOULD NOW OWN: the derived layer still resolves to the working tree instead of the common\ndir. Two worktrees therefore keep two index.sqlite files and would keep two lease registries, which is\nwasteful for the index and wrong for leases - a claim in one worktree must be visible in the other before any\nmerge. That is GB-333's requirement arriving from a different direction, and the two should be decided\nonce: derived state resolves through the common dir, tracked state follows the branch.\n\nDONE 2026-11-08 (commit 89ec9c2), under ADR 0009, on branch feat/gb-347-shared-keys.\n\nLeases live in the git directory beside the ticket-number counter: shared by every checkout of a repository,\nnever tracked, and with no way for a worktree to hold a private copy. The ticket file still records that a claim\nhappened, because that is branch history.\n\nKept deliberately: an expired lease is taken over rather than refused (a dead agent must not hold work\nhostage), renewing your own lease is granted, release only succeeds for the holder while handoff and reaping\nforce-release, and every mutation takes an exclusive lock with the same stale-takeover rule as the record store.\n\nThe conflict message distinguishes 'held by agent-a' from 'held by agent-a in another checkout', because those\nare different situations to the person reading it.\n\nBranching note, recorded rather than tidied away: this was built on the GB-347 branch rather than its own, so\none branch now carries two verified tickets. The stack is the same either way; when it merges in dependency\norder the commits keep their tickets in their footers.\n\nStill owed by GB-329, which is why it stays Blocked: its gate is two clients in two checkouts sharing a lease\nend to end, and the pieces now exist but that test has not been rewritten to drive them.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794204974826
+    }
+  ]
+}

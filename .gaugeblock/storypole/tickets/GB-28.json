@@ -1,0 +1,142 @@
+{
+  "ticket": {
+    "id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+    "ticket_key": "GB-28",
+    "slug": "add-taskplan-multi-commit-verificationreceipt-and-branch-isolation-tracking-to-storypole-a65543",
+    "title": "Add TaskPlan, multi-commit VerificationReceipt, and branch isolation tracking to storypole",
+    "description": "Upgrade storypole with first-class TaskPlan support, design markdown persistence to .storypole/plans/<KEY>.md, and multi-commit branch tracking in AgentClaim and VerificationReceipt.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 1,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Delivered: TaskPlan+PlanStep live in gaugeblock-contracts (storypole-core/model/plan.rs), ops/plan_ops.rs persists .storypole/plans/<KEY>.md, claim --branch records the lease branch+base, and VerificationReceipt carries git_branch/base_commit_sha/head_commit_sha/commit_shas[]. No outstanding work.",
+      "verified_at_epoch_ms": 1793942108808,
+      "git_branch": "main",
+      "base_commit_sha": "afce824da0ce27926a861d19e046ef282150b9ab",
+      "head_commit_sha": "afce824da0ce27926a861d19e046ef282150b9ab",
+      "commit_shas": [
+        "afce824da0ce27926a861d19e046ef282150b9ab"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1792858551490,
+    "updated_at_epoch_ms": 1794037957714,
+    "archived_at_epoch_ms": 1794037957714
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+        "ticket_key": "GB-28",
+        "slug": "add-taskplan-multi-commit-verificationreceipt-and-branch-isolation-tracking-to-storypole-a65543",
+        "title": "Add TaskPlan, multi-commit VerificationReceipt, and branch isolation tracking to storypole",
+        "description": "Upgrade storypole with first-class TaskPlan support, design markdown persistence to .storypole/plans/<KEY>.md, and multi-commit branch tracking in AgentClaim and VerificationReceipt.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1792858551490,
+        "updated_at_epoch_ms": 1792858551490
+      }
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+      "claim": {
+        "agent_id": "antigravity",
+        "claimed_at_epoch_ms": 1792858559774,
+        "lease_expires_at_epoch_ms": 1792862159774,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by antigravity",
+      "timestamp_ms": 1792858559774
+    },
+    {
+      "event": "task_verified",
+      "task_id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Implemented TaskPlan, multi-commit VerificationReceipt, and branch isolation tracking in storypole",
+        "verified_at_epoch_ms": 1792859521657,
+        "git_branch": "feat/storypole-plan-and-gb18-spec",
+        "base_commit_sha": "1f3ce7495b99a20865f12540c9a553824461d780",
+        "head_commit_sha": "1f3ce7495b99a20865f12540c9a553824461d780",
+        "commit_shas": [
+          "1f3ce7495b99a20865f12540c9a553824461d780"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_verified",
+      "task_id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Delivered: TaskPlan+PlanStep live in gaugeblock-contracts (storypole-core/model/plan.rs), ops/plan_ops.rs persists .storypole/plans/<KEY>.md, claim --branch records the lease branch+base, and VerificationReceipt carries git_branch/base_commit_sha/head_commit_sha/commit_shas[]. No outstanding work.",
+        "verified_at_epoch_ms": 1793942108808,
+        "git_branch": "main",
+        "base_commit_sha": "afce824da0ce27926a861d19e046ef282150b9ab",
+        "head_commit_sha": "afce824da0ce27926a861d19e046ef282150b9ab",
+        "commit_shas": [
+          "afce824da0ce27926a861d19e046ef282150b9ab"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "a655439f-8f4d-49d3-b24d-89f01fdfe164",
+      "status": "verified",
+      "timestamp_ms": 1794037957714
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "ticket": {
+    "id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+    "ticket_key": "GB-334",
+    "slug": "verify-gates-unchecked-plan-steps-unresolved-children-manual-receipts-state-deletion-827f7f",
+    "title": "Verify gates: unchecked plan steps, unresolved children, manual receipts, state deletion",
+    "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: GB-57 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.\n\nPARTIAL 2026-11-08 (commit 347ae5d): refusal 1 of 4 is live.\n\nverify now refuses when the task's own plan has unchecked steps, naming each open step. A task with no plan,\nand a plan whose steps are all complete, pass - the plan is an optional stronger promise, and requiring one\nwould punish the honest small ticket.\n\nThis is the refusal that would have stopped the failure that motivated the ticket: GB-57 verified with 0 of 6\nsteps and a record claiming delivery of a fleet of distributed ledgers that did not exist.\n\nThe other three, each with the reason it is not in this commit:\n  - epic closure with unresolved children needs the workspace rollup to see children in other repositories\n    (GB-330);\n  - --manual alongside an executable chain: the chain is resolved inside receipts::build, so the check belongs\n    there rather than at the entry point;\n  - a commit deleting tracked .gaugeblock state without a decision record is a miter audit rule, in another\n    repository.",
+    "kind": "feature",
+    "status": "in_progress",
+    "priority": 1,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "a perf task cannot be verified without a before/after measurement recorded in the commit, the task and a durable document (law 12), so the kind added in GB-343 does not license an unmeasured claim"
+    ],
+    "plan": null,
+    "active_claim": {
+      "agent_id": "cline-agent",
+      "claimed_at_epoch_ms": 1794205703436,
+      "lease_expires_at_epoch_ms": 1794209303436,
+      "git_branch": "main",
+      "base_commit_sha": "347ae5d6fe2f936dfd30ef9920f0bbb072c82bfa"
+    },
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167014714,
+    "updated_at_epoch_ms": 1794205703855
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+        "ticket_key": "GB-334",
+        "slug": "verify-gates-unchecked-plan-steps-unresolved-children-manual-receipts-state-deletion-827f7f",
+        "title": "Verify gates: unchecked plan steps, unresolved children, manual receipts, state deletion",
+        "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: GB-57 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "each refusal has a test that fails against today behaviour; GB-57 as it stands fails rules 1 and 3"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167014714,
+        "updated_at_epoch_ms": 1794167014714
+      }
+    },
+    {
+      "event": "edge_added",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "GB-328",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794167014782
+    },
+    {
+      "event": "task_updated",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "a perf task cannot be verified without a before/after measurement recorded in the commit, the task and a durable document (law 12), so the kind added in GB-343 does not license an unmeasured claim"
+      ],
+      "timestamp_ms": 1794198312801
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794205703436,
+        "lease_expires_at_epoch_ms": 1794209303436,
+        "git_branch": "main",
+        "base_commit_sha": "347ae5d6fe2f936dfd30ef9920f0bbb072c82bfa"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794205703436
+    },
+    {
+      "event": "task_updated",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "title": null,
+      "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: GB-57 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.\n\nPARTIAL 2026-11-08 (commit 347ae5d): refusal 1 of 4 is live.\n\nverify now refuses when the task's own plan has unchecked steps, naming each open step. A task with no plan,\nand a plan whose steps are all complete, pass - the plan is an optional stronger promise, and requiring one\nwould punish the honest small ticket.\n\nThis is the refusal that would have stopped the failure that motivated the ticket: GB-57 verified with 0 of 6\nsteps and a record claiming delivery of a fleet of distributed ledgers that did not exist.\n\nThe other three, each with the reason it is not in this commit:\n  - epic closure with unresolved children needs the workspace rollup to see children in other repositories\n    (GB-330);\n  - --manual alongside an executable chain: the chain is resolved inside receipts::build, so the check belongs\n    there rather than at the entry point;\n  - a commit deleting tracked .gaugeblock state without a decision record is a miter audit rule, in another\n    repository.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794205703855
+    }
+  ]
+}

@@ -1,0 +1,210 @@
+{
+  "ticket": {
+    "id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+    "ticket_key": "GB-132",
+    "slug": "configure-sqlite-wal-journal-mode-and-synchronous-normal-in-storypole-core-c97ab6",
+    "title": "Configure SQLite WAL journal mode and synchronous=NORMAL in storypole-core",
+    "description": "Configure high-performance SQLite PRAGMAs (journal_mode=WAL, synchronous=NORMAL, temp_store=MEMORY, cache_size=-64000) when opening storypole index.sqlite to eliminate blocking fsync disk stalls.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": [
+        "sqlite,io,perf,storypole"
+      ]
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "cc76e2e9-add6-4a0d-b2c3-47d1966e8f83",
+        "target_ticket_key": "GB-128",
+        "target_repo": "workspace"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "open_and_sync_index initializes WAL journal mode and NORMAL synchronous,Storypole ledger rebuilds and queries run 10x-50x faster without reader/writer lock contention"
+    ],
+    "plan": {
+      "summary": "Configure SQLite WAL journal mode and synchronous=NORMAL in storypole-core",
+      "design_markdown": "# Task Plan: GB-132 — Configure SQLite WAL Journal Mode and synchronous=NORMAL in storypole-core\n\n> **Task Key:** `GB-132`  \n> **Parent Epic:** `GB-128`  \n> **Scope:** `storypole-core`  \n> **Status:** Planned\n\n---\n\n## 1. Problem Statement\n`storypole-core` currently opens `index.sqlite` without setting SQLite performance PRAGMAs, defaulting to rollback journal deletion and full synchronous disk flushes (`PRAGMA synchronous = FULL`). Every task update, verification, and ledger rebuild incurs blocking `fsync()` system calls.\n\n---\n\n## 2. Technical Blueprint\n1. In `storypole-core/src/index/mod.rs` (`open_and_sync_index`):\n   * Immediately after `Connection::open(sqlite_path)`, execute:\n     ```rust\n     conn.execute_batch(\n         \"PRAGMA journal_mode = WAL;\n          PRAGMA synchronous = NORMAL;\n          PRAGMA temp_store = MEMORY;\n          PRAGMA cache_size = -64000;\n          PRAGMA busy_timeout = 5000;\"\n     )?;\n     ```\n2. Verify WAL mode compatibility with existing tests and multi-process access.\n\n---\n\n## 3. Execution Steps\n* **Step 1:** Add high-performance SQLite PRAGMAs to `open_and_sync_index` in `storypole-core`.\n* **Step 2:** Verify all storypole unit and integration tests pass cleanly under WAL mode.\n* **Step 3:** Tier 2 verification (`cargo nextest run -p storypole-core`).\n",
+      "steps": [
+        {
+          "step_id": "1",
+          "title": "Add high-performance SQLite PRAGMAs to open_and_sync_index",
+          "target_files": [],
+          "verification_gate": "cargo check -p storypole-core",
+          "completed": false
+        },
+        {
+          "step_id": "2",
+          "title": "Verify storypole unit and integration tests under WAL mode",
+          "target_files": [],
+          "verification_gate": "cargo nextest run -p storypole-core",
+          "completed": false
+        },
+        {
+          "step_id": "3",
+          "title": "Tier 2 verification",
+          "target_files": [],
+          "verification_gate": "cargo nextest run -p storypole-core",
+          "completed": false
+        }
+      ],
+      "plan_file_path": ".gaugeblock/storypole/plans/GB-132.md",
+      "updated_at_epoch_ms": 1793170579350
+    },
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Tier 3 gate green on merged storypole main: fmt --all --check OK, clippy --workspace --all-targets -D warnings OK, nextest --workspace 23/23. Index connections now use WAL + synchronous=NORMAL + 64MiB cache + 5s busy_timeout, asserted by two new regression tests (including reopen).",
+      "verified_at_epoch_ms": 1793174996023,
+      "git_branch": "fix/outfeed-doc-drift",
+      "base_commit_sha": "2d869bb0367f28ff91a85756ba0e6fff829928f5",
+      "head_commit_sha": "2d869bb0367f28ff91a85756ba0e6fff829928f5",
+      "commit_shas": [
+        "2d869bb0367f28ff91a85756ba0e6fff829928f5"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793170423943,
+    "updated_at_epoch_ms": 1794038000316,
+    "archived_at_epoch_ms": 1794038000316
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+        "ticket_key": "GB-132",
+        "slug": "configure-sqlite-wal-journal-mode-and-synchronous-normal-in-storypole-core-c97ab6",
+        "title": "Configure SQLite WAL journal mode and synchronous=NORMAL in storypole-core",
+        "description": "Configure high-performance SQLite PRAGMAs (journal_mode=WAL, synchronous=NORMAL, temp_store=MEMORY, cache_size=-64000) when opening storypole index.sqlite to eliminate blocking fsync disk stalls.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": [
+            "sqlite,io,perf,storypole"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "open_and_sync_index initializes WAL journal mode and NORMAL synchronous,Storypole ledger rebuilds and queries run 10x-50x faster without reader/writer lock contention"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793170423943,
+        "updated_at_epoch_ms": 1793170423943
+      }
+    },
+    {
+      "event": "edge_added",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "cc76e2e9-add6-4a0d-b2c3-47d1966e8f83",
+        "target_ticket_key": "GB-128",
+        "target_repo": "workspace"
+      },
+      "timestamp_ms": 1793170427572
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "plan": {
+        "summary": "Configure SQLite WAL journal mode and synchronous=NORMAL in storypole-core",
+        "design_markdown": "# Task Plan: GB-132 — Configure SQLite WAL Journal Mode and synchronous=NORMAL in storypole-core\n\n> **Task Key:** `GB-132`  \n> **Parent Epic:** `GB-128`  \n> **Scope:** `storypole-core`  \n> **Status:** Planned\n\n---\n\n## 1. Problem Statement\n`storypole-core` currently opens `index.sqlite` without setting SQLite performance PRAGMAs, defaulting to rollback journal deletion and full synchronous disk flushes (`PRAGMA synchronous = FULL`). Every task update, verification, and ledger rebuild incurs blocking `fsync()` system calls.\n\n---\n\n## 2. Technical Blueprint\n1. In `storypole-core/src/index/mod.rs` (`open_and_sync_index`):\n   * Immediately after `Connection::open(sqlite_path)`, execute:\n     ```rust\n     conn.execute_batch(\n         \"PRAGMA journal_mode = WAL;\n          PRAGMA synchronous = NORMAL;\n          PRAGMA temp_store = MEMORY;\n          PRAGMA cache_size = -64000;\n          PRAGMA busy_timeout = 5000;\"\n     )?;\n     ```\n2. Verify WAL mode compatibility with existing tests and multi-process access.\n\n---\n\n## 3. Execution Steps\n* **Step 1:** Add high-performance SQLite PRAGMAs to `open_and_sync_index` in `storypole-core`.\n* **Step 2:** Verify all storypole unit and integration tests pass cleanly under WAL mode.\n* **Step 3:** Tier 2 verification (`cargo nextest run -p storypole-core`).\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "Add high-performance SQLite PRAGMAs to open_and_sync_index",
+            "target_files": [],
+            "verification_gate": "cargo check -p storypole-core",
+            "completed": false
+          },
+          {
+            "step_id": "2",
+            "title": "Verify storypole unit and integration tests under WAL mode",
+            "target_files": [],
+            "verification_gate": "cargo nextest run -p storypole-core",
+            "completed": false
+          },
+          {
+            "step_id": "3",
+            "title": "Tier 2 verification",
+            "target_files": [],
+            "verification_gate": "cargo nextest run -p storypole-core",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/GB-132.md",
+        "updated_at_epoch_ms": 1793170579350
+      },
+      "timestamp_ms": 1793170579350
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793174824556,
+        "lease_expires_at_epoch_ms": 1793178424556,
+        "git_branch": "feat/storypole-sqlite-wal",
+        "base_commit_sha": "2d869bb0367f28ff91a85756ba0e6fff829928f5"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793174824556
+    },
+    {
+      "event": "task_verified",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Tier 3 gate green on merged storypole main: fmt --all --check OK, clippy --workspace --all-targets -D warnings OK, nextest --workspace 23/23. Index connections now use WAL + synchronous=NORMAL + 64MiB cache + 5s busy_timeout, asserted by two new regression tests (including reopen).",
+        "verified_at_epoch_ms": 1793174996023,
+        "git_branch": "fix/outfeed-doc-drift",
+        "base_commit_sha": "2d869bb0367f28ff91a85756ba0e6fff829928f5",
+        "head_commit_sha": "2d869bb0367f28ff91a85756ba0e6fff829928f5",
+        "commit_shas": [
+          "2d869bb0367f28ff91a85756ba0e6fff829928f5"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "c97ab642-4873-45e0-8125-1dc7c1389351",
+      "status": "verified",
+      "timestamp_ms": 1794038000316
+    }
+  ]
+}

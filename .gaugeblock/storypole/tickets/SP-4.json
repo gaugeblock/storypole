@@ -1,0 +1,131 @@
+{
+  "ticket": {
+    "id": "3e5cd6f0-9c2f-4189-9c5f-a7fe31ad340d",
+    "ticket_key": "SP-4",
+    "slug": "render-a-task-s-own-pending-decisions-in-the-human-briefing-3e5cd6",
+    "title": "Render a task's own pending decisions in the human briefing",
+    "description": "Repro: from a repo with a decision-blocked task run ask-decision on it, then show it. The human output omits the pending decision entirely, while show --json carries it under task.decisions (status, category, proposed_options). Evidence: format_task_briefing renders inherited_decisions only, and there is no reference to .decisions anywhere in storypole-cli, so a task's own decision is never printed. Observed against AF-17 and AF-18 in the aerofoil backlog on storypole 0.1.0-beta.2 and still present on main at 09557e7.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-cli",
+      "module_path": null,
+      "target_files": [
+        "crates/storypole-cli/src/format.rs"
+      ],
+      "target_symbols": [
+        "format_task_briefing"
+      ],
+      "labels": [
+        "cli,briefing"
+      ]
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "DONE 2026-11-06, commit 50247d3 (storypole).\n\nThe human briefing now prints the task's own decisions, unresolved first, with the proposed options listed for any pending one. Before this it printed only decisions inherited from linked tasks, so the very question blocking the work was invisible in the briefing meant to state what blocks the work. The data was never missing: TaskNode.decisions has been populated all along and no renderer read it.\n\nOrdering and option-printing are the substance, not the formatting: a question the operator must answer outranks a decision already made, and a briefing that asks something it gives no way to answer is only half a briefing.\n\nThree tests: pending decision prints its options; unresolved sorts before resolved; a task with no decisions adds nothing. The renderer lives in format_decisions.rs (88 lines) because format.rs was already at 193 and the tests would have crossed the 250-line limit.\n\nTier 2: fmt clean, clippy -p storypole-cli --all-targets -D warnings clean, 3 tests green.\n\nNote: recording it here because it is the shape of SP-4 itself - this ticket was recovered from a legacy ledger during GB-260's archive, so it is the one ticket in the queue that existed nowhere else."
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "miter contracts && outfeed lockfiles && chalkline docs check --workspace",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Polyglot Contract Verification across SQL, Rust, and TypeScript\n================================================================================\nVerified Multi-Language Entities: 0\nEntities with Contract Drift:     0\n\nALL CONTRACTS CONSISTENT: No cross-language schema drifts detected.\nREPOSITORY     LOCKFILE     FRESH   \n------------------------------------\n\nAll 0 repositories track a fresh Cargo.lock.\n\n=== Gaugeblock 9-Document Architecture Audit (Workspace) ===\nWorkspace Root: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\nRepo           README CONTRIB PROD   ARCH   SPEC   DESIGN   ROADMAP   CHANGELOG   AGENTS   Status    \n-----------------------------------------------------------------------------------------------\nworkspace      [OK]   [OK]    [OK]   [OK]   [OK]   [OK]     [OK]      [OK]        [OK]     CLEAN     \n\nSummary: 1 targets audited, 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794032238584,
+      "git_branch": "main",
+      "base_commit_sha": "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b",
+      "head_commit_sha": "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b",
+      "commit_shas": [
+        "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793819329495,
+    "updated_at_epoch_ms": 1794038004923,
+    "archived_at_epoch_ms": 1794038004923
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "3e5cd6f0-9c2f-4189-9c5f-a7fe31ad340d",
+        "ticket_key": "SP-4",
+        "slug": "render-a-task-s-own-pending-decisions-in-the-human-briefing-3e5cd6",
+        "title": "Render a task's own pending decisions in the human briefing",
+        "description": "Repro: from a repo with a decision-blocked task run ask-decision on it, then show it. The human output omits the pending decision entirely, while show --json carries it under task.decisions (status, category, proposed_options). Evidence: format_task_briefing renders inherited_decisions only, and there is no reference to .decisions anywhere in storypole-cli, so a task's own decision is never printed. Observed against AF-17 and AF-18 in the aerofoil backlog on storypole 0.1.0-beta.2 and still present on main at 09557e7.",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-cli",
+          "module_path": null,
+          "target_files": [
+            "crates/storypole-cli/src/format.rs"
+          ],
+          "target_symbols": [
+            "format_task_briefing"
+          ],
+          "labels": [
+            "cli,briefing"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "show KEY renders each own decision with status, category, question and proposed options; a pending decision is distinguishable from a resolved one; list marks a task that is blocked by a decision so the reason is not invisible"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793819329495,
+        "updated_at_epoch_ms": 1793819329495
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "3e5cd6f0-9c2f-4189-9c5f-a7fe31ad340d",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "DONE 2026-11-06, commit 50247d3 (storypole).\n\nThe human briefing now prints the task's own decisions, unresolved first, with the proposed options listed for any pending one. Before this it printed only decisions inherited from linked tasks, so the very question blocking the work was invisible in the briefing meant to state what blocks the work. The data was never missing: TaskNode.decisions has been populated all along and no renderer read it.\n\nOrdering and option-printing are the substance, not the formatting: a question the operator must answer outranks a decision already made, and a briefing that asks something it gives no way to answer is only half a briefing.\n\nThree tests: pending decision prints its options; unresolved sorts before resolved; a task with no decisions adds nothing. The renderer lives in format_decisions.rs (88 lines) because format.rs was already at 193 and the tests would have crossed the 250-line limit.\n\nTier 2: fmt clean, clippy -p storypole-cli --all-targets -D warnings clean, 3 tests green.\n\nNote: recording it here because it is the shape of SP-4 itself - this ticket was recovered from a legacy ledger during GB-260's archive, so it is the one ticket in the queue that existed nowhere else."
+      ],
+      "timestamp_ms": 1794032225969
+    },
+    {
+      "event": "task_verified",
+      "task_id": "3e5cd6f0-9c2f-4189-9c5f-a7fe31ad340d",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "miter contracts && outfeed lockfiles && chalkline docs check --workspace",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Polyglot Contract Verification across SQL, Rust, and TypeScript\n================================================================================\nVerified Multi-Language Entities: 0\nEntities with Contract Drift:     0\n\nALL CONTRACTS CONSISTENT: No cross-language schema drifts detected.\nREPOSITORY     LOCKFILE     FRESH   \n------------------------------------\n\nAll 0 repositories track a fresh Cargo.lock.\n\n=== Gaugeblock 9-Document Architecture Audit (Workspace) ===\nWorkspace Root: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\nRepo           README CONTRIB PROD   ARCH   SPEC   DESIGN   ROADMAP   CHANGELOG   AGENTS   Status    \n-----------------------------------------------------------------------------------------------\nworkspace      [OK]   [OK]    [OK]   [OK]   [OK]   [OK]     [OK]      [OK]        [OK]     CLEAN     \n\nSummary: 1 targets audited, 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794032238584,
+        "git_branch": "main",
+        "base_commit_sha": "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b",
+        "head_commit_sha": "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b",
+        "commit_shas": [
+          "50247d3787ab7e81fa8fca8db66a4cc852ba1c7b"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "3e5cd6f0-9c2f-4189-9c5f-a7fe31ad340d",
+      "status": "verified",
+      "timestamp_ms": 1794038004923
+    }
+  ]
+}

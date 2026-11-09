@@ -105,6 +105,9 @@ fn main() -> Result<()> {
                 Commands::Update(args) => handle_update(&mut store, args, cli.json)?,
                 Commands::Plan(args) => handle_plan(&mut store, args, cli.json)?,
                 Commands::Graph { format } => handle_graph(&store, &format, cli.json)?,
+                Commands::Migrate { dry_run } => {
+                    crate::handlers::migrate_cmds::handle_migrate(&root_dir, dry_run, cli.json)?
+                }
                 Commands::Spool(args) => match args.command {
                     SpoolCommands::Migrate { path, dry_run } => {
                         handle_spool_migrate(&store, path.as_deref(), dry_run, cli.json)?;

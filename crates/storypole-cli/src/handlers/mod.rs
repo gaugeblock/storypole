@@ -5,6 +5,7 @@ pub mod config_cmds;
 pub mod core_cmds;
 pub mod ledger_cmds;
 pub mod lifecycle_cmds;
+pub mod migrate_cmds;
 pub mod plan_cmds;
 pub mod spool_cmds;
 pub mod update_cmd;

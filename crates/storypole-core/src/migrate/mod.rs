@@ -10,6 +10,7 @@
 //! states as replaying the ledger they came from.
 
 pub mod apply;
+pub mod manifests;
 
 use std::collections::BTreeMap;
 

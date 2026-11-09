@@ -110,6 +110,12 @@ pub enum Commands {
     /// Manage multi-repository workspace members and distributed migration
     Workspace(crate::workspace_args::WorkspaceArgs),
     /// Inspect or repair the local telemetry spool outbox
+    /// Split one store's tickets into the repositories that own them
+    Migrate {
+        /// Report what would move without writing anything
+        #[arg(long)]
+        dry_run: bool,
+    },
     Spool(SpoolArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,

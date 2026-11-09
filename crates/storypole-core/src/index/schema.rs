@@ -68,7 +68,12 @@ pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
         CREATE TABLE IF NOT EXISTS task_edges (
             task_id TEXT NOT NULL,
             kind TEXT NOT NULL,
+            -- identity: the target's uuid. The two columns below are the locator, and they exist because a
+            -- cross-repository edge cannot be rendered from a uuid in a checkout that does not hold the
+            -- target (`GB-332`).
             target_id TEXT NOT NULL,
+            target_ticket_key TEXT,
+            target_repo TEXT,
             PRIMARY KEY (task_id, kind, target_id)
         );
         CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
@@ -81,5 +86,48 @@ pub fn init_schema(conn: &Connection) -> Result<(), StorypoleError> {
     // it is already present (GB-179).
     let _ = conn.execute("ALTER TABLE tasks ADD COLUMN archived_at INTEGER", []);
 
+    ensure_edge_locator_columns(conn)?;
     Ok(())
+}
+
+/// Adds the locator columns to an index built before they existed.
+///
+/// `CREATE TABLE IF NOT EXISTS` does not alter an existing table, so an index created by an earlier version keeps
+/// its three columns and silently drops the locator on every rebuild. `ALTER TABLE ... ADD COLUMN` is additive and
+/// safe to attempt on every open.
+///
+/// # Errors
+///
+/// [`StorypoleError::Sqlite`] when the table cannot be inspected or altered.
+fn ensure_edge_locator_columns(conn: &rusqlite::Connection) -> Result<(), StorypoleError> {
+    for column in ["target_ticket_key", "target_repo"] {
+        if !has_column(conn, "task_edges", column)? {
+            conn.execute(
+                &format!("ALTER TABLE task_edges ADD COLUMN {column} TEXT"),
+                [],
+            )
+            .map_err(StorypoleError::Sqlite)?;
+        }
+    }
+    Ok(())
+}
+
+/// Whether a table already has a column.
+fn has_column(
+    conn: &rusqlite::Connection,
+    table: &str,
+    column: &str,
+) -> Result<bool, StorypoleError> {
+    let mut stmt = conn
+        .prepare(&format!("PRAGMA table_info({table})"))
+        .map_err(StorypoleError::Sqlite)?;
+    let names = stmt
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(StorypoleError::Sqlite)?;
+    for name in names {
+        if name.map_err(StorypoleError::Sqlite)? == column {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }

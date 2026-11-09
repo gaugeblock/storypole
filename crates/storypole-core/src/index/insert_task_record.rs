@@ -72,11 +72,13 @@ pub fn insert_task_record(conn: &Connection, task: &TaskNode) -> Result<(), Stor
     for edge in &task.edges {
         let edge_kind_str = serde_json::to_string(&edge.kind)?.replace('"', "");
         conn.execute(
-            "INSERT OR IGNORE INTO task_edges (task_id, kind, target_id) VALUES (?, ?, ?)",
+            "INSERT OR IGNORE INTO task_edges (task_id, kind, target_id, target_ticket_key, target_repo)              VALUES (?, ?, ?, ?, ?)",
             params![
                 task.id.to_string(),
                 edge_kind_str,
-                edge.target_id.to_string()
+                edge.target_id.to_string(),
+                edge.target_ticket_key.clone(),
+                edge.target_repo.clone()
             ],
         )
         .map_err(StorypoleError::Sqlite)?;

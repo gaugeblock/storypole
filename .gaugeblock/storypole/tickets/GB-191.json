@@ -1,0 +1,127 @@
+{
+  "ticket": {
+    "id": "3c39ac2e-8cc1-44ce-813f-a1f9fbfc03be",
+    "ticket_key": "GB-191",
+    "slug": "split-storypole-core-index-mod-rs-284-lines-over-the-hard-250-ceiling-3c39ac",
+    "title": "Split storypole-core index/mod.rs: 284 lines, over the hard 250 ceiling",
+    "description": "storypole CI runs the same 250-line audit as every repo, so this file makes the audit step red today. miter slice proposes two extractions, neither with circular risk: (1) lines 33-204 to index/open_and_sync_index.rs carrying open_and_sync_index, apply_connection_pragmas, init_schema, check_needs_rebuild, rebuild_index, re-exported pub(crate), leaving ~116 lines; (2) lines 206-284 to index/insert_task_record.rs carrying insert_task_record. Do (1) first and re-run the audit, because (2) alone still leaves 205.",
+    "kind": "tech_debt",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/index/mod.rs"
+      ],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "Every .rs file under crates/ src/ tests/ is at or under 250 lines and the CI audit step passes",
+      "Extraction follows the miter slice blueprint and keeps pub(crate) visibility unchanged"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cargo-nextest",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "index/mod.rs 284 lines became mod.rs 11 + schema 85 + rebuild 122 + insert_task_record 86; fmt/clippy/nextest green (44 tests); public paths re-exported unchanged",
+      "verified_at_epoch_ms": 1793308082456,
+      "git_branch": "refactor/gb-191-split-index-mod",
+      "base_commit_sha": "0e7dde49e58c92022e23ef39adfc5a0a57b0116c",
+      "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+      "commit_shas": [
+        "8e8aba3288174d7af3a5ae1569a775afd7d933ad",
+        "167bcf8a3d47c5739745c4279bd2984031b7afd9",
+        "0f51add598b8ae496f8c426006f965b1dffaacf3",
+        "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793307119638,
+    "updated_at_epoch_ms": 1794038003291,
+    "archived_at_epoch_ms": 1794038003291
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "3c39ac2e-8cc1-44ce-813f-a1f9fbfc03be",
+        "ticket_key": "GB-191",
+        "slug": "split-storypole-core-index-mod-rs-284-lines-over-the-hard-250-ceiling-3c39ac",
+        "title": "Split storypole-core index/mod.rs: 284 lines, over the hard 250 ceiling",
+        "description": "storypole CI runs the same 250-line audit as every repo, so this file makes the audit step red today. miter slice proposes two extractions, neither with circular risk: (1) lines 33-204 to index/open_and_sync_index.rs carrying open_and_sync_index, apply_connection_pragmas, init_schema, check_needs_rebuild, rebuild_index, re-exported pub(crate), leaving ~116 lines; (2) lines 206-284 to index/insert_task_record.rs carrying insert_task_record. Do (1) first and re-run the audit, because (2) alone still leaves 205.",
+        "kind": "tech_debt",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/index/mod.rs"
+          ],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "Every .rs file under crates/ src/ tests/ is at or under 250 lines and the CI audit step passes",
+          "Extraction follows the miter slice blueprint and keeps pub(crate) visibility unchanged"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793307119638,
+        "updated_at_epoch_ms": 1793307119638
+      }
+    },
+    {
+      "event": "task_verified",
+      "task_id": "3c39ac2e-8cc1-44ce-813f-a1f9fbfc03be",
+      "receipt": {
+        "verifier": "cargo-nextest",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "index/mod.rs 284 lines became mod.rs 11 + schema 85 + rebuild 122 + insert_task_record 86; fmt/clippy/nextest green (44 tests); public paths re-exported unchanged",
+        "verified_at_epoch_ms": 1793308082456,
+        "git_branch": "refactor/gb-191-split-index-mod",
+        "base_commit_sha": "0e7dde49e58c92022e23ef39adfc5a0a57b0116c",
+        "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+        "commit_shas": [
+          "8e8aba3288174d7af3a5ae1569a775afd7d933ad",
+          "167bcf8a3d47c5739745c4279bd2984031b7afd9",
+          "0f51add598b8ae496f8c426006f965b1dffaacf3",
+          "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "3c39ac2e-8cc1-44ce-813f-a1f9fbfc03be",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953187165
+    },
+    {
+      "event": "task_archived",
+      "task_id": "3c39ac2e-8cc1-44ce-813f-a1f9fbfc03be",
+      "status": "verified",
+      "timestamp_ms": 1794038003291
+    }
+  ]
+}

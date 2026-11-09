@@ -1,0 +1,146 @@
+{
+  "ticket": {
+    "id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+    "ticket_key": "GB-185",
+    "slug": "concurrent-storypole-defers-allocate-the-same-ticket-key-and-poison-the-index-9b28f6",
+    "title": "Concurrent storypole defers allocate the same ticket key and poison the index",
+    "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from GB-147 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to GB-184 by hand.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::mutations::add_task"
+      ],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793466130693,
+      "git_branch": "main",
+      "base_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+      "head_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+      "commit_shas": [
+        "b8f9f54f177f4094f5bb795fb98b51f394f69ad6"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793304918196,
+    "updated_at_epoch_ms": 1794038015487,
+    "archived_at_epoch_ms": 1794038015487
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+        "ticket_key": "GB-185",
+        "slug": "concurrent-storypole-defers-allocate-the-same-ticket-key-and-poison-the-index-9b28f6",
+        "title": "Concurrent storypole defers allocate the same ticket key and poison the index",
+        "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from GB-147 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to GB-184 by hand.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::mutations::add_task"
+          ],
+          "labels": []
+        },
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+          }
+        ],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793304918196,
+        "updated_at_epoch_ms": 1793304918196
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793466042848,
+        "lease_expires_at_epoch_ms": 1793469642848,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793466042848
+    },
+    {
+      "event": "task_verified",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793466130693,
+        "git_branch": "main",
+        "base_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+        "head_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+        "commit_shas": [
+          "b8f9f54f177f4094f5bb795fb98b51f394f69ad6"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953212882
+    },
+    {
+      "event": "task_archived",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "status": "verified",
+      "timestamp_ms": 1794038015487
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "ticket": {
+    "id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+    "ticket_key": "GB-257",
+    "slug": "claim-leases-expire-but-nothing-returns-the-task-to-the-backlog-so-the-board-shows-ghost-work-35e937",
+    "title": "Claim leases expire but nothing returns the task to the backlog, so the board shows ghost work",
+    "description": "Reported by the owner 2026-11-06: the workbench showed GB-195 and GB-236 as in progress when nobody was working on them, and no ticket ever appeared to transition while work was happening.\\n\\nTwo distinct causes. (1) MISSING REAPER: AgentClaim carries a TTL and is_expired exists, and claim_task already allows a takeover of an expired lease, but nothing moved an InProgress task back to Ready when its holder stopped heartbeating. GB-195 and GB-236 had been InProgress with leases expired 128 and 131 hours. (2) PROCESS: work was verified without ever being claimed, so tickets went Ready -> Verified with no InProgress in between and the board never showed the work.\\n\\nFix for (1): 'storypole reap' plus --dry-run releases the lease (TaskReleased) and returns the task to Ready (StatusChanged with the expiry in the reason). Explicit command rather than a read side effect, because a status change is a ledger event and a read-only checkout must not fail. Verified on this workspace: dry-run named exactly GB-195 and GB-236, the run returned both, and benchwork capabilities then matched storypole ledger-reconcile exactly - archived 61, blocked 4, deferred 26, ready 18, triage 12, verified 164, and no inprogress bucket.\\n\\nOUTSTANDING: no unit test covers the reaper yet - it was verified against the live ledger only. The next change here should add a temp-store test asserting that an expired claim yields TaskReleased then StatusChanged and a live one yields nothing.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 1,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::lease::reap_expired_claims"
+      ],
+      "labels": [
+        "storypole,claims,observability,benchwork"
+      ]
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "Unit test in storypole-core/tests/archive_and_lease_tests.rs (storypole 1590f95): 4 tests covering archive state",
+      " unarchive",
+      " expired-claim reaping and a live claim being left alone; workspace nextest 55/55."
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Reaper shipped in storypole 542f960 ('storypole reap' + --dry-run). Measured: dry-run named exactly GB-195 and GB-236 (leases expired 128h and 131h), the run returned both to Ready, ledger-reconcile went from inprogress 2 / ready 16 / verified 163 to no inprogress / ready 18 / verified 164 with index and ledger agreeing, and the rebuilt benchwork capabilities then reported the identical set. Unit test for the reaper is still outstanding and recorded on the ticket.",
+      "verified_at_epoch_ms": 1793952680986,
+      "git_branch": "main",
+      "base_commit_sha": "542f9604c4b257cb6758e108d81c7acb03c255c3",
+      "head_commit_sha": "542f9604c4b257cb6758e108d81c7acb03c255c3",
+      "commit_shas": [
+        "542f9604c4b257cb6758e108d81c7acb03c255c3"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793952671799,
+    "updated_at_epoch_ms": 1794037984939,
+    "archived_at_epoch_ms": 1794037984939
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+        "ticket_key": "GB-257",
+        "slug": "claim-leases-expire-but-nothing-returns-the-task-to-the-backlog-so-the-board-shows-ghost-work-35e937",
+        "title": "Claim leases expire but nothing returns the task to the backlog, so the board shows ghost work",
+        "description": "Reported by the owner 2026-11-06: the workbench showed GB-195 and GB-236 as in progress when nobody was working on them, and no ticket ever appeared to transition while work was happening.\\n\\nTwo distinct causes. (1) MISSING REAPER: AgentClaim carries a TTL and is_expired exists, and claim_task already allows a takeover of an expired lease, but nothing moved an InProgress task back to Ready when its holder stopped heartbeating. GB-195 and GB-236 had been InProgress with leases expired 128 and 131 hours. (2) PROCESS: work was verified without ever being claimed, so tickets went Ready -> Verified with no InProgress in between and the board never showed the work.\\n\\nFix for (1): 'storypole reap' plus --dry-run releases the lease (TaskReleased) and returns the task to Ready (StatusChanged with the expiry in the reason). Explicit command rather than a read side effect, because a status change is a ledger event and a read-only checkout must not fail. Verified on this workspace: dry-run named exactly GB-195 and GB-236, the run returned both, and benchwork capabilities then matched storypole ledger-reconcile exactly - archived 61, blocked 4, deferred 26, ready 18, triage 12, verified 164, and no inprogress bucket.\\n\\nOUTSTANDING: no unit test covers the reaper yet - it was verified against the live ledger only. The next change here should add a temp-store test asserting that an expired claim yields TaskReleased then StatusChanged and a live one yields nothing.",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::lease::reap_expired_claims"
+          ],
+          "labels": [
+            "storypole,claims,observability,benchwork"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793952671799,
+        "updated_at_epoch_ms": 1793952671799
+      }
+    },
+    {
+      "event": "task_verified",
+      "task_id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Reaper shipped in storypole 542f960 ('storypole reap' + --dry-run). Measured: dry-run named exactly GB-195 and GB-236 (leases expired 128h and 131h), the run returned both to Ready, ledger-reconcile went from inprogress 2 / ready 16 / verified 163 to no inprogress / ready 18 / verified 164 with index and ledger agreeing, and the rebuilt benchwork capabilities then reported the identical set. Unit test for the reaper is still outstanding and recorded on the ticket.",
+        "verified_at_epoch_ms": 1793952680986,
+        "git_branch": "main",
+        "base_commit_sha": "542f9604c4b257cb6758e108d81c7acb03c255c3",
+        "head_commit_sha": "542f9604c4b257cb6758e108d81c7acb03c255c3",
+        "commit_shas": [
+          "542f9604c4b257cb6758e108d81c7acb03c255c3"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953183072
+    },
+    {
+      "event": "task_updated",
+      "task_id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "Unit test in storypole-core/tests/archive_and_lease_tests.rs (storypole 1590f95): 4 tests covering archive state",
+        " unarchive",
+        " expired-claim reaping and a live claim being left alone; workspace nextest 55/55."
+      ],
+      "timestamp_ms": 1793954887014
+    },
+    {
+      "event": "task_archived",
+      "task_id": "35e937bf-0e37-4ace-bdc3-788d1f57418e",
+      "status": "verified",
+      "timestamp_ms": 1794037984939
+    }
+  ]
+}

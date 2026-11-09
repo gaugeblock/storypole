@@ -1,0 +1,125 @@
+{
+  "ticket": {
+    "id": "774a82d8-cca7-4d53-a092-b2fe55f7f0f2",
+    "ticket_key": "GB-147",
+    "slug": "concurrent-storypole-invocations-corrupt-the-ledger-by-splicing-two-json-events-onto-one-line-774a82",
+    "title": "Concurrent storypole invocations corrupt the ledger by splicing two JSON events onto one line",
+    "description": "Observed twice on 2026-10-28 while two agent tool calls ran storypole mutations in parallel: the ledger gained a line holding two concatenated JSON objects and every subsequent command failed with 'Corrupt ledger at line N: trailing characters at line 1 column M'. Incidents were at line 747 (claim + three defers) and line 833 (decide + claim). Appends are not atomic against concurrent writers: there is no advisory lock and no guarantee the event is written in a single syscall, so interleaved writers splice objects. Repair requires hand-splitting the affected line and deleting index.sqlite, because the SQLite projection does not notice an externally repaired ledger. Desired: take an advisory lock (flock) or write via a single serialized append per event; add an integrity check that refuses to append to a corrupt tail; and invalidate/rebuild the index when the ledger mtime or size no longer matches the projection.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ledger/mod.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::ledger::append_event"
+      ],
+      "labels": [
+        "race,ledger,data-integrity"
+      ]
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Merged to storypole main (0c9c0be): append_event now serialises the event into one buffer and writes it with a single append instead of a formatted writeln!, which could issue several writes and interleave with a concurrent writer. A tail check refuses to append to a ledger whose last byte is not a newline, returning CorruptLedger rather than swallowing an event, and the index is unaffected. Regression tests: 8 concurrent writers x 20 events produce exactly 160 lines, every one valid JSON and fully replayable; the corrupt-tail refusal leaves the file untouched; empty/missing file still works. Gates: clippy -p storypole-core --all-targets -D warnings clean, nextest -p storypole-core 28/28, fmt and docs clean.",
+      "verified_at_epoch_ms": 1793230631611,
+      "git_branch": "main",
+      "base_commit_sha": "0c9c0bebb2abe10da00b29c59e9f81767e43b623",
+      "head_commit_sha": "0c9c0bebb2abe10da00b29c59e9f81767e43b623",
+      "commit_shas": [
+        "0c9c0bebb2abe10da00b29c59e9f81767e43b623"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793225473164,
+    "updated_at_epoch_ms": 1794038009455,
+    "archived_at_epoch_ms": 1794038009455
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "774a82d8-cca7-4d53-a092-b2fe55f7f0f2",
+        "ticket_key": "GB-147",
+        "slug": "concurrent-storypole-invocations-corrupt-the-ledger-by-splicing-two-json-events-onto-one-line-774a82",
+        "title": "Concurrent storypole invocations corrupt the ledger by splicing two JSON events onto one line",
+        "description": "Observed twice on 2026-10-28 while two agent tool calls ran storypole mutations in parallel: the ledger gained a line holding two concatenated JSON objects and every subsequent command failed with 'Corrupt ledger at line N: trailing characters at line 1 column M'. Incidents were at line 747 (claim + three defers) and line 833 (decide + claim). Appends are not atomic against concurrent writers: there is no advisory lock and no guarantee the event is written in a single syscall, so interleaved writers splice objects. Repair requires hand-splitting the affected line and deleting index.sqlite, because the SQLite projection does not notice an externally repaired ledger. Desired: take an advisory lock (flock) or write via a single serialized append per event; add an integrity check that refuses to append to a corrupt tail; and invalidate/rebuild the index when the ledger mtime or size no longer matches the projection.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ledger/mod.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::ledger::append_event"
+          ],
+          "labels": [
+            "race,ledger,data-integrity"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793225473164,
+        "updated_at_epoch_ms": 1793225473164
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_verified",
+      "task_id": "774a82d8-cca7-4d53-a092-b2fe55f7f0f2",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Merged to storypole main (0c9c0be): append_event now serialises the event into one buffer and writes it with a single append instead of a formatted writeln!, which could issue several writes and interleave with a concurrent writer. A tail check refuses to append to a ledger whose last byte is not a newline, returning CorruptLedger rather than swallowing an event, and the index is unaffected. Regression tests: 8 concurrent writers x 20 events produce exactly 160 lines, every one valid JSON and fully replayable; the corrupt-tail refusal leaves the file untouched; empty/missing file still works. Gates: clippy -p storypole-core --all-targets -D warnings clean, nextest -p storypole-core 28/28, fmt and docs clean.",
+        "verified_at_epoch_ms": 1793230631611,
+        "git_branch": "main",
+        "base_commit_sha": "0c9c0bebb2abe10da00b29c59e9f81767e43b623",
+        "head_commit_sha": "0c9c0bebb2abe10da00b29c59e9f81767e43b623",
+        "commit_shas": [
+          "0c9c0bebb2abe10da00b29c59e9f81767e43b623"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "774a82d8-cca7-4d53-a092-b2fe55f7f0f2",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793289296644
+    },
+    {
+      "event": "task_archived",
+      "task_id": "774a82d8-cca7-4d53-a092-b2fe55f7f0f2",
+      "status": "verified",
+      "timestamp_ms": 1794038009455
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "ticket": {
+    "id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+    "ticket_key": "GB-137",
+    "slug": "storypole-claim-checks-out-the-lease-branch-in-the-store-root-instead-of-the-task-s-target-repository-7db9e3",
+    "title": "storypole claim checks out the lease branch in the store root instead of the task's target repository",
+    "description": "claim_task calls checkout_or_create_branch(Some(store.root_dir()), branch). For harness-level ledgers the store root is the meta-harness repository, so claiming a ticket scoped to a member repo (or with no repo scope) silently switches the harness repo onto that branch and subsequent harness commits land there. The branch should be created in the task's target repo (scope.repo -> workspace member path), and claims with no repo scope should not touch any branch. Verification receipts also inherit the wrong branch name from store.root_dir().",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ops/workflow.rs,storypole/crates/storypole-core/src/git.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::ops::workflow::claim_task"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Merged to storypole main (83346f5): claim resolves the task's owning repository (member store -> store root; workspace store -> <root>/<scope.repo> when it is a git repo) and only checks out there, recording the branch without any checkout when no repo owns the task; verification receipts read branch/HEAD/commit range from the task's target dir. Gates: clippy --workspace --all-targets -D warnings clean, nextest --workspace 26/26 (3 new claim-scope tests), fmt OK, docs 9/9.",
+      "verified_at_epoch_ms": 1793199922956,
+      "git_branch": "main",
+      "base_commit_sha": "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0",
+      "head_commit_sha": "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0",
+      "commit_shas": [
+        "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793175055762,
+    "updated_at_epoch_ms": 1794038008492,
+    "archived_at_epoch_ms": 1794038008492
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+        "ticket_key": "GB-137",
+        "slug": "storypole-claim-checks-out-the-lease-branch-in-the-store-root-instead-of-the-task-s-target-repository-7db9e3",
+        "title": "storypole claim checks out the lease branch in the store root instead of the task's target repository",
+        "description": "claim_task calls checkout_or_create_branch(Some(store.root_dir()), branch). For harness-level ledgers the store root is the meta-harness repository, so claiming a ticket scoped to a member repo (or with no repo scope) silently switches the harness repo onto that branch and subsequent harness commits land there. The branch should be created in the task's target repo (scope.repo -> workspace member path), and claims with no repo scope should not touch any branch. Verification receipts also inherit the wrong branch name from store.root_dir().",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ops/workflow.rs,storypole/crates/storypole-core/src/git.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::ops::workflow::claim_task"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793175055762,
+        "updated_at_epoch_ms": 1793175055762
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793199670619,
+        "lease_expires_at_epoch_ms": 1793203270619,
+        "git_branch": "fix/storypole-claim-branch-scope",
+        "base_commit_sha": "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793199670619
+    },
+    {
+      "event": "task_verified",
+      "task_id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Merged to storypole main (83346f5): claim resolves the task's owning repository (member store -> store root; workspace store -> <root>/<scope.repo> when it is a git repo) and only checks out there, recording the branch without any checkout when no repo owns the task; verification receipts read branch/HEAD/commit range from the task's target dir. Gates: clippy --workspace --all-targets -D warnings clean, nextest --workspace 26/26 (3 new claim-scope tests), fmt OK, docs 9/9.",
+        "verified_at_epoch_ms": 1793199922956,
+        "git_branch": "main",
+        "base_commit_sha": "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0",
+        "head_commit_sha": "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0",
+        "commit_shas": [
+          "ce5f87554188bab0f4161ec1d18fd4a414bdd0f0"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793289297988
+    },
+    {
+      "event": "task_archived",
+      "task_id": "7db9e3d1-caeb-48c0-b902-9c59cc982703",
+      "status": "verified",
+      "timestamp_ms": 1794038008492
+    }
+  ]
+}

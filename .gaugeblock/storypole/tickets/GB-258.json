@@ -1,0 +1,135 @@
+{
+  "ticket": {
+    "id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+    "ticket_key": "GB-258",
+    "slug": "archive-emits-a-status-change-to-a-status-that-no-longer-exists-so-the-ledger-s-vocabulary-contradicts-gb-179-72b2b9",
+    "title": "Archive emits a status change to a status that no longer exists, so the ledger's vocabulary contradicts GB-179",
+    "description": "Reported by the owner 2026-11-06 after archiving tickets from benchwork: the ledger records a status change on archive, but GB-179 decided archived is a STATE, not a status.\\n\\nDIAGNOSIS - data is intact, the vocabulary is not. Measured on this workspace: 286 tasks, 0 of them with status='archived', and 128 with archived_at set. Archived tasks hold the status they earned (7 ready, 2 triage, 119 verified). So the projection is already doing the right thing: it reads StatusChanged{to: Archived} as 'stamp archived_at, keep the status'. Nothing is corrupted today.\\n\\nBut that is a special case in the replayer standing in for a missing event. Two latent hazards. (1) A consumer reading raw ledger events sees a status transition to a variant the model says is never a status, which is exactly what confused the owner. (2) Any replayer that does not know the special case - a new tool, a rewrite, a backfill - would materialise status='archived' with no archived_at, or fold those rows into status counts, which is the same class of bug as GB-211.\\n\\nSame shape on the other side: unarchive emits StatusChanged{from: verified, to: verified} when the status never moved, purely to clear the state.\\n\\nFIX SHAPE: add TaskArchived and TaskUnarchived to LedgerEvent (contracts), carrying the status that was in force; emit them from archive_task/unarchive_task; teach the projection to set and clear archived_at from them; keep reading the legacy StatusChanged{to: archived} shim indefinitely, because 128 historical events already exist and a replay must reproduce today's state exactly. The compiler will name every exhaustive match on LedgerEvent.\\n\\nACCEPTANCE: a fresh replay of the existing ledgers yields byte-identical state (0 rows with status='archived', 128 with archived_at); a new archive records TaskArchived and no StatusChanged; and a test asserts the legacy event still replays to the same state.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::archive::archive_task"
+      ],
+      "labels": [
+        "storypole,ledger,archived,gb-179,contracts"
+      ]
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "Unit test in storypole-core/tests/archive_and_lease_tests.rs (storypole 1590f95): 4 tests covering archive state",
+      " unarchive",
+      " expired-claim reaping and a live claim being left alone; workspace nextest 55/55."
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Fixed in contracts d1197f5 and storypole 0bcf3b3. Archive emitted StatusChanged{to: Archived} - a transition to a variant GB-179 says is never a status - and unarchive emitted StatusChanged{from: verified, to: verified}, a transition that moved nothing. Both now emit TaskArchived (carrying the status the task keeps) and TaskUnarchived. The legacy StatusChanged{to: Archived} arm stays in the replayer forever, because 128 such events already exist. Verified by deleting the index and rebuilding it from the ledgers through the new code: archived 128/128 delta 0, verified 106, ready 12, deferred 26, triage 11, blocked 4, index and ledger agree, and zero rows with status='archived'. Tier 2 fmt/clippy clean, nextest 51/51. OUTSTANDING: no unit test yet pins the archive/unarchive round trip - verified by full replay only.",
+      "verified_at_epoch_ms": 1793953826325,
+      "git_branch": "main",
+      "base_commit_sha": "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea",
+      "head_commit_sha": "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea",
+      "commit_shas": [
+        "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793953624810,
+    "updated_at_epoch_ms": 1794038005398,
+    "archived_at_epoch_ms": 1794038005398
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+        "ticket_key": "GB-258",
+        "slug": "archive-emits-a-status-change-to-a-status-that-no-longer-exists-so-the-ledger-s-vocabulary-contradicts-gb-179-72b2b9",
+        "title": "Archive emits a status change to a status that no longer exists, so the ledger's vocabulary contradicts GB-179",
+        "description": "Reported by the owner 2026-11-06 after archiving tickets from benchwork: the ledger records a status change on archive, but GB-179 decided archived is a STATE, not a status.\\n\\nDIAGNOSIS - data is intact, the vocabulary is not. Measured on this workspace: 286 tasks, 0 of them with status='archived', and 128 with archived_at set. Archived tasks hold the status they earned (7 ready, 2 triage, 119 verified). So the projection is already doing the right thing: it reads StatusChanged{to: Archived} as 'stamp archived_at, keep the status'. Nothing is corrupted today.\\n\\nBut that is a special case in the replayer standing in for a missing event. Two latent hazards. (1) A consumer reading raw ledger events sees a status transition to a variant the model says is never a status, which is exactly what confused the owner. (2) Any replayer that does not know the special case - a new tool, a rewrite, a backfill - would materialise status='archived' with no archived_at, or fold those rows into status counts, which is the same class of bug as GB-211.\\n\\nSame shape on the other side: unarchive emits StatusChanged{from: verified, to: verified} when the status never moved, purely to clear the state.\\n\\nFIX SHAPE: add TaskArchived and TaskUnarchived to LedgerEvent (contracts), carrying the status that was in force; emit them from archive_task/unarchive_task; teach the projection to set and clear archived_at from them; keep reading the legacy StatusChanged{to: archived} shim indefinitely, because 128 historical events already exist and a replay must reproduce today's state exactly. The compiler will name every exhaustive match on LedgerEvent.\\n\\nACCEPTANCE: a fresh replay of the existing ledgers yields byte-identical state (0 rows with status='archived', 128 with archived_at); a new archive records TaskArchived and no StatusChanged; and a test asserts the legacy event still replays to the same state.",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::archive::archive_task"
+          ],
+          "labels": [
+            "storypole,ledger,archived,gb-179,contracts"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793953624810,
+        "updated_at_epoch_ms": 1793953624810
+      }
+    },
+    {
+      "event": "task_verified",
+      "task_id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Fixed in contracts d1197f5 and storypole 0bcf3b3. Archive emitted StatusChanged{to: Archived} - a transition to a variant GB-179 says is never a status - and unarchive emitted StatusChanged{from: verified, to: verified}, a transition that moved nothing. Both now emit TaskArchived (carrying the status the task keeps) and TaskUnarchived. The legacy StatusChanged{to: Archived} arm stays in the replayer forever, because 128 such events already exist. Verified by deleting the index and rebuilding it from the ledgers through the new code: archived 128/128 delta 0, verified 106, ready 12, deferred 26, triage 11, blocked 4, index and ledger agree, and zero rows with status='archived'. Tier 2 fmt/clippy clean, nextest 51/51. OUTSTANDING: no unit test yet pins the archive/unarchive round trip - verified by full replay only.",
+        "verified_at_epoch_ms": 1793953826325,
+        "git_branch": "main",
+        "base_commit_sha": "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea",
+        "head_commit_sha": "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea",
+        "commit_shas": [
+          "0bcf3b3d3f68edc7d5f4b72794a332f5ee92e4ea"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "Unit test in storypole-core/tests/archive_and_lease_tests.rs (storypole 1590f95): 4 tests covering archive state",
+        " unarchive",
+        " expired-claim reaping and a live claim being left alone; workspace nextest 55/55."
+      ],
+      "timestamp_ms": 1793954887184
+    },
+    {
+      "event": "task_archived",
+      "task_id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+      "status": "verified",
+      "timestamp_ms": 1794037259678
+    },
+    {
+      "event": "task_archived",
+      "task_id": "72b2b9d2-a1d6-407f-8b30-5e2cbcb79ce2",
+      "status": "verified",
+      "timestamp_ms": 1794038005398
+    }
+  ]
+}

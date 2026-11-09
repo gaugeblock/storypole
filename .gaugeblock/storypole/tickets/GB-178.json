@@ -1,0 +1,140 @@
+{
+  "ticket": {
+    "id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+    "ticket_key": "GB-178",
+    "slug": "add-a-ledger-integrity-and-index-reconciliation-audit-to-storypole-e7d007",
+    "title": "Add a ledger integrity and index-reconciliation audit to storypole",
+    "description": "There is no integrity check for the distributed ledger set, and GB-177 exposed why that matters. A structural audit of all eleven ledgers today passes cleanly: 1067 events, zero unparsable lines, zero duplicate lines, so nothing is corrupt. But the status views disagree wildly - the unified index reports 116 Verified while a naive per-ledger replay reports 58 Archived, zero Verified and 98 InProgress. Part of that gap is my replay being naive (claim and verification events carry state this script does not model), which is precisely the argument for the tool: you cannot reason about ledger truth without the real replay. Scope: storypole ledger verify (or workspace verify) that (1) parses every line in every ledger and reports the offending file and line, (2) flags exact duplicate events, (3) detects the same task appearing in two ledgers with divergent histories, (4) reconciles index against ledger replay and reports the difference per status, and (5) reports claims whose leases have expired as a separate count. Acceptance: running it on the current suite reproduces the 1067/0/0 structural result and prints the index-versus-ledger delta as its headline. Pairs with GB-177 (index does not reflect member archives) and GB-79 (replay ordering), and should land before any further bulk mutation of task state.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ledger,storypole/crates/storypole-core/src/workspace/store.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::ledger::replay::replay_events"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Landed on storypole main, developed on feat/ledger-audit with the lease taken before edits. storypole_core::ledger::audit provides discover_ledgers and audit_ledgers: it finds the root and member ledgers, parses every line counting unparsable ones and exact duplicate lines, and reports the status histogram produced by the real replay_events walk rather than a naive scan - which is exactly the distinction that made the earlier ad hoc count (98 in_progress) untrustworthy. is_structurally_sound gates on zero unparsable and zero duplicate lines. Three tests use a real store: a healthy ledger replays clean and reports the created task as ready; an appended duplicate plus a garbage line are each counted once while the task still replays; discovery covers root plus member files and the formatter renders. Gates: fmt clean, clippy workspace all-targets -D warnings clean, nextest 36/36. SCOPE NOT YET DONE: no CLI subcommand is wired yet, so storypole ledger verify is not runnable from the shell, and index-versus-ledger reconciliation is deliberately not in this module - it needs the unified store, which the audit does not open. Both are the next slice.",
+      "verified_at_epoch_ms": 1793290453054,
+      "git_branch": "main",
+      "base_commit_sha": "d4080597377adbbf8b1a766613fd3ed77c522ce6",
+      "head_commit_sha": "d4080597377adbbf8b1a766613fd3ed77c522ce6",
+      "commit_shas": [
+        "d4080597377adbbf8b1a766613fd3ed77c522ce6"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793290039730,
+    "updated_at_epoch_ms": 1794038014623,
+    "archived_at_epoch_ms": 1794038014623
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+        "ticket_key": "GB-178",
+        "slug": "add-a-ledger-integrity-and-index-reconciliation-audit-to-storypole-e7d007",
+        "title": "Add a ledger integrity and index-reconciliation audit to storypole",
+        "description": "There is no integrity check for the distributed ledger set, and GB-177 exposed why that matters. A structural audit of all eleven ledgers today passes cleanly: 1067 events, zero unparsable lines, zero duplicate lines, so nothing is corrupt. But the status views disagree wildly - the unified index reports 116 Verified while a naive per-ledger replay reports 58 Archived, zero Verified and 98 InProgress. Part of that gap is my replay being naive (claim and verification events carry state this script does not model), which is precisely the argument for the tool: you cannot reason about ledger truth without the real replay. Scope: storypole ledger verify (or workspace verify) that (1) parses every line in every ledger and reports the offending file and line, (2) flags exact duplicate events, (3) detects the same task appearing in two ledgers with divergent histories, (4) reconciles index against ledger replay and reports the difference per status, and (5) reports claims whose leases have expired as a separate count. Acceptance: running it on the current suite reproduces the 1067/0/0 structural result and prints the index-versus-ledger delta as its headline. Pairs with GB-177 (index does not reflect member archives) and GB-79 (replay ordering), and should land before any further bulk mutation of task state.",
+        "kind": "feature",
+        "status": "deferred",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ledger,storypole/crates/storypole-core/src/workspace/store.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::ledger::replay::replay_events"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793290039730,
+        "updated_at_epoch_ms": 1793290039730
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793290136332,
+        "lease_expires_at_epoch_ms": 1793293736332,
+        "git_branch": "feat/ledger-audit",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+      "from": "deferred",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793290136332
+    },
+    {
+      "event": "task_verified",
+      "task_id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Landed on storypole main, developed on feat/ledger-audit with the lease taken before edits. storypole_core::ledger::audit provides discover_ledgers and audit_ledgers: it finds the root and member ledgers, parses every line counting unparsable ones and exact duplicate lines, and reports the status histogram produced by the real replay_events walk rather than a naive scan - which is exactly the distinction that made the earlier ad hoc count (98 in_progress) untrustworthy. is_structurally_sound gates on zero unparsable and zero duplicate lines. Three tests use a real store: a healthy ledger replays clean and reports the created task as ready; an appended duplicate plus a garbage line are each counted once while the task still replays; discovery covers root plus member files and the formatter renders. Gates: fmt clean, clippy workspace all-targets -D warnings clean, nextest 36/36. SCOPE NOT YET DONE: no CLI subcommand is wired yet, so storypole ledger verify is not runnable from the shell, and index-versus-ledger reconciliation is deliberately not in this module - it needs the unified store, which the audit does not open. Both are the next slice.",
+        "verified_at_epoch_ms": 1793290453054,
+        "git_branch": "main",
+        "base_commit_sha": "d4080597377adbbf8b1a766613fd3ed77c522ce6",
+        "head_commit_sha": "d4080597377adbbf8b1a766613fd3ed77c522ce6",
+        "commit_shas": [
+          "d4080597377adbbf8b1a766613fd3ed77c522ce6"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953246823
+    },
+    {
+      "event": "task_archived",
+      "task_id": "e7d0072e-c528-4a2f-a5ae-11c173adc5b3",
+      "status": "verified",
+      "timestamp_ms": 1794038014623
+    }
+  ]
+}

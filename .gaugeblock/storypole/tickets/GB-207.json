@@ -1,0 +1,127 @@
+{
+  "ticket": {
+    "id": "2922c2e0-0de7-4672-ab3f-820139fab91f",
+    "ticket_key": "GB-207",
+    "slug": "storypole-verify-traces-without-target-symbols-are-rejected-by-the-rabbet-gate-2922c2",
+    "title": "storypole verify traces without target symbols are rejected by the rabbet gate",
+    "description": "Ingesting the live outbox after the dogfood gave accepted 6 and rejected 8, every rejection reading AST syntax validation failed: Trace must contain at least one filled hole or a rejected attempt. storypole builds filled_holes from task scope target_symbols, so a task verified with no symbols writes a structurally invalid record while a task with symbols passes - the writer and the gate disagree about what a valid trace is, and 8 of 14 records were lost on the first real run. Either storypole should emit a scope signature or a rejected attempt marker for symbol-less tasks, or the gate should accept a receipt-only Silver trace.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ops/verification/capture_trace.rs"
+      ],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "df07c9b8-9e1d-4b4f-aa04-b97d29ed9dfa"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cargo-nextest+live-ingest",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "gate rule now accepts a verified scope as evidence; rabbet-core tests (2 new), clippy and fmt green; live re-ingest of the same 18 records went from accepted 8 / duplicates 7 / rejected 10 to accepted 18 / 0 / 0; patterns still 0 because they require Gold",
+      "verified_at_epoch_ms": 1793353333791,
+      "git_branch": "main",
+      "base_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+      "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+      "commit_shas": [
+        "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793334647911,
+    "updated_at_epoch_ms": 1794038017490,
+    "archived_at_epoch_ms": 1794038017490
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "2922c2e0-0de7-4672-ab3f-820139fab91f",
+        "ticket_key": "GB-207",
+        "slug": "storypole-verify-traces-without-target-symbols-are-rejected-by-the-rabbet-gate-2922c2",
+        "title": "storypole verify traces without target symbols are rejected by the rabbet gate",
+        "description": "Ingesting the live outbox after the dogfood gave accepted 6 and rejected 8, every rejection reading AST syntax validation failed: Trace must contain at least one filled hole or a rejected attempt. storypole builds filled_holes from task scope target_symbols, so a task verified with no symbols writes a structurally invalid record while a task with symbols passes - the writer and the gate disagree about what a valid trace is, and 8 of 14 records were lost on the first real run. Either storypole should emit a scope signature or a rejected attempt marker for symbol-less tasks, or the gate should accept a receipt-only Silver trace.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ops/verification/capture_trace.rs"
+          ],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "df07c9b8-9e1d-4b4f-aa04-b97d29ed9dfa"
+          }
+        ],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793334647911,
+        "updated_at_epoch_ms": 1793334647911
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "df07c9b8-9e1d-4b4f-aa04-b97d29ed9dfa"
+    },
+    {
+      "event": "task_verified",
+      "task_id": "2922c2e0-0de7-4672-ab3f-820139fab91f",
+      "receipt": {
+        "verifier": "cargo-nextest+live-ingest",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "gate rule now accepts a verified scope as evidence; rabbet-core tests (2 new), clippy and fmt green; live re-ingest of the same 18 records went from accepted 8 / duplicates 7 / rejected 10 to accepted 18 / 0 / 0; patterns still 0 because they require Gold",
+        "verified_at_epoch_ms": 1793353333791,
+        "git_branch": "main",
+        "base_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+        "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+        "commit_shas": [
+          "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "2922c2e0-0de7-4672-ab3f-820139fab91f",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953176356
+    },
+    {
+      "event": "task_archived",
+      "task_id": "2922c2e0-0de7-4672-ab3f-820139fab91f",
+      "status": "verified",
+      "timestamp_ms": 1794038017490
+    }
+  ]
+}

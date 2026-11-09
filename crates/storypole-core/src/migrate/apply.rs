@@ -92,6 +92,21 @@ pub fn apply(
     // Phase 2: the new records must reproduce the ledger's tasks, or nothing else happens.
     verify(state, plan, &destinations)?;
 
+    // Phase 2b: a ticket that moved must stop existing at the source, or the same ticket lives in two stores -
+    // which the rollup refuses and a reader sees twice. Before this, a run wrote the destination and left the
+    // original, leaving 422 tickets where the plan accounted for 350.
+    for assignment in &plan.assignments {
+        if let Destination::Member(_) = assignment.destination
+            && let Ok(source_record) = tickets::path(source_dot, &assignment.ticket_key)
+            && source_record.is_file()
+        {
+            fs::remove_file(&source_record).map_err(|e| StorypoleError::IoWithPath {
+                path: source_record,
+                source: e,
+            })?;
+        }
+    }
+
     // Phase 3: only now is the original superseded.
     let archive = archive_ledger(source_dot)?;
     Ok(Applied {

@@ -76,6 +76,32 @@ impl Plan {
             .count()
     }
 
+    /// The same plan with only the moves the ticket's own scope justifies (`GB-331`).
+    ///
+    /// Adoption is a judgement about a ticket filed weeks ago: its crate named one repository when it was
+    /// written, which is evidence and not proof that the work landed there. A scope move needs no judgement - the
+    /// ticket says where it belongs - so the two can be applied separately, smallest risk first. Tickets that
+    /// would have been adopted keep their evidence and stay at the root, so the restricted plan still explains
+    /// itself rather than pretending they had no owner.
+    #[must_use]
+    pub fn scope_only(&self) -> Self {
+        let assignments = self
+            .assignments
+            .iter()
+            .map(
+                |assignment| match (&assignment.destination, assignment.evidence) {
+                    (Destination::Member(_), "scope") => assignment.clone(),
+                    (Destination::Member(_), _) => Assignment {
+                        destination: Destination::Root,
+                        ..assignment.clone()
+                    },
+                    _ => assignment.clone(),
+                },
+            )
+            .collect();
+        Self { assignments }
+    }
+
     /// Tickets adopted because their crate named their owner.
     #[must_use]
     pub fn adopted(&self) -> usize {

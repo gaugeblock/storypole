@@ -12,7 +12,7 @@ use storypole_core::state;
 use storypole_core::store::StorypoleStore;
 use storypole_core::workspace::discovery::discover_members;
 
-pub fn handle_migrate(root_dir: &Path, dry_run: bool, json: bool) -> Result<()> {
+pub fn handle_migrate(root_dir: &Path, dry_run: bool, scope_only: bool, json: bool) -> Result<()> {
     let source = StorypoleStore::resolve_dot_dir(root_dir);
     let loaded = state::load(&source)?;
 
@@ -23,6 +23,7 @@ pub fn handle_migrate(root_dir: &Path, dry_run: bool, json: bool) -> Result<()> 
     let names: Vec<String> = members.iter().map(|(name, _)| name.clone()).collect();
     let owners = storypole_core::migrate::manifests::crate_owners(&members);
     let plan = storypole_core::migrate::plan(&loaded, &names, &|c| owners.get(c).cloned());
+    let plan = if scope_only { plan.scope_only() } else { plan };
 
     if json {
         let rows: Vec<String> = plan

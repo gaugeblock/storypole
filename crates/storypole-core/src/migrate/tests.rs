@@ -193,3 +193,46 @@ fn the_counts_add_up_to_the_ticket_total() {
     assert_eq!(moved + plan.staying(), plan.assignments.len());
     assert_eq!(moved, 2, "one by scope into benchwork, none by crate");
 }
+
+#[test]
+fn the_restricted_plan_moves_only_what_the_ticket_itself_says() {
+    // Adoption is a judgement about an old ticket; a scope move is not a judgement at all. Being able to apply
+    // the second without the first is what keeps the risk proportional to the evidence.
+    let plan = plan(
+        &state_of(vec![
+            task("GB-1", Some("benchwork"), None),
+            task("GB-2", None, Some("benchwork-core")),
+            task("GB-3", Some("gaugeblock"), None),
+        ]),
+        &members(),
+        &owner,
+    );
+    assert_eq!(
+        plan.per_member().values().sum::<usize>(),
+        2,
+        "both would move"
+    );
+
+    let restricted = plan.scope_only();
+
+    assert_eq!(
+        restricted.per_member().values().sum::<usize>(),
+        1,
+        "only the scoped ticket moves"
+    );
+    assert_eq!(
+        destination_of(&restricted, "GB-2"),
+        Destination::Root,
+        "the adopted ticket waits for review"
+    );
+    assert_eq!(
+        restricted
+            .assignments
+            .iter()
+            .find(|a| a.ticket_key == "GB-2")
+            .map(|a| a.evidence)
+            .unwrap(),
+        "crate",
+        "and the restricted plan still says why it was a candidate"
+    );
+}

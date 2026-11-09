@@ -115,6 +115,9 @@ pub enum Commands {
         /// Report what would move without writing anything
         #[arg(long)]
         dry_run: bool,
+        /// Move only the tickets whose own scope names their repository, leaving adoptions for review
+        #[arg(long)]
+        scope_only: bool,
     },
     Spool(SpoolArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server

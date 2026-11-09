@@ -104,9 +104,16 @@ pub fn add_task(
         validate_no_cycle(&all_tasks, task.id, edge.target_id, edge.kind)?;
     }
 
-    let mut highest = get_max_ticket_number(store.conn(), &prefix)?;
-    for _ in 0..MAX_KEY_ATTEMPTS {
-        highest += 1;
+    // One counter per repository, in the git dir: two branches must not mint the same number (GB-347).
+    let index_max = get_max_ticket_number(store.conn(), &prefix)?;
+    let counter_dir = crate::ticket_keys::shared_dir(store.root_dir())
+        .unwrap_or_else(|| store.dot_dir().join("derived"));
+    let mut highest = crate::ticket_keys::allocate(&counter_dir, index_max, &prefix)?;
+    for attempt in 0..MAX_KEY_ATTEMPTS {
+        if attempt > 0 {
+            // A local collision (another writer in this store) costs one number, not the allocation.
+            highest += 1;
+        }
         ticket_key = format!("{prefix}-{highest}");
         task.ticket_key = ticket_key.clone();
         if store.record_creation(&LedgerEvent::TaskCreated { task: task.clone() })? {

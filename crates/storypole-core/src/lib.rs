@@ -16,6 +16,7 @@ pub mod store;
 mod store_locate;
 pub mod store_records;
 pub mod telemetry;
+pub mod ticket_keys;
 pub mod tickets;
 pub mod workspace;
 

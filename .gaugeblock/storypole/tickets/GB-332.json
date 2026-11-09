@@ -88,6 +88,16 @@
       "scope": null,
       "acceptance_criteria": null,
       "timestamp_ms": 1794206058881
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "title": null,
+      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed GB-330.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows GB-316 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794212578976
     }
   ]
 }

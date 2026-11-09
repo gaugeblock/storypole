@@ -10,6 +10,7 @@ pub mod git;
 pub mod index;
 pub mod leases;
 pub mod ledger;
+pub mod migrate;
 pub mod model;
 pub mod ops;
 pub mod state;

@@ -102,7 +102,7 @@ pub struct VerifyArgs {
 }
 
 /// Kinds a task can be, as the parser accepts them.
-pub(crate) const KIND_NAMES: [&str; 7] = [
+pub(crate) const KIND_NAMES: [&str; 8] = [
     "epic",
     "bug",
     "refactor",
@@ -110,6 +110,7 @@ pub(crate) const KIND_NAMES: [&str; 7] = [
     "spike",
     "feature",
     "chore",
+    "docs",
 ];
 
 /// Validates a `--kind` value, for clap.
@@ -125,5 +126,36 @@ pub(crate) fn valid_kind(value: &str) -> Result<String, String> {
             "unknown kind `{value}`; expected one of: {}",
             KIND_NAMES.join(", ")
         ))
+    }
+}
+
+#[cfg(test)]
+mod kind_tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::valid_kind;
+
+    #[test]
+    fn docs_is_an_accepted_kind() {
+        // GB-342: documentation work had no kind that described it, so it was filed as chore or feature.
+        assert_eq!(valid_kind("docs").unwrap(), "docs");
+    }
+
+    #[test]
+    fn a_kind_is_case_insensitive() {
+        assert_eq!(valid_kind("DOCS").unwrap(), "docs");
+    }
+
+    #[test]
+    fn an_unknown_kind_lists_docs_among_the_choices() {
+        let message = valid_kind("perf").unwrap_err();
+        assert!(
+            message.contains("docs"),
+            "the error names what is accepted: {message}"
+        );
+        assert!(
+            message.contains("unknown kind"),
+            "and says what was wrong: {message}"
+        );
     }
 }

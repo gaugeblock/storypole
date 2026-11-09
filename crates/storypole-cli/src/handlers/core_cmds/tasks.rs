@@ -94,6 +94,7 @@ pub(super) fn parse_kind(s: &str) -> TaskKind {
         "refactor" => TaskKind::Refactor,
         "tech_debt" | "techdebt" | "tech-debt" => TaskKind::TechDebt,
         "chore" => TaskKind::Chore,
+        "docs" => TaskKind::Docs,
         "spike" => TaskKind::Spike,
         _ => TaskKind::Feature,
     }

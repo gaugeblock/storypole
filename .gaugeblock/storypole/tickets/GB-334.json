@@ -125,6 +125,16 @@
       "scope": null,
       "acceptance_criteria": null,
       "timestamp_ms": 1794205703855
+    },
+    {
+      "event": "task_updated",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "title": null,
+      "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: GB-57 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.\n\nPARTIAL 2026-11-08 (commit 347ae5d): refusal 1 of 4 is live.\n\nverify now refuses when the task's own plan has unchecked steps, naming each open step. A task with no plan,\nand a plan whose steps are all complete, pass - the plan is an optional stronger promise, and requiring one\nwould punish the honest small ticket.\n\nThis is the refusal that would have stopped the failure that motivated the ticket: GB-57 verified with 0 of 6\nsteps and a record claiming delivery of a fleet of distributed ledgers that did not exist.\n\nThe other three, each with the reason it is not in this commit:\n  - epic closure with unresolved children needs the workspace rollup to see children in other repositories\n    (GB-330);\n  - --manual alongside an executable chain: the chain is resolved inside receipts::build, so the check belongs\n    there rather than at the entry point;\n  - a commit deleting tracked .gaugeblock state without a decision record is a miter audit rule, in another\n    repository.\n\nREFUSAL 2 OF 4 LIVE 2026-11-08 (commit 1858c32).\n\nverify now refuses `verifier: manual` when a chain resolves for the task, and names the chain. Three tests: refused\nwith the chain named; an explicit --verifier accepted; and a manual receipt fine when nothing is configured.\n\nThe escape hatch is deliberate, not a loophole: a ticket verified on a machine without the toolchain must be able to\nsay who attested it. The rule targets the default, which is the path taken without thinking - and GB-57 is what\ntaking it looks like.\n\nStill owed: epic closure with unresolved children (needs the rollup, which GB-330 half-built) and the ADR-citation\ngate for deleting tracked state (a miter rule, in another repository).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794213135084
     }
   ]
 }

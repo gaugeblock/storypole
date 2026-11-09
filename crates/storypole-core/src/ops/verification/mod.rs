@@ -1,6 +1,7 @@
 //! Verification certification and downstream dependency unblocking.
 
 mod capture_trace;
+mod children;
 mod receipts;
 mod refusals;
 mod target;
@@ -49,6 +50,10 @@ pub fn verify_task(
     // The plan is the ticket's own statement of what finishing means (`GB-334`). Verifying past an unfinished
     // plan certifies something other than the ticket - which is how GB-57 closed with 0 of 6 steps.
     refusals::unchecked_plan_steps(&task)?;
+    // An epic is a promise that the work is done, so it cannot be certified while a child of it is open
+    // (`GB-334`). Children are found through the edges they carry, and only within this store - seeing the rest
+    // needs the workspace rollup.
+    children::unresolved_children(store.conn(), &task)?;
 
     let now = StorypoleStore::now_ms();
     let target_dir = resolve_target_dir(store.root_dir(), &task);

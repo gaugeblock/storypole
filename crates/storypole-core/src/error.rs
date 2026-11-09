@@ -125,6 +125,17 @@ pub enum StorypoleError {
     )]
     PlanIncomplete { ticket: String, steps: Vec<String> },
 
+    /// An epic was verified while children of it are still open (`GB-334`).
+    #[error(
+        "{ticket} is an epic with {count} unfinished child task(s) ({children}); an epic is a promise that the          work is done, so close the children or retire them first",
+        count = children.len(),
+        children = children.join(", ")
+    )]
+    EpicHasOpenChildren {
+        ticket: String,
+        children: Vec<String>,
+    },
+
     /// A manual receipt was offered for a task that has an executable verification chain (`GB-334`).
     #[error(
         "{ticket} has an executable verification chain ({chain}); a manual receipt attests less than the\n         chain already could, so run the chain or say --verifier explicitly if it cannot run"

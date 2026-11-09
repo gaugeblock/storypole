@@ -117,6 +117,14 @@ pub enum StorypoleError {
     #[error("Corrupt ledger at line {line}: {reason}")]
     CorruptLedger { line: usize, reason: String },
 
+    /// Verification was asked for while the task's own plan still has open steps (`GB-334`).
+    #[error(
+        "{ticket} has {count} unchecked plan step(s) ({steps}); an unfinished plan is an unfinished ticket, so          either complete the steps or retire them before verifying",
+        count = steps.len(),
+        steps = steps.join(", ")
+    )]
+    PlanIncomplete { ticket: String, steps: Vec<String> },
+
     /// A ticket record could not be read, written or locked (`GB-329`).
     #[error("Ticket record at '{path}': {reason}")]
     TicketRecord { path: PathBuf, reason: String },

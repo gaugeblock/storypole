@@ -2,6 +2,7 @@
 
 mod capture_trace;
 mod receipts;
+mod refusals;
 mod target;
 
 use self::capture_trace::capture_trace;
@@ -44,6 +45,10 @@ pub fn verify_task(
             ),
         });
     }
+
+    // The plan is the ticket's own statement of what finishing means (`GB-334`). Verifying past an unfinished
+    // plan certifies something other than the ticket - which is how GB-57 closed with 0 of 6 steps.
+    refusals::unchecked_plan_steps(&task)?;
 
     let now = StorypoleStore::now_ms();
     let target_dir = resolve_target_dir(store.root_dir(), &task);

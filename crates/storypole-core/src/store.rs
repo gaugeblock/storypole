@@ -112,13 +112,17 @@ impl StorypoleStore {
     }
 
     /// Initialize a new storypole repository at `root_dir`.
+    ///
+    /// Always `.gaugeblock/storypole`, never the legacy `.storypole`, because ADR 0001 says canonical state
+    /// lives in `.gaugeblock` and a default that disagrees with the architecture is a trap for every new
+    /// repository (`GB-344`). It used to fall back to `.storypole` whenever `.gaugeblock` did not exist yet,
+    /// which is precisely the case in a repository being initialised.
+    ///
+    /// Existing `.storypole` stores keep working: [`Self::resolve_dot_dir`] still prefers a
+    /// `.gaugeblock/storypole` that exists and still reads one that is legacy.
     pub fn init(root_dir: &Path, config: StorypoleConfig) -> Result<Self, StorypoleError> {
         let paths = gaugeblock_workspace::GaugeblockPaths::at(root_dir);
-        let dot_dir = if paths.root().is_dir() {
-            paths.member("storypole")
-        } else {
-            root_dir.join(".storypole")
-        };
+        let dot_dir = paths.member("storypole");
         fs::create_dir_all(&dot_dir).map_err(|e| StorypoleError::IoWithPath {
             path: dot_dir.clone(),
             source: e,

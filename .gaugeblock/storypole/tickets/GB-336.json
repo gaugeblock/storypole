@@ -78,6 +78,16 @@
         "target_repo": "storypole"
       },
       "timestamp_ms": 1794167026611
+    },
+    {
+      "event": "task_updated",
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+      "title": null,
+      "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.\n\nDONE 2026-11-08 (commit cdf4bd3, docs/decisions/0010-a-ticket-is-a-file.md).\n\nThe ticket-record contract is written down now that the migration has run and other code depends on it: one file\nper ticket, identity is the task uuid, a duplicate uuid is corruption rather than a merge, the owner is scope.repo,\na key prefix is a minting convention and never an owner, edges reference with a locator instead of copying, replay\norders by the record, and writes are exclusive and atomic.\n\nAlso recorded: the integration seam (an external field, no adapter, and why building one before knowing the\nworkflow is how a six-step epic closes at 0/6), and an explicit \"what this does not decide\" section - rendering the\nlocator, and the judgement still required when a crate name is ambiguous.\n\nADR 0009 decided which copy of state a command sees; 0010 decides what a ticket is. ADR 0001's ledger append is\nsuperseded by both while its rule about where state lives stands.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794212639679
     }
   ]
 }

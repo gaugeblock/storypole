@@ -4,12 +4,16 @@ use crate::error::StorypoleError;
 use crate::index::open_and_sync_index;
 use crate::ledger::read_events;
 use crate::ledger::replay::replay_events;
+use crate::model::LedgerEvent;
+use crate::storage_mode::StorageMode;
 use crate::store::StorypoleStore;
 use crate::workspace::config::WorkspaceConfig;
 use crate::workspace::discovery::{DiscoveredMember, discover_members};
 use rusqlite::Connection;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
+
+use uuid::Uuid;
 
 /// Unified multi-repository workspace store.
 #[derive(Debug)]
@@ -63,19 +67,34 @@ impl StorypoleWorkspaceStore {
     }
 
     /// Synchronize all member stores into the unified SQLite cache.
+    ///
+    /// Each source is read in whichever layout it uses (`GB-330`): a repository with ticket records is
+    /// replayed from its files, and one that still has a ledger is read from the ledger. Two sources holding
+    /// the same task id is refused rather than merged - one ticket lives in one file, and quietly picking a
+    /// winner is what made `GB-79`'s copies disagree about whether work was done.
     pub fn sync_all_members(&mut self) -> Result<(), StorypoleError> {
         let mut all_events = Vec::new();
-
-        if let Some(ref rs) = self.root_store
-            && let Ok(events) = read_events(&rs.ledger_path())
-        {
-            all_events.extend(events);
+        let mut sources: Vec<(String, &StorypoleStore)> = Vec::new();
+        if let Some(ref rs) = self.root_store {
+            sources.push(("the workspace root".to_string(), rs));
+        }
+        for (name, store) in &self.member_stores {
+            sources.push((name.clone(), store));
         }
 
-        for store in self.member_stores.values() {
-            if let Ok(events) = read_events(&store.ledger_path()) {
-                all_events.extend(events);
+        let mut seen: BTreeMap<Uuid, String> = BTreeMap::new();
+        for (label, store) in &sources {
+            for id in task_ids(store)? {
+                if let Some(first) = seen.insert(id, label.clone()) {
+                    return Err(StorypoleError::TicketRecord {
+                        path: store.dot_dir().to_path_buf(),
+                        reason: format!(
+                            "task {id} is recorded in both {first} and {label}; one ticket belongs in one file"
+                        ),
+                    });
+                }
             }
+            all_events.extend(events_of(store)?);
         }
 
         let tasks = replay_events(&all_events);
@@ -159,5 +178,32 @@ impl StorypoleWorkspaceStore {
             .flatten();
 
         repo
+    }
+}
+
+/// Every event a store owns, from whichever layout it uses.
+fn events_of(store: &StorypoleStore) -> Result<Vec<LedgerEvent>, StorypoleError> {
+    match store.storage_mode() {
+        StorageMode::Records => {
+            let mut events = Vec::new();
+            for record in crate::tickets::read_all(store.dot_dir())? {
+                events.extend(record.events);
+            }
+            Ok(events)
+        }
+        StorageMode::Ledger => read_events(&store.ledger_path()),
+    }
+}
+
+/// The task ids a store owns, which is what makes a duplicate detectable before anything is merged.
+fn task_ids(store: &StorypoleStore) -> Result<Vec<Uuid>, StorypoleError> {
+    match store.storage_mode() {
+        StorageMode::Records => Ok(crate::tickets::read_all(store.dot_dir())?
+            .into_iter()
+            .map(|record| record.ticket.id)
+            .collect()),
+        StorageMode::Ledger => Ok(replay_events(&read_events(&store.ledger_path())?)
+            .into_keys()
+            .collect()),
     }
 }

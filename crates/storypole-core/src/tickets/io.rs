@@ -94,9 +94,38 @@ pub fn append_event(
 ) -> Result<TicketRecord, StorypoleError> {
     let record_path = path(dot_dir, key)?;
     let _lock = TicketLock::acquire(dot_dir, key)?;
-    let mut record = read(&record_path)?;
+    // A ticket's first event creates its file; every later event must find one. Answering "created" for a
+    // status change on a ticket that does not exist would invent a record from nothing.
+    let mut record = match read(&record_path) {
+        Ok(record) => record,
+        Err(error) => match seed_record(key, event) {
+            Some(record) => record,
+            None if record_path.exists() => return Err(error),
+            None => {
+                return Err(StorypoleError::TicketRecord {
+                    path: record_path,
+                    reason: format!("no record for {key} and this event does not carry one"),
+                });
+            }
+        },
+    };
     record.events.push(event.clone());
     order_events(&mut record.events);
     write(&record_path, &record)?;
     Ok(record)
+}
+
+/// A record for a ticket whose first event is in hand.
+///
+/// Only the two variants that carry a whole task can seed one; a `StatusChanged` has no title, kind or
+/// scope, so there is nothing to write.
+fn seed_record(key: &str, event: &LedgerEvent) -> Option<TicketRecord> {
+    match event {
+        LedgerEvent::TaskCreated { task } | LedgerEvent::DeferredItemCaptured { task, .. }
+            if task.ticket_key == key =>
+        {
+            Some(TicketRecord::new(task.clone(), Vec::new()))
+        }
+        _ => None,
+    }
 }

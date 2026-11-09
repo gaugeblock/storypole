@@ -15,7 +15,10 @@
 //! * **Order comes from the record, not the file.** Events replay by `(timestamp, id)`, so a merge that
 //!   interleaves two histories cannot let a stale status win on line position.
 
+use std::fs;
 use std::path::{Path, PathBuf};
+
+use uuid::Uuid;
 
 use serde::{Deserialize, Serialize};
 
@@ -31,7 +34,7 @@ mod tests;
 
 pub use io::{append_event, read, write};
 pub use lock::TicketLock;
-pub use order::{event_timestamp, order_events};
+pub use order::{event_timestamp, order_events, task_id_of_event};
 
 /// Mapping from a ticket to its row in an external tracker.
 ///
@@ -102,4 +105,63 @@ pub fn path(dot_dir: &Path, key: &str) -> Result<PathBuf, StorypoleError> {
         });
     }
     Ok(dir(dot_dir).join(format!("{key}.json")))
+}
+
+/// Every record in the store, refusing a set that cannot be one truth.
+///
+/// Two checks, both of which `GB-79` earned the hard way: the file must be named for the ticket it holds,
+/// and no task id may appear twice. A duplicate is corruption to report, because the alternative - pick
+/// one and carry on - is how two live copies of a ticket came to disagree about whether it was done.
+///
+/// # Errors
+///
+/// [`StorypoleError::TicketRecord`] naming both paths when a name and its contents disagree, or when one
+/// task id is stored twice.
+pub fn read_all(dot_dir: &Path) -> Result<Vec<TicketRecord>, StorypoleError> {
+    let dir = dir(dot_dir);
+    if !dir.is_dir() {
+        return Ok(Vec::new());
+    }
+    let mut paths: Vec<PathBuf> = fs::read_dir(&dir)
+        .map_err(|e| StorypoleError::TicketRecord {
+            path: dir.clone(),
+            reason: e.to_string(),
+        })?
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("json"))
+        .collect();
+    paths.sort();
+
+    let mut records = Vec::with_capacity(paths.len());
+    let mut seen: std::collections::BTreeMap<Uuid, PathBuf> = std::collections::BTreeMap::new();
+    for path in paths {
+        let record = read(&path)?;
+        let stem = path
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or_default();
+        if record.ticket.ticket_key != stem {
+            return Err(StorypoleError::TicketRecord {
+                path: path.clone(),
+                reason: format!(
+                    "file is named {stem} but holds {}; a record must be named for the ticket it stores",
+                    record.ticket.ticket_key
+                ),
+            });
+        }
+        if let Some(first) = seen.insert(record.ticket.id, path.clone()) {
+            return Err(StorypoleError::TicketRecord {
+                path: path.clone(),
+                reason: format!(
+                    "task {} is stored twice: {} and {}",
+                    record.ticket.id,
+                    first.display(),
+                    path.display()
+                ),
+            });
+        }
+        records.push(record);
+    }
+    Ok(records)
 }

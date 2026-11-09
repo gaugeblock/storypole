@@ -12,7 +12,7 @@ use crate::model::LedgerEvent;
 /// A stable sort on the event's own clock: events describing the same instant keep the order they were
 /// recorded in.
 pub fn order_events(events: &mut [LedgerEvent]) {
-    events.sort_by_key(|event| (event_timestamp(event), event_id(event)));
+    events.sort_by_key(|event| (event_timestamp(event), task_id_of_event(event)));
 }
 
 /// The event's own clock in epoch milliseconds.
@@ -54,8 +54,11 @@ fn timestamp_of(event: &LedgerEvent) -> u64 {
     }
 }
 
-/// A deterministic tiebreaker, so two events sharing a timestamp keep a stable order.
-fn event_id(event: &LedgerEvent) -> Uuid {
+/// The task an event belongs to.
+///
+/// Public because a writer has to resolve which record an event belongs to before it can append (`GB-329`).
+#[must_use]
+pub fn task_id_of_event(event: &LedgerEvent) -> Uuid {
     match event {
         LedgerEvent::TaskCreated { task } | LedgerEvent::DeferredItemCaptured { task, .. } => {
             task.id

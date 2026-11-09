@@ -2,9 +2,10 @@
 
 use crate::config::StorypoleConfig;
 use crate::error::StorypoleError;
-use crate::index::open_and_sync_index;
+use crate::index::{open_and_sync_index, open_and_sync_records};
 use crate::ledger::append_event;
 use crate::model::LedgerEvent;
+use crate::storage_mode::StorageMode;
 use rusqlite::Connection;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -17,6 +18,8 @@ pub struct StorypoleStore {
     dot_dir: PathBuf,
     config: StorypoleConfig,
     conn: Connection,
+    /// Which layout is authoritative for this store: one ledger, or one file per ticket.
+    mode: StorageMode,
 }
 
 impl StorypoleStore {
@@ -70,16 +73,15 @@ impl StorypoleStore {
                 StorypoleConfig::load_from_file(&config_path)?
             };
 
-        let ledger_path = dot_dir.join("ledger.jsonl");
         let sqlite_path = dot_dir.join("index.sqlite");
-
-        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+        let (conn, mode) = sync_index(&sqlite_path, &dot_dir)?;
 
         Ok(Self {
             root_dir,
             dot_dir,
             config,
             conn,
+            mode,
         })
     }
 
@@ -97,16 +99,15 @@ impl StorypoleStore {
                 StorypoleConfig::load_from_file(&config_path)?
             };
 
-        let ledger_path = dot_dir.join("ledger.jsonl");
         let sqlite_path = dot_dir.join("index.sqlite");
-
-        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+        let (conn, mode) = sync_index(&sqlite_path, &dot_dir)?;
 
         Ok(Self {
             root_dir: root_dir.to_path_buf(),
             dot_dir,
             config,
             conn,
+            mode,
         })
     }
 
@@ -144,13 +145,14 @@ impl StorypoleStore {
         }
 
         let sqlite_path = dot_dir.join("index.sqlite");
-        let conn = open_and_sync_index(&sqlite_path, &ledger_path)?;
+        let (conn, mode) = sync_index(&sqlite_path, &dot_dir)?;
 
         Ok(Self {
             root_dir: root_dir.to_path_buf(),
             dot_dir,
             config,
             conn,
+            mode,
         })
     }
 
@@ -191,11 +193,24 @@ impl StorypoleStore {
 
     /// Record a ledger event, sync SQLite index, and persist to disk.
     pub fn record_event(&mut self, event: &LedgerEvent) -> Result<(), StorypoleError> {
-        let ledger = self.ledger_path();
-        append_event(&ledger, event)?;
-        let sqlite = self.sqlite_path();
-        self.conn = open_and_sync_index(&sqlite, &ledger)?;
+        match self.mode {
+            StorageMode::Ledger => {
+                let ledger = self.ledger_path();
+                append_event(&ledger, event)?;
+                self.conn = open_and_sync_index(&self.sqlite_path(), &ledger)?;
+            }
+            StorageMode::Records => {
+                // One target only. Writing both layouts would be the divergence GB-79 documents.
+                crate::store_records::record_event(&self.conn, &self.dot_dir, event)?;
+                self.conn = open_and_sync_records(&self.sqlite_path(), &self.dot_dir)?;
+            }
+        }
         Ok(())
+    }
+
+    /// Which layout this store reads and writes.
+    pub fn storage_mode(&self) -> StorageMode {
+        self.mode
     }
 
     /// Current Unix epoch timestamp in milliseconds.
@@ -205,4 +220,17 @@ impl StorypoleStore {
             .map(|d| d.as_millis() as u64)
             .unwrap_or(0)
     }
+}
+
+/// Opens the index for whichever layout `dot_dir` uses.
+fn sync_index(
+    sqlite_path: &Path,
+    dot_dir: &Path,
+) -> Result<(Connection, StorageMode), StorypoleError> {
+    let mode = StorageMode::detect(dot_dir);
+    let conn = match mode {
+        StorageMode::Records => open_and_sync_records(sqlite_path, dot_dir)?,
+        StorageMode::Ledger => open_and_sync_index(sqlite_path, &dot_dir.join("ledger.jsonl"))?,
+    };
+    Ok((conn, mode))
 }

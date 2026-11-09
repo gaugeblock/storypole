@@ -132,7 +132,7 @@ fn two_worktrees_creating_tickets_lose_neither() {
 }
 
 #[test]
-#[ignore = "GB-346: the store cannot be found from a linked worktree, so those clients see no tickets"]
+#[ignore = "GB-333: tracked records are per branch by design (ADR 0009), so two worktrees must share leases, not records"]
 fn concurrent_updates_to_one_ticket_keep_every_event() {
     let temp = TempDir::new().unwrap();
     let Some((main, linked)) = records_suite(temp.path()) else {

@@ -7,12 +7,13 @@
 //! references leaves a live graph pointing at nothing.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use storypole_core::ticket_keys::{Remint, plan_remint};
 
 use super::remint_cmds::{cites, prefix_of, read_refs};
+use super::remint_store::{rename_plan, store_tickets};
 
 /// What applying a remint did, for reporting and for tests.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -74,8 +75,31 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
                 ticket["ticket_key"] = serde_json::Value::String(new_key.clone());
                 applied.keys += 1;
             }
-            applied.edges += rewrite_edge_targets(ticket, &lookup);
-            applied.citations += rewrite_citations(ticket, &mapping);
+            let (edges, citations) = rewrite_task(ticket, &lookup, &mapping);
+            applied.edges += edges;
+            applied.citations += citations;
+        }
+
+        // The event log carries a full snapshot per event, and the index is built by replaying it. Rewriting only the
+        // projection left every replay resurrecting the old key: the ticket said BA-1 and `storypole list` still showed
+        // GB-112, from the events. The log is live state, not history - it is what the next rebuild reads (GB-347).
+        if let Some(events) = document
+            .get_mut("events")
+            .and_then(|events| events.as_array_mut())
+        {
+            for snapshot in events.iter_mut() {
+                if let Some(task) = snapshot.get_mut("task") {
+                    if let Some(new_key) = &new_key
+                        && task.get("ticket_key").and_then(serde_json::Value::as_str)
+                            == Some(old_key.as_str())
+                    {
+                        task["ticket_key"] = serde_json::Value::String(new_key.clone());
+                    }
+                    let (edges, citations) = rewrite_task(task, &lookup, &mapping);
+                    applied.edges += edges;
+                    applied.citations += citations;
+                }
+            }
         }
 
         let target = match &new_key {
@@ -96,26 +120,6 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
 
     verify(store, &prefix)?;
     Ok(applied)
-}
-
-/// The ticket files of the store at `store` itself - not its members, because applying is one store at a time.
-fn store_tickets(store: &Path) -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-    for base in [
-        store.join(".gaugeblock").join("storypole"),
-        store.join(".storypole"),
-    ] {
-        let Ok(entries) = std::fs::read_dir(base.join("tickets")) else {
-            continue;
-        };
-        paths.extend(
-            entries
-                .flatten()
-                .map(|entry| entry.path())
-                .filter(|path| path.extension().is_some_and(|ext| ext == "json")),
-        );
-    }
-    paths
 }
 
 /// Points every edge at the reminted key, when the edge names one that moved.
@@ -190,28 +194,6 @@ fn replace_token(text: &str, from: &str, to: &str) -> String {
     out
 }
 
-/// Renames the plan blueprint named after a ticket, returning 1 when one moved.
-///
-/// The plans directory is derived from the ticket path, exactly as `read_refs` derives it when counting. Taking it from
-/// the store root instead put it one directory too high, so the dry run promised a rename the apply never performed.
-fn rename_plan(ticket_path: &Path, old_key: &str, new_key: &str) -> Result<usize> {
-    let Some(plans) = ticket_path
-        .parent()
-        .and_then(|tickets| tickets.parent())
-        .map(|store| store.join("plans"))
-    else {
-        return Ok(0);
-    };
-    let from = plans.join(format!("{old_key}.md"));
-    if !from.exists() {
-        return Ok(0);
-    }
-    let to = plans.join(format!("{new_key}.md"));
-    std::fs::rename(&from, &to)
-        .with_context(|| format!("could not rename {} to {}", from.display(), to.display()))?;
-    Ok(1)
-}
-
 /// Refuses to finish with a key still off-prefix.
 ///
 /// Re-lists the store rather than reusing the paths it started with: those files have been renamed, so checking the old
@@ -227,4 +209,19 @@ fn verify(store: &Path, prefix: &str) -> Result<()> {
         anyhow::bail!("{remaining} key(s) still off-prefix after the remint");
     }
     Ok(())
+}
+
+/// Applies every reference rewrite to one task-shaped object: edge targets and body citations.
+///
+/// Used for the projection and for each event snapshot, because they are the same object shape and both are read: the
+/// projection by everything that opens a ticket file, the snapshots by every index rebuild.
+fn rewrite_task(
+    task: &mut serde_json::Value,
+    lookup: &BTreeMap<String, String>,
+    mapping: &[Remint],
+) -> (usize, usize) {
+    (
+        rewrite_edge_targets(task, lookup),
+        rewrite_citations(task, mapping),
+    )
 }

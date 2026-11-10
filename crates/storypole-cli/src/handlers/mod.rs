@@ -9,6 +9,7 @@ pub mod migrate_cmds;
 pub mod plan_cmds;
 pub mod remint_apply;
 pub mod remint_cmds;
+pub mod remint_store;
 pub mod spool_cmds;
 pub mod update_cmd;
 pub mod workspace_cmds;

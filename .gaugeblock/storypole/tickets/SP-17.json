@@ -9,7 +9,7 @@
         "active_claim": null,
         "created_at_epoch_ms": 1793304918196,
         "decisions": [],
-        "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to SP-16 by hand.",
+        "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated BW-28, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing CO-6; repaired by re-keying the second event to SP-16 by hand.",
         "edges": [
           {
             "kind": "discovered_from",
@@ -99,7 +99,7 @@
     "archived_at_epoch_ms": 1794038015487,
     "created_at_epoch_ms": 1793304918196,
     "decisions": [],
-    "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to SP-16 by hand.",
+    "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated BW-28, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing CO-6; repaired by re-keying the second event to SP-16 by hand.",
     "edges": [
       {
         "kind": "discovered_from",

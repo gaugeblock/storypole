@@ -9,7 +9,7 @@
         "active_claim": null,
         "created_at_epoch_ms": 1793304856201,
         "decisions": [],
-        "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing GB-182, whose plan was written at close-out.",
+        "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing CO-6, whose plan was written at close-out.",
         "edges": [
           {
             "kind": "discovered_from",
@@ -110,7 +110,7 @@
     "archived_at_epoch_ms": 1794038015291,
     "created_at_epoch_ms": 1793304856201,
     "decisions": [],
-    "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing GB-182, whose plan was written at close-out.",
+    "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing CO-6, whose plan was written at close-out.",
     "edges": [
       {
         "kind": "discovered_from",

@@ -9,7 +9,7 @@
         "active_claim": null,
         "created_at_epoch_ms": 1793305193677,
         "decisions": [],
-        "description": "update SP-18 --file AGENTS.md --file CONTRIBUTING.md prints Updated task but show still lists only its original file; the scope branch in update_cmd only takes args.files when non-empty, so either the flag binding or the scope merge is dropping them. Found while widening SP-18 scope during the GB-182 close-out.",
+        "description": "update SP-18 --file AGENTS.md --file CONTRIBUTING.md prints Updated task but show still lists only its original file; the scope branch in update_cmd only takes args.files when non-empty, so either the flag binding or the scope merge is dropping them. Found while widening SP-18 scope during the CO-6 close-out.",
         "edges": [
           {
             "kind": "discovered_from",

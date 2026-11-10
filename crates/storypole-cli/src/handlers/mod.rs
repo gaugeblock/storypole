@@ -7,6 +7,7 @@ pub mod ledger_cmds;
 pub mod lifecycle_cmds;
 pub mod migrate_cmds;
 pub mod plan_cmds;
+pub mod remint;
 pub mod remint_apply;
 pub mod remint_cmds;
 pub mod remint_store;

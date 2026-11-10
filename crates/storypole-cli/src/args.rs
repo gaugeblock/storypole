@@ -33,19 +33,19 @@ pub enum Commands {
     Init(InitArgs),
     /// Add a new backlog task node
     Add(AddArgs),
-    /// List backlog tasks matching filters
     /// Audit every ledger for corruption and replay truth
     LedgerVerify,
     /// Compare the unified index against the ledger replay
     LedgerReconcile,
     /// Report the key remint a store would need to mint under its own prefix (GB-347)
     Remint {
-        /// Apply the remint. Refused for now: it must rewrite references in the same pass.
+        /// Apply the remint, rewriting every key, edge target, citation and plan path it moves.
         #[arg(long)]
         apply: bool,
     },
     /// Inspect the repository configuration
     Config(ConfigArgs),
+    /// List backlog tasks matching filters
     List(ListArgs),
     /// Show full context briefing for a task
     Show {

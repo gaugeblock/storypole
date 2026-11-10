@@ -14,6 +14,8 @@ use storypole_core::ticket_keys::plan_remint;
 
 use crate::json_out::print_json;
 
+use super::remint::rewrite::cites;
+
 /// Prints the remint mapping for every store under `root_dir`, or refuses to apply it.
 ///
 /// # Errors
@@ -195,16 +197,6 @@ pub(crate) fn read_refs(path: &Path) -> Option<TicketRefs> {
         description,
         edge_targets,
         plan_file,
-    })
-}
-
-/// Whether `haystack` cites `key` as a whole token, so `GB-1` does not match inside `GB-10`.
-pub(crate) fn cites(haystack: &str, key: &str) -> bool {
-    haystack.match_indices(key).any(|(at, _)| {
-        let before = haystack[..at].chars().next_back();
-        let after = haystack[at + key.len()..].chars().next();
-        let boundary = |c: Option<char>| c.is_none_or(|c| !c.is_alphanumeric() && c != '-');
-        boundary(before) && boundary(after)
     })
 }
 

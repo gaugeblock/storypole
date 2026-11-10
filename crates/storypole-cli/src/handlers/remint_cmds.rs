@@ -22,9 +22,30 @@ use crate::json_out::print_json;
 /// read, because a store whose prefix is unknown cannot be planned safely.
 pub fn handle_remint(root_dir: &Path, apply: bool, json: bool) -> Result<()> {
     if apply {
-        anyhow::bail!(
-            "applying a remint is not implemented: `map` and dry run are GB-347 steps 1-2, and step 3 rewrites the reference graph in the same pass as the keys"
-        );
+        let applied = super::remint_apply::apply_remint(root_dir)?;
+        if json {
+            print_json(
+                "remint",
+                &serde_json::json!({
+                    "applied": {
+                        "keys": applied.keys,
+                        "edges": applied.edges,
+                        "citations": applied.citations,
+                        "plans": applied.plans,
+                    }
+                }),
+            )?;
+        } else {
+            println!(
+                "{} key(s) reminted, {} edge target(s) rewritten, {} citation(s) rewritten, {} plan file(s) renamed in {}",
+                applied.keys,
+                applied.edges,
+                applied.citations,
+                applied.plans,
+                label(root_dir, root_dir)
+            );
+        }
+        return Ok(());
     }
 
     // Group by store first: a prefix belongs to a repository, so the mapping only means anything per store.
@@ -127,8 +148,8 @@ pub fn handle_remint(root_dir: &Path, apply: bool, json: bool) -> Result<()> {
 }
 
 /// What one ticket file points at, as far as a remint is concerned (`GB-347` step 3).
-struct TicketRefs {
-    key: String,
+pub(crate) struct TicketRefs {
+    pub(crate) key: String,
     /// The body, which may cite other keys in prose.
     description: String,
     /// Edge targets, by the key the edge stores.
@@ -138,7 +159,7 @@ struct TicketRefs {
 }
 
 /// Reads the referencing surface of one ticket file, or `None` when it is unreadable.
-fn read_refs(path: &Path) -> Option<TicketRefs> {
+pub(crate) fn read_refs(path: &Path) -> Option<TicketRefs> {
     let text = std::fs::read_to_string(path).ok()?;
     let document: serde_json::Value = serde_json::from_str(&text).ok()?;
     let ticket = document.get("ticket")?;
@@ -178,7 +199,7 @@ fn read_refs(path: &Path) -> Option<TicketRefs> {
 }
 
 /// Whether `haystack` cites `key` as a whole token, so `GB-1` does not match inside `GB-10`.
-fn cites(haystack: &str, key: &str) -> bool {
+pub(crate) fn cites(haystack: &str, key: &str) -> bool {
     haystack.match_indices(key).any(|(at, _)| {
         let before = haystack[..at].chars().next_back();
         let after = haystack[at + key.len()..].chars().next();
@@ -199,7 +220,7 @@ fn store_of(root_dir: &Path, path: &Path) -> PathBuf {
 }
 
 /// The ticket prefix a store declares, from its unified or legacy configuration.
-fn prefix_of(store: &Path) -> Result<String> {
+pub(crate) fn prefix_of(store: &Path) -> Result<String> {
     let legacy = store.join(".gaugeblock/storypole/config.toml");
     let config = StorypoleConfig::load_unified_or_legacy(store, &legacy)
         .with_context(|| format!("could not read configuration in {}", store.display()))?;

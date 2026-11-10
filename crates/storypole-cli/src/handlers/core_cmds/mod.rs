@@ -81,13 +81,31 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
         ..Default::default()
     };
     let tasks = query_tasks(store.conn(), &filter)?;
+
+    // An all-archived store printed exactly what an empty store prints, which read as a broken store during `GB-347`.
+    // Counting what the filter hid costs one more query and answers the question the empty table raises.
+    let hidden = if args.include_archived {
+        0
+    } else {
+        let mut widened = filter.clone();
+        widened.include_archived = true;
+        query_tasks(store.conn(), &widened)?
+            .len()
+            .saturating_sub(tasks.len())
+    };
+
     if json {
         print_json(
             "list",
-            &serde_json::json!({"count": tasks.len(), "tasks": tasks}),
+            &serde_json::json!({"count": tasks.len(), "archived_hidden": hidden, "tasks": tasks}),
         )?;
     } else {
         print!("{}", format_task_table(&tasks));
+        if hidden > 0 {
+            println!(
+                "{hidden} archived ticket(s) hidden by this view; --include-archived lists them"
+            );
+        }
     }
     Ok(())
 }

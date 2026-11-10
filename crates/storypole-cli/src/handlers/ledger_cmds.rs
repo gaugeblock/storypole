@@ -10,11 +10,27 @@ use storypole_core::ledger::audit::{audit_ledgers, format_ledger_audit};
 pub fn handle_ledger_verify(root_dir: &Path, json: bool) -> Result<()> {
     let audit = audit_ledgers(root_dir)
         .with_context(|| format!("Ledger audit failed for {}", root_dir.display()))?;
+    // Blueprints are part of the same question - "is what the store says about itself true" - but they are reported
+    // rather than gated: resolving an orphan means deciding which ticket a file was meant for, and until that decision
+    // is made a non-zero exit would block every repository on data nobody has judged yet (`GB-350`).
+    let plans = crate::handlers::plan_audit::audit(root_dir)?;
 
     if json {
-        print_json("ledger-verify", &serde_json::json!({"audit": audit}))?;
+        print_json(
+            "ledger-verify",
+            &serde_json::json!({"audit": audit, "plans": plans}),
+        )?;
     } else {
         print!("{}", format_ledger_audit(&audit));
+        if !plans.is_clean() {
+            println!("\nplan blueprints (reported, not gating):");
+            for orphan in &plans.orphans {
+                println!("  orphan    {orphan}");
+            }
+            for dangling in &plans.dangling {
+                println!("  dangling  {dangling}");
+            }
+        }
     }
 
     if !audit.is_structurally_sound() {

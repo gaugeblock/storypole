@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use super::events::rewrite_event;
 use super::rewrite::{rewrite_plan, rewrite_task};
-use super::test_support::{lookup, mapping};
+use super::test_support::{lookup, mapping, record_described_with};
 
 #[test]
 fn a_task_update_rewrites_the_text_replay_installs() {
@@ -114,4 +114,21 @@ fn a_value_that_is_not_a_ticket_is_left_alone() {
     let mut scalar = Value::Number(1.into());
     assert_eq!(rewrite_event(&mut scalar, &lookup(), &mapping()), (0, 0));
     assert_eq!(rewrite_task(&mut scalar, &lookup(), &mapping()), (0, 0));
+}
+
+#[test]
+fn citations_are_counted_from_replay_not_from_the_creation_snapshot() {
+    // The projection is the task as created; a description set later lives only in the events. Counting against the
+    // projection under-reported a remint's work by most of its total (GB-349).
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("CO-9.json");
+    let record = record_described_with("CO-9", "GB-182");
+    std::fs::write(&path, serde_json::to_string(&record).unwrap()).unwrap();
+
+    let refs = crate::handlers::remint_cmds::read_refs(&path).unwrap();
+    assert!(
+        refs.description.contains("GB-182"),
+        "the citation is in the event, not the projection: {:?}",
+        refs.description
+    );
 }

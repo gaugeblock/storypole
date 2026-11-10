@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 use storypole_core::config::StorypoleConfig;
 use storypole_core::ledger::audit::discover_ticket_files;
 use storypole_core::ticket_keys::plan_remint;
+use storypole_core::tickets::TicketRecord;
 
 use crate::json_out::print_json;
 
@@ -154,37 +155,44 @@ pub fn handle_remint(root_dir: &Path, apply: bool, json: bool) -> Result<()> {
 /// What one ticket file points at, as far as a remint is concerned (`GB-347` step 3).
 pub(crate) struct TicketRefs {
     pub(crate) key: String,
-    /// The body, which may cite other keys in prose.
-    description: String,
+    /// The body, which may cite other keys in prose - read from replay, not the creation snapshot (`GB-349`).
+    pub(crate) description: String,
     /// Edge targets, by the key the edge stores.
-    edge_targets: Vec<String>,
+    pub(crate) edge_targets: Vec<String>,
     /// A plan blueprint named after this ticket, if one exists beside it.
     plan_file: Option<String>,
 }
 
 /// Reads the referencing surface of one ticket file, or `None` when it is unreadable.
+///
+/// The served state comes from **replay**, not from the projection. `ticket` is the task as it was created - later
+/// changes live in the events - so counting a remint's citations against it under-reported the work by most of its
+/// total, and missed every citation added after creation (`GB-349`).
 pub(crate) fn read_refs(path: &Path) -> Option<TicketRefs> {
     let text = std::fs::read_to_string(path).ok()?;
-    let document: serde_json::Value = serde_json::from_str(&text).ok()?;
-    let ticket = document.get("ticket")?;
-    let ticket_key = ticket.get("ticket_key")?.as_str()?.to_string();
-    let description = ticket
-        .get("description")
-        .and_then(serde_json::Value::as_str)
-        .unwrap_or_default()
-        .to_string();
-    let edge_targets = ticket
-        .get("edges")
-        .and_then(serde_json::Value::as_array)
-        .map(|edges| {
-            edges
+    let record: TicketRecord = serde_json::from_str(&text).ok()?;
+    let ticket_key = record.ticket.ticket_key.clone();
+    let live = record.replay();
+    let description = live.as_ref().map_or_else(
+        || record.ticket.description.clone(),
+        |task| task.description.clone(),
+    );
+    let edge_targets: Vec<String> = live.as_ref().map_or_else(
+        || {
+            record
+                .ticket
+                .edges
                 .iter()
-                .filter_map(|edge| edge.get("target_ticket_key"))
-                .filter_map(serde_json::Value::as_str)
-                .map(str::to_string)
+                .filter_map(|edge| edge.target_ticket_key.clone())
                 .collect()
-        })
-        .unwrap_or_default();
+        },
+        |task| {
+            task.edges
+                .iter()
+                .filter_map(|edge| edge.target_ticket_key.clone())
+                .collect()
+        },
+    );
 
     // Resolved before the struct literal, because the literal moves `ticket_key` into the struct.
     let plan_file = path

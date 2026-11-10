@@ -80,6 +80,7 @@ Autonomous coding agents (Claude Code, Cursor, Cline, Windsurf) excel at localiz
 | `graph` | Display ASCII or Mermaid dependency DAG visualization. | — |
 | `archive <KEY>` | Archive a completed or closed task out of active backlog views. | — |
 | `unarchive <KEY>` | Restore an archived task back to active backlog views. | — |
+| `remint` | Report, or with `--apply` perform, the key remint a store needs to mint under its own prefix, rewriting every reference in the same pass. | — |
 | `workspace` | Manage multi-repository workspace members and store routing. Subcommands: `list`, `init`, `distribute`. | — |
 | `spool migrate` | Rewrite legacy bare-trace outbox lines into canonical `SpoolEntry` envelopes. | — |
 | `mcp` | Launch the Model Context Protocol (JSON-RPC 2.0 stdio) server. | — |
@@ -146,6 +147,29 @@ storypole ledger-reconcile
 `ledger-verify` reports `1078 events across 11 files: 0 unparsable, 0 duplicate` on a healthy suite.
 `ledger-reconcile` ends in `index and ledger agree` when the SQLite projection matches the ledgers,
 and names each status group that disagrees otherwise.
+
+### Key migration
+
+A member store that inherited another repository's key numbering can be moved onto its own configured prefix. The
+command reports first and changes nothing until asked:
+
+```bash
+# Report the mapping and what a rewrite would have to repair
+storypole remint --dir path/to/repo
+
+# Apply it: keys, edge targets, citations, plan filenames and plan paths in one pass
+storypole remint --apply --dir path/to/repo
+```
+
+A key is not only an identifier - it is how one ticket points at another - so applying rewrites the references in the
+same pass and then verifies against replay rather than against the files it just wrote. That distinction is the whole
+point: a ticket file is a projection plus an event log, replay applies `TaskUpdated.description`,
+`EdgeAdded.edge` and `PlanUpdated.plan` from the event payload, and a pass that rewrote only the projection would leave
+the served state citing keys nothing owns while reporting success. A claim's `branch` is deliberately left alone: it
+records where work happened, and renaming it would name a branch that never existed.
+
+`remint` changes what a ticket is called now, never what it was called when it shipped - changelogs and commit messages
+are history and are not touched.
 
 ### Training-trace outbox
 

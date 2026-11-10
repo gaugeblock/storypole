@@ -162,3 +162,41 @@ fn a_live_claim_is_left_alone() {
         "live work must not be taken away from its holder"
     );
 }
+
+#[test]
+fn a_claim_whose_record_lives_elsewhere_is_reported_not_reaped() {
+    // At a suite root the index is the unified view, so it lists member tickets whose records this store cannot write.
+    // Reaping one used to abort the whole run after the earlier releases had already been written (`GB-352`).
+    let (_dir, mut store) = fresh_store();
+    let id = new_task(&mut store);
+    hold_expired_claim(&mut store, id, "ghost", 1);
+
+    // The index still knows the task; the ledger no longer holds it, as it would not in a store that does not own it.
+    let key = get_task_by_id(store.conn(), id).expect("task").ticket_key;
+    let ledger = store.dot_dir().join("ledger.jsonl");
+    let kept: String = fs::read_to_string(&ledger)
+        .expect("read ledger")
+        .lines()
+        .filter(|line| !line.contains(&format!("\"{key}\"")))
+        .map(|line| format!("{line}\n"))
+        .collect();
+    fs::write(&ledger, kept).expect("rewrite ledger");
+
+    assert!(
+        expired_claims(&store).expect("scan").is_empty(),
+        "a ticket this store does not hold is not its lease to reap"
+    );
+    assert!(
+        reap_expired_claims(&mut store)
+            .expect("reap must not fail")
+            .is_empty(),
+        "nothing is reaped here"
+    );
+    let elsewhere = storypole_core::ops::lease::expired_claims_elsewhere(&store).expect("scan");
+    assert_eq!(
+        elsewhere.len(),
+        1,
+        "and the operator is told where it belongs"
+    );
+    assert_eq!(elsewhere[0].0, key);
+}

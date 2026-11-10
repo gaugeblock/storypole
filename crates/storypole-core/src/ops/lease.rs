@@ -9,6 +9,8 @@
 //! event, and a read that writes is a trap: `list` would mutate the ledger simply because someone looked
 //! at it, and a read-only mount would fail. `--dry-run` gives the same visibility without the write.
 
+use std::path::Path;
+
 use crate::error::StorypoleError;
 use crate::index::query::get_all_tasks;
 use crate::model::LedgerEvent;
@@ -26,6 +28,66 @@ pub struct ReapedClaim {
     pub expired_at_epoch_ms: u64,
 }
 
+/// Whether this store holds the ticket's record.
+///
+/// A store's index can list more than its own records: at a suite root it is the unified view, which holds every member's
+/// tickets too. Reaping is a write, so it must be limited to what this store can actually record - otherwise the first
+/// member ticket aborts the run with an error and the root's own releases are already half-written (`GB-352`).
+fn owns(store: &StorypoleStore, key: &str) -> bool {
+    // Either layout: a store still on `ledger.jsonl` holds its tickets there, and asking only about record files made
+    // reaping a no-op for the whole legacy layout (caught by `an_expired_claim_is_reported_and_reaped_back_to_ready`).
+    crate::workspace::lookup::holds(store.dot_dir(), key)
+}
+
+/// How to name the repository that owns a ticket, for a message a person can act on.
+fn owner_label(root: &Path, dot_dir: &Path) -> String {
+    let repo = if dot_dir.ends_with(".gaugeblock/storypole") {
+        dot_dir.parent().and_then(Path::parent).unwrap_or(dot_dir)
+    } else {
+        dot_dir.parent().unwrap_or(dot_dir)
+    };
+    match repo
+        .strip_prefix(root)
+        .ok()
+        .and_then(Path::file_name)
+        .and_then(|name| name.to_str())
+    {
+        Some(name) => name.to_string(),
+        None => "the workspace root".to_string(),
+    }
+}
+
+/// Expired claims this store cannot reap, each with the repository to run `reap --dir` in.
+///
+/// # Errors
+///
+/// [`StorypoleError`] when the index cannot be read.
+pub fn expired_claims_elsewhere(
+    store: &StorypoleStore,
+) -> Result<Vec<(String, String)>, StorypoleError> {
+    let now = StorypoleStore::now_ms();
+    let mut elsewhere = Vec::new();
+    for task in get_all_tasks(store.conn())?.values() {
+        if task.status != TaskStatus::InProgress || owns(store, &task.ticket_key) {
+            continue;
+        }
+        let Some(claim) = task.active_claim.as_ref() else {
+            continue;
+        };
+        if !claim.is_expired(now) {
+            continue;
+        }
+        let owner = crate::workspace::lookup::locate_ticket(store.root_dir(), &task.ticket_key)
+            .map_or_else(
+                || "an unknown repository".to_string(),
+                |dot| owner_label(store.root_dir(), &dot),
+            );
+        elsewhere.push((task.ticket_key.clone(), owner));
+    }
+    elsewhere.sort();
+    Ok(elsewhere)
+}
+
 /// Tasks that are `InProgress` while their claim lease has expired, without changing anything.
 ///
 /// # Errors
@@ -36,7 +98,7 @@ pub fn expired_claims(store: &StorypoleStore) -> Result<Vec<ReapedClaim>, Storyp
     let tasks = get_all_tasks(store.conn())?;
     let mut expired = Vec::new();
     for task in tasks.values() {
-        if task.status != TaskStatus::InProgress {
+        if task.status != TaskStatus::InProgress || !owns(store, &task.ticket_key) {
             continue;
         }
         let Some(claim) = task.active_claim.as_ref() else {
@@ -69,7 +131,7 @@ pub fn reap_expired_claims(store: &mut StorypoleStore) -> Result<Vec<ReapedClaim
     let mut reaped = Vec::new();
 
     for (task_id, task) in &tasks {
-        if task.status != TaskStatus::InProgress {
+        if task.status != TaskStatus::InProgress || !owns(store, &task.ticket_key) {
             continue;
         }
         let Some(claim) = task.active_claim.as_ref() else {

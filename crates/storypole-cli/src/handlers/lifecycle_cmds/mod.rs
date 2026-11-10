@@ -54,6 +54,9 @@ pub fn handle_reap(store: &mut StorypoleStore, dry_run: bool, json: bool) -> Res
     } else {
         storypole_core::ops::lease::reap_expired_claims(store)?
     };
+    // At a suite root the index also lists member tickets, whose records this store cannot write. They used to abort the
+    // run half-way through the root's own releases; now they are named with the repository to run in (`GB-352`).
+    let elsewhere = storypole_core::ops::lease::expired_claims_elsewhere(store)?;
 
     if json {
         let rows: Vec<serde_json::Value> = reaped
@@ -66,31 +69,53 @@ pub fn handle_reap(store: &mut StorypoleStore, dry_run: bool, json: bool) -> Res
                 })
             })
             .collect();
+        let other: Vec<serde_json::Value> = elsewhere
+            .iter()
+            .map(|(key, repo)| serde_json::json!({ "ticket_key": key, "repository": repo }))
+            .collect();
         println!(
             "{}",
-            serde_json::json!({ "dry_run": dry_run, "count": reaped.len(), "reaped": rows })
+            serde_json::json!({
+                "dry_run": dry_run,
+                "count": reaped.len(),
+                "reaped": rows,
+                "elsewhere": other,
+            })
         );
         return Ok(());
     }
 
-    if reaped.is_empty() {
+    if reaped.is_empty() && elsewhere.is_empty() {
         println!("No expired claim leases; every InProgress task has a live holder.");
         return Ok(());
     }
 
-    if dry_run {
-        println!(
-            "[dry-run] {} task(s) would be returned to the backlog:",
-            reaped.len()
-        );
-    } else {
-        println!("Returned {} task(s) to the backlog:", reaped.len());
+    if !reaped.is_empty() {
+        if dry_run {
+            println!(
+                "[dry-run] {} task(s) would be returned to the backlog:",
+                reaped.len()
+            );
+        } else {
+            println!("Returned {} task(s) to the backlog:", reaped.len());
+        }
+        for item in &reaped {
+            println!(
+                "  {} (agent {}, lease expired at epoch ms {})",
+                item.ticket_key, item.agent_id, item.expired_at_epoch_ms
+            );
+        }
     }
-    for item in &reaped {
+
+    if !elsewhere.is_empty() {
         println!(
-            "  {} (agent {}, lease expired at epoch ms {})",
-            item.ticket_key, item.agent_id, item.expired_at_epoch_ms
+            "
+{} expired lease(s) belong to another repository; reap them where their records live:",
+            elsewhere.len()
         );
+        for (key, repo) in &elsewhere {
+            println!("  {key} -> storypole reap --dir {repo}");
+        }
     }
     Ok(())
 }

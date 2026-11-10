@@ -32,7 +32,7 @@ pub fn locate_ticket(workspace_root: &Path, key: &str) -> Option<PathBuf> {
 }
 
 /// Whether a store holds the ticket, in either layout.
-fn holds(dot_dir: &Path, key: &str) -> bool {
+pub fn holds(dot_dir: &Path, key: &str) -> bool {
     if tickets::path(dot_dir, key).is_ok_and(|path| path.is_file()) {
         return true;
     }

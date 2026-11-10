@@ -17,7 +17,7 @@ pub use archive::{archive_task, unarchive_task};
 pub use decisions::{ask_decision, decide, supersede_decision};
 pub use graph::{defer_issue, link_tasks, split_task, unlink_tasks};
 pub use handoff::{handoff_task, heartbeat};
-pub use lease::{ReapedClaim, expired_claims, reap_expired_claims};
+pub use lease::{ReapedClaim, expired_claims, expired_claims_elsewhere, reap_expired_claims};
 pub use mutations::{CreateTaskParams, UpdateTaskParams, add_task, slugify, update_task};
 pub use plan_ops::set_task_plan;
 pub use verification::verify_task;

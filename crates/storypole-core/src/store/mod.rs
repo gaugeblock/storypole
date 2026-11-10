@@ -66,7 +66,7 @@ impl StorypoleStore {
 
         let config_path = dot_dir.join("config.toml");
 
-        let config =
+        let loaded =
             if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(&root_dir, &config_path) {
                 cfg
             } else if !config_path.exists() {
@@ -74,6 +74,12 @@ impl StorypoleStore {
             } else {
                 StorypoleConfig::load_from_file(&config_path)?
             };
+
+        // A member repository declares no chains of its own: they live once at the suite root, keyed by the
+        // directory names the `[suite] members` roster uses. Without this inheritance a member-scoped task asked
+        // its own config for a chain, found none, and fell back to `cargo test` - a weaker certification than the
+        // configuration promised, recorded honestly and still wrong (`SP-1`).
+        let config = loaded.inheriting(chains_declared_by_suite(&root_dir));
 
         let sqlite_path = dot_dir.join("index.sqlite");
         let (conn, mode) = sync_index(&sqlite_path, &dot_dir)?;
@@ -92,7 +98,7 @@ impl StorypoleStore {
         let dot_dir = Self::resolve_dot_dir(root_dir);
         let config_path = dot_dir.join("config.toml");
 
-        let config =
+        let loaded =
             if let Ok(cfg) = StorypoleConfig::load_unified_or_legacy(root_dir, &config_path) {
                 cfg
             } else if !config_path.exists() {
@@ -100,6 +106,9 @@ impl StorypoleStore {
             } else {
                 StorypoleConfig::load_from_file(&config_path)?
             };
+
+        // Same inheritance as `open`, for the caller that pinned the directory instead of searching (`SP-1`).
+        let config = loaded.inheriting(chains_declared_by_suite(root_dir));
 
         let sqlite_path = dot_dir.join("index.sqlite");
         let (conn, mode) = sync_index(&sqlite_path, &dot_dir)?;
@@ -212,3 +221,39 @@ impl StorypoleStore {
 }
 
 mod writes;
+
+/// The verification chains declared by the suite that contains `root_dir` (`SP-1`).
+///
+/// Returns nothing for a lone checkout, which is why the caller can inherit unconditionally: a repository that is
+/// not in a suite keeps exactly the configuration it had before. A malformed suite config also yields nothing -
+/// the suite's own tooling is the right place to complain about it, and a member should not refuse to open because
+/// a file it does not own is broken.
+fn chains_declared_by_suite(root_dir: &Path) -> Vec<(String, String)> {
+    let Some(membership) = gaugeblock_workspace::Membership::containing(root_dir) else {
+        return Vec::new();
+    };
+    let path = gaugeblock_workspace::GaugeblockPaths::at(&membership.suite_root).config();
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    let Ok(table) = text.parse::<toml::Table>() else {
+        return Vec::new();
+    };
+    let Some(entries) = table
+        .get("verification_commands")
+        .and_then(|v| v.as_array())
+    else {
+        return Vec::new();
+    };
+    // Each entry is `[key, command]`. Anything else is skipped rather than fatal: the caller falls back to the
+    // previous behaviour, which is a chain that does not run - the status quo, not a new failure.
+    entries
+        .iter()
+        .filter_map(|entry| {
+            let pair = entry.as_array()?;
+            let key = pair.first()?.as_str()?;
+            let command = pair.get(1)?.as_str()?;
+            Some((key.to_string(), command.to_string()))
+        })
+        .collect()
+}

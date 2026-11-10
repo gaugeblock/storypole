@@ -120,6 +120,20 @@ impl StorypoleConfig {
         self.verification_chain_exact("default")
     }
 
+    /// Adopts chains declared elsewhere when this configuration declares none (`SP-1`).
+    ///
+    /// All or nothing, deliberately: a repository that declares chains keeps every one of them, and one that
+    /// declares none takes the whole inherited set. Merging key by key would let a member accumulate half a
+    /// chain from its own config and half from the suite, which is a configuration nobody wrote and nobody
+    /// could predict.
+    #[must_use]
+    pub fn inheriting(mut self, candidate: Vec<(String, String)>) -> Self {
+        if self.verification_commands.is_empty() {
+            self.verification_commands = candidate;
+        }
+        self
+    }
+
     /// The verification chain that would run for `target`, together with the key it matched.
     ///
     /// [`Self::verification_command_for`] answers "which command", which is enough to run one and not

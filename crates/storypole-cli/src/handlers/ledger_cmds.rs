@@ -32,6 +32,21 @@ pub fn handle_ledger_reconcile(root_dir: &Path, json: bool) -> Result<()> {
     let mut audit = audit_ledgers(root_dir)
         .with_context(|| format!("Ledger audit failed for {}", root_dir.display()))?;
 
+    // A key belongs to a repository (ADR 0007), so two repositories owning GB-342 is legal - but the unified index
+    // constrains `ticket_key_lower` across the whole suite and refuses to hold both. That surfaced here as a raw
+    // `UNIQUE constraint failed` from inside the workspace store, which says nothing about what actually collided
+    // (`GB-346`). Name the collisions first: the answer is a decision about identity, not a repaired database.
+    if let Some(collisions) = keys_owned_by_several_repositories(root_dir) {
+        eprintln!("cross-repository key collisions - the unified index cannot hold these:");
+        for (key, repos) in &collisions {
+            eprintln!("  {key}: {}", repos.join(", "));
+        }
+        anyhow::bail!(
+            "{} key(s) are owned by more than one repository; GB- is harness only, so each is either a key minted under the wrong prefix or a legacy key awaiting remint - see GB-346 and GB-347",
+            collisions.len()
+        );
+    }
+
     let workspace = storypole_core::workspace::store::StorypoleWorkspaceStore::open(root_dir)
         .context("Unified index could not be opened")?;
     let filter = storypole_core::index::query::TaskFilter {
@@ -126,5 +141,59 @@ index and ledger agree"
             "index disagrees with the ledger on {} status group(s) - see GB-177",
             deltas.len()
         )
+    }
+}
+
+/// Keys that more than one repository owns, with the owners (`GB-346`).
+///
+/// Returns `None` when every key is unique, which is the state the unified index requires and the state the suite
+/// cannot always be in: a key is scoped to its repository, so a collision is legal and this function exists to report
+/// it as a collision rather than let it surface as a constraint violation from three layers down.
+fn keys_owned_by_several_repositories(root_dir: &Path) -> Option<Vec<(String, Vec<String>)>> {
+    let mut owners: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
+
+    for path in storypole_core::ledger::audit::discover_ticket_files(root_dir) {
+        let Ok(text) = std::fs::read_to_string(&path) else {
+            continue;
+        };
+        let Ok(document) = serde_json::from_str::<serde_json::Value>(&text) else {
+            continue;
+        };
+        let Some(key) = document
+            .get("ticket")
+            .and_then(|ticket| ticket.get("ticket_key"))
+            .and_then(serde_json::Value::as_str)
+        else {
+            continue;
+        };
+        // Relative to the root first: the discovered paths are absolute, so the first component of the path itself
+        // is `/` for every one of them - which is what this printed before the fix served as its own test.
+        let relative = path.strip_prefix(root_dir).unwrap_or(&path);
+        let repository = match relative.components().next() {
+            Some(first) => {
+                let name = first.as_os_str().to_string_lossy().to_string();
+                if name.starts_with('.') {
+                    ".".to_string()
+                } else {
+                    name
+                }
+            }
+            None => ".".to_string(),
+        };
+        owners
+            .entry(key.to_uppercase())
+            .or_default()
+            .push(repository);
+    }
+
+    let collisions: Vec<(String, Vec<String>)> = owners
+        .into_iter()
+        .filter(|(_, repos)| repos.len() > 1)
+        .collect();
+    if collisions.is_empty() {
+        None
+    } else {
+        Some(collisions)
     }
 }

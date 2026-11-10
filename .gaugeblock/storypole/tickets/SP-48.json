@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+    "ticket_key": "SP-48",
+    "slug": "storypole-link-cannot-create-a-cross-repository-edge-so-no-dependency-spanning-two-stores-can-be-recorded-5364c1",
+    "title": "storypole link cannot create a cross-repository edge, so no dependency spanning two stores can be recorded",
+    "description": "Measured 2026-11-10 in the live suite, both directions, three ways of naming the target. storypole link SP-40 MTR-1 from inside storypole/ answers Task not found: MTR-1; the same command from the suite root answers a different failure, no record for SP-40 in the root ticket file. Passing MTR-1 as the uuid 9f2b9c8c-676d-43f7-a0eb-57e8d62e5453 fails identically from both ends, so the defect is not key resolution against the unified index - link resolves only inside the store the command runs in. Consequence: since the 2026-11-08 migration moved tickets into their owning repositories, no cross-repository edge can be created at all. The 7 blocked_by, 15 related_to and 12 parent_epic cross-ledger edges SP-38 counts are historical; every new one is unexpressible. That matters for the burn-down because a dependency that spans repositories is exactly how the queue is ordered: SP-40 cannot be recorded as blocked_by MTR-1, so it keeps reading Ready while its only remaining deliverable sits in another repository. Wanted: link resolves a bare key by consulting the workspace rollup, writes the edge as uuid plus repo:key locator (the contract SP-38 already documents and 106 of 123 historical edges carry), and refuses to write a copy of the target. Acceptance: the two commands above succeed and a member-only checkout renders the locator without the target repository present.",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::graph::link_tasks,storypole_core::workspace::lookup"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794351603719,
+    "updated_at_epoch_ms": 1794351603719
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+        "ticket_key": "SP-48",
+        "slug": "storypole-link-cannot-create-a-cross-repository-edge-so-no-dependency-spanning-two-stores-can-be-recorded-5364c1",
+        "title": "storypole link cannot create a cross-repository edge, so no dependency spanning two stores can be recorded",
+        "description": "Measured 2026-11-10 in the live suite, both directions, three ways of naming the target. storypole link SP-40 MTR-1 from inside storypole/ answers Task not found: MTR-1; the same command from the suite root answers a different failure, no record for SP-40 in the root ticket file. Passing MTR-1 as the uuid 9f2b9c8c-676d-43f7-a0eb-57e8d62e5453 fails identically from both ends, so the defect is not key resolution against the unified index - link resolves only inside the store the command runs in. Consequence: since the 2026-11-08 migration moved tickets into their owning repositories, no cross-repository edge can be created at all. The 7 blocked_by, 15 related_to and 12 parent_epic cross-ledger edges SP-38 counts are historical; every new one is unexpressible. That matters for the burn-down because a dependency that spans repositories is exactly how the queue is ordered: SP-40 cannot be recorded as blocked_by MTR-1, so it keeps reading Ready while its only remaining deliverable sits in another repository. Wanted: link resolves a bare key by consulting the workspace rollup, writes the edge as uuid plus repo:key locator (the contract SP-38 already documents and 106 of 123 historical edges carry), and refuses to write a copy of the target. Acceptance: the two commands above succeed and a member-only checkout renders the locator without the target repository present.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::graph::link_tasks,storypole_core::workspace::lookup"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794351603719,
+        "updated_at_epoch_ms": 1794351603719
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

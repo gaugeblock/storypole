@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "f3a0df1d-6bee-452e-a17e-39c4a630cf2b",
+    "ticket_key": "SP-47",
+    "slug": "lifecycle-transitions-no-verb-parks-an-existing-ticket-or-reopens-a-verified-one-so-a-held-epic-cannot-be-held-down-f3a0df",
+    "title": "Lifecycle transitions: no verb parks an existing ticket or reopens a verified one, so a held epic cannot be held down",
+    "description": "Discovered 2026-11-10 while planning the backlog burn-down. Deferred is reachable only at creation: ops/graph.rs:88-91 maps a defer of a non-bug/tech_debt/chore kind straight to Deferred, and nothing else in the tree ever writes that status. Consequences measured on the live board the same day: GB-155 carries an owner do-not-start directive yet still reads Ready, and storypole next recommends it as the next task; SP-40 reads Ready although its only remaining deliverable is MTR-1, which sits Deferred in another repository, so even the blocked_by edge that would say so cannot be recorded against a parked task. GB-341 records the mirror-image half, a Verified task that cannot be reopened. Wanted: one transition verb with explicit legality rules - park a task into Deferred, return it to Ready, and reopen a Verified task while retaining the previous receipt for audit - recorded as its own ledger event kind so replay stays deterministic, and refusing transitions that would hide work. Acceptance: park GB-155 and storypole list stops offering it, unpark returns it to Ready with its priority intact, reopen preserves the prior receipt, and a ledger replay reproduces every transition in order.",
+    "kind": "feature",
+    "status": "deferred",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::graph,storypole_core::ops::archive,storypole_core::state"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794351559381,
+    "updated_at_epoch_ms": 1794351559381
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "f3a0df1d-6bee-452e-a17e-39c4a630cf2b",
+        "ticket_key": "SP-47",
+        "slug": "lifecycle-transitions-no-verb-parks-an-existing-ticket-or-reopens-a-verified-one-so-a-held-epic-cannot-be-held-down-f3a0df",
+        "title": "Lifecycle transitions: no verb parks an existing ticket or reopens a verified one, so a held epic cannot be held down",
+        "description": "Discovered 2026-11-10 while planning the backlog burn-down. Deferred is reachable only at creation: ops/graph.rs:88-91 maps a defer of a non-bug/tech_debt/chore kind straight to Deferred, and nothing else in the tree ever writes that status. Consequences measured on the live board the same day: GB-155 carries an owner do-not-start directive yet still reads Ready, and storypole next recommends it as the next task; SP-40 reads Ready although its only remaining deliverable is MTR-1, which sits Deferred in another repository, so even the blocked_by edge that would say so cannot be recorded against a parked task. GB-341 records the mirror-image half, a Verified task that cannot be reopened. Wanted: one transition verb with explicit legality rules - park a task into Deferred, return it to Ready, and reopen a Verified task while retaining the previous receipt for audit - recorded as its own ledger event kind so replay stays deterministic, and refusing transitions that would hide work. Acceptance: park GB-155 and storypole list stops offering it, unpark returns it to Ready with its priority intact, reopen preserves the prior receipt, and a ledger replay reproduces every transition in order.",
+        "kind": "feature",
+        "status": "deferred",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::graph,storypole_core::ops::archive,storypole_core::state"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794351559381,
+        "updated_at_epoch_ms": 1794351559381
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

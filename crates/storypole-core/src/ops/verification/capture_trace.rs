@@ -20,7 +20,9 @@ pub(super) fn capture_trace(
     task: &crate::model::task::TaskNode,
     receipt: &VerificationReceipt,
 ) -> Result<bool, StorypoleError> {
-    let path = crate::telemetry::spool_path(store.dot_dir());
+    // The suite's outbox, not this store's own: a trace belongs in the one corpus every consumer reads
+    // (`SP-24`). Resolved in `telemetry` so the writer and `storypole spool` cannot disagree.
+    let path = crate::telemetry::outbox_path(store);
     let passed = receipt.exit_code == Some(0);
 
     let trace = gaugeblock_contracts::AnonymizedSynthesisTrace {

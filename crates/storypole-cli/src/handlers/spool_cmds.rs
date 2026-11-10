@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::json_out::print_json;
 use anyhow::{Context, Result};
 use storypole_core::store::StorypoleStore;
-use storypole_core::telemetry::{migrate_spool, normalize_spool_text, spool_path};
+use storypole_core::telemetry::{migrate_spool, normalize_spool_text, outbox_path};
 
 /// Rewrites legacy bare-trace outbox lines into canonical `SpoolEntry` envelopes.
 ///
@@ -17,7 +17,9 @@ pub fn handle_spool_migrate(
     dry_run: bool,
     json: bool,
 ) -> Result<()> {
-    let outbox = path.map_or_else(|| spool_path(store.dot_dir()), Path::to_path_buf);
+    // Resolved from the store rather than from its dot directory, so this command inspects the same
+    // outbox `verify` writes (`SP-24`): inside a member that is the suite's, not the member's own.
+    let outbox = path.map_or_else(|| outbox_path(store), Path::to_path_buf);
 
     let migrated = if dry_run {
         let text = if outbox.exists() {

@@ -2,11 +2,16 @@
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
+use std::fs;
+use std::path::Path;
+
 use gaugeblock_contracts::{
     AnonymizedSynthesisTrace, Language, SpoolEntry, SyncStatus, TelemetryTier, VerificationReport,
 };
+use storypole_core::StorypoleConfig;
+use storypole_core::store::StorypoleStore;
 use storypole_core::telemetry::{
-    already_spooled, append_trace, migrate_spool, normalize_spool_text, spool_path,
+    already_spooled, append_trace, migrate_spool, normalize_spool_text, outbox_path, spool_path,
 };
 use uuid::Uuid;
 
@@ -170,4 +175,72 @@ fn normalize_keeps_the_legacy_payload_readable_after_rewrite() {
         "idempotency key survives the rewrite"
     );
     assert_eq!(entry.trace.head_commit_sha.as_deref(), Some("abc123"));
+}
+
+// --- which outbox a store writes to (SP-24) ------------------------------------------------------
+
+/// A store in the suite layout. `init` picks the legacy `.storypole` directory when
+/// `.gaugeblock/storypole` is absent, so the directory is created first and the legacy one removed.
+fn store_in_suite_layout(root: &Path) -> StorypoleStore {
+    fs::create_dir_all(root.join(".gaugeblock").join("storypole")).expect("store dir");
+    let store = StorypoleStore::init(root, StorypoleConfig::default()).expect("init store");
+    fs::remove_dir_all(root.join(".storypole")).ok();
+    store
+}
+
+/// A suite that declares `members`, so membership resolves from a member checkout.
+fn suite_declaring(root: &Path, members: &[&str]) -> StorypoleStore {
+    let store = store_in_suite_layout(root);
+    let list: Vec<String> = members.iter().map(|m| format!("\"{m}\"")).collect();
+    fs::write(
+        root.join(".gaugeblock").join("config.toml"),
+        format!("[suite]\nmembers = [{}]\n", list.join(", ")),
+    )
+    .expect("suite declaration");
+    store
+}
+
+/// The outbox below a directory. Callers pass a canonical root, because membership answers with the
+/// resolved path and macOS reaches a tempdir through `/var` rather than `/private/var`.
+fn expected_outbox(root: &Path) -> std::path::PathBuf {
+    root.join(".gaugeblock").join("spool").join("outbox.jsonl")
+}
+
+/// A member checkout. `.git` is what `WorkspaceTopology::discover` qualifies a member by, so without
+/// it the suite declares a member that cannot be resolved and membership answers `None`.
+fn member_checkout(root: &Path) -> StorypoleStore {
+    fs::create_dir_all(root.join(".git")).expect("member checkout");
+    store_in_suite_layout(root)
+}
+
+#[test]
+fn a_member_store_spools_into_the_suite_outbox() {
+    // The defect SP-24 records: `verify --dir <member>` created `<member>/spool/outbox.jsonl` in four
+    // repositories, so the trace existed and no consumer of the canonical spool could see it.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let root = fs::canonicalize(tmp.path()).expect("canonical tempdir");
+    let suite = suite_declaring(&root, &["miter"]);
+    let member = member_checkout(&root.join("miter"));
+
+    assert_eq!(
+        outbox_path(&member),
+        expected_outbox(&root),
+        "a member writes the suite's outbox, not its own"
+    );
+    assert_eq!(
+        outbox_path(&suite),
+        outbox_path(&member),
+        "the suite and its member must name one file"
+    );
+}
+
+#[test]
+fn a_lone_checkout_keeps_its_own_outbox() {
+    // The other half of the rule: a repository no suite lists is its own corpus, and centralising must
+    // not reach outside a suite to find a spool it has no business writing.
+    let tmp = tempfile::tempdir().expect("tempdir");
+    let root = fs::canonicalize(tmp.path()).expect("canonical tempdir");
+    let lone = store_in_suite_layout(&root);
+
+    assert_eq!(outbox_path(&lone), expected_outbox(&root));
 }

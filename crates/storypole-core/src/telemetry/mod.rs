@@ -12,8 +12,10 @@
 use std::path::{Path, PathBuf};
 
 use gaugeblock_contracts::{AnonymizedSynthesisTrace, SpoolEntry};
+use gaugeblock_workspace::{GaugeblockPaths, Membership};
 
 use crate::error::StorypoleError;
+use crate::store::StorypoleStore;
 
 /// Resolves `<canonical .gaugeblock>/spool/outbox.jsonl` from the store's dot directory.
 ///
@@ -26,6 +28,30 @@ pub fn spool_path(dot_dir: &Path) -> PathBuf {
         .unwrap_or(dot_dir)
         .join("spool")
         .join("outbox.jsonl")
+}
+
+/// The one outbox this store's traces belong in (`SP-24`).
+///
+/// [`spool_path`] answers from a directory and therefore cannot tell a suite member from a suite: every
+/// member carries its own `.gaugeblock/`, so a trace written there is invisible to `rabbet`, to `joiner`
+/// and to anything else that reads the canonical spool. Four stray spool directories in four
+/// repositories were the measured result, leaked as untracked trees that a careless `git add -A` would
+/// have committed.
+///
+/// Derived state is not per-checkout - the same conclusion `GB-293` reached when it stopped enumerating
+/// member logs - so a member writes to the suite's outbox and a lone checkout keeps its own. This is the
+/// writer half of that rule, and it mirrors `gaugeblock_workspace::invocation::sink_path`, which rooted
+/// the invocation log at the suite for exactly this reason (`CO-11`).
+#[must_use]
+pub fn outbox_path(store: &StorypoleStore) -> PathBuf {
+    // Canonicalised before asking membership, because `Membership::containing` walks ancestors and a
+    // relative path stops at the current directory - the defect that cost `OF-42` a session.
+    let root = store.root_dir();
+    let canonical = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    match Membership::containing(&canonical) {
+        Some(membership) => GaugeblockPaths::at(&membership.suite_root).outbox(),
+        None => spool_path(store.dot_dir()),
+    }
 }
 
 /// `true` when a trace for this `(task_key, head_commit_sha)` is already spooled.

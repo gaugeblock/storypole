@@ -105,6 +105,12 @@
         "repo": "storypole",
         "chain_key": "storypole"
       }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+      "status": "verified",
+      "timestamp_ms": 1794352265336
     }
   ]
 }

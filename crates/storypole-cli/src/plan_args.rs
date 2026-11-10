@@ -52,4 +52,10 @@ pub enum PlanCommands {
         /// Task ticket key, slug, or UUID
         identifier: String,
     },
+    /// Move blueprints out of the canonical plans directory into the store that owns their ticket
+    Collect {
+        /// Apply the move instead of reporting it
+        #[arg(long)]
+        apply: bool,
+    },
 }

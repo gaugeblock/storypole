@@ -15,7 +15,7 @@ use serde_json::Value;
 use storypole_core::ticket_keys::Remint;
 
 use super::rewrite::{
-    rewrite_decision, rewrite_edge_target, rewrite_handoff, rewrite_plan, rewrite_prose,
+    PlanPath, rewrite_decision, rewrite_edge_target, rewrite_handoff, rewrite_plan, rewrite_prose,
     rewrite_prose_list, rewrite_task,
 };
 
@@ -24,6 +24,7 @@ pub(crate) fn rewrite_event(
     event: &mut Value,
     lookup: &BTreeMap<String, String>,
     mapping: &[Remint],
+    plan_path: PlanPath,
 ) -> (usize, usize) {
     let (mut edges, mut citations) = (0, 0);
     let tag = event
@@ -35,7 +36,7 @@ pub(crate) fn rewrite_event(
         // The whole task travels in the payload, so its own key moves with it.
         "task_created" | "deferred_item_captured" => {
             if let Some(task) = event.get_mut("task") {
-                let (e, c) = remap_task(task, lookup, mapping);
+                let (e, c) = remap_task(task, lookup, mapping, plan_path);
                 edges += e;
                 citations += c;
             }
@@ -46,7 +47,7 @@ pub(crate) fn rewrite_event(
                 .and_then(Value::as_array_mut)
             {
                 for child in children {
-                    let (e, c) = remap_task(child, lookup, mapping);
+                    let (e, c) = remap_task(child, lookup, mapping, plan_path);
                     edges += e;
                     citations += c;
                 }
@@ -88,7 +89,7 @@ pub(crate) fn rewrite_event(
         // Replay installs this plan wholesale, so the attachment is the served state.
         "plan_updated" => {
             if let Some(plan) = event.get_mut("plan") {
-                citations += rewrite_plan(plan, mapping);
+                citations += rewrite_plan(plan, mapping, plan_path);
             }
         }
         "task_verified" => {
@@ -109,6 +110,7 @@ fn remap_task(
     task: &mut Value,
     lookup: &BTreeMap<String, String>,
     mapping: &[Remint],
+    plan_path: PlanPath,
 ) -> (usize, usize) {
     let old_key = task
         .get("ticket_key")
@@ -120,5 +122,5 @@ fn remap_task(
     {
         object.insert("ticket_key".to_string(), Value::String(new_key.clone()));
     }
-    rewrite_task(task, lookup, mapping)
+    rewrite_task(task, lookup, mapping, plan_path)
 }

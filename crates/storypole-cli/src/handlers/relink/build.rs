@@ -12,7 +12,7 @@ use storypole_core::ticket_keys::Remint;
 use storypole_core::tickets::TicketRecord;
 
 use crate::handlers::remint::record;
-use crate::handlers::remint::rewrite::cites;
+use crate::handlers::remint::rewrite::cites_bare;
 
 use super::plan::{
     Link, Plan, Repair, Target, rewrite_document, stores, ticket_files, ticket_keys,
@@ -71,7 +71,7 @@ pub fn build(root: &Path) -> Result<Plan> {
                 .with_context(|| format!("could not read {}", path.display()))?;
             let subset: Vec<Remint> = mapping
                 .iter()
-                .filter(|remint| text.contains(&remint.from))
+                .filter(|remint| cites_bare(&text, &remint.from))
                 .cloned()
                 .collect();
             if subset.is_empty() {
@@ -114,7 +114,7 @@ fn links(root: &Path, moved: &BTreeMap<String, Target>) -> Result<Vec<Link>> {
             continue;
         };
         for (key, target) in moved {
-            if target.store == "." || !cites(&task.description, key) {
+            if target.store == "." || !cites_bare(&task.description, key) {
                 continue;
             }
             if task

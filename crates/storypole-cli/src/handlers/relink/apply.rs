@@ -19,6 +19,7 @@ use uuid::Uuid;
 
 use super::build;
 use super::plan::{self, Link, Plan};
+use crate::handlers::remint::rewrite::cites_bare;
 
 /// What the pass changed.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -56,7 +57,7 @@ pub fn apply(root: &Path, plan: &Plan) -> Result<Applied> {
                 .with_context(|| format!("could not read {}", path.display()))?;
             let subset: Vec<Remint> = mapping
                 .iter()
-                .filter(|remint| text.contains(&remint.from))
+                .filter(|remint| cites_bare(&text, &remint.from))
                 .cloned()
                 .collect();
             if subset.is_empty() {

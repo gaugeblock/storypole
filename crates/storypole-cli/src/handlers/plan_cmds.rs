@@ -178,6 +178,39 @@ pub fn handle_plan(store: &mut StorypoleStore, args: PlanArgs, json: bool) -> Re
                 println!("No plan attached to {identifier}.");
             }
         }
+        PlanCommands::Collect { apply } => {
+            let root_dir = store.root_dir().to_path_buf();
+            let planned = crate::handlers::plan_collect::build(&root_dir)?;
+            for unresolved in &planned.unresolved {
+                println!("unresolved  {unresolved}");
+            }
+            if planned.moves.is_empty() {
+                println!("nothing to collect: every pointer that can be resolved already is");
+                return Ok(());
+            }
+            for entry in &planned.moves {
+                println!(
+                    "move  {}/{}  {} -> {}",
+                    entry.store,
+                    entry.ticket,
+                    entry.from.display(),
+                    entry.to.display()
+                );
+            }
+            if !apply {
+                println!(
+                    "\n{} blueprint(s) could be placed. Nothing has been changed; re-run with --apply.",
+                    planned.moves.len()
+                );
+                return Ok(());
+            }
+            let moved = crate::handlers::plan_collect::apply(&planned)?;
+            let after = crate::handlers::plan_collect::build(&root_dir)?;
+            println!(
+                "\n{moved} blueprint(s) moved; {} pointer(s) unresolved",
+                after.unresolved.len()
+            );
+        }
     }
     Ok(())
 }

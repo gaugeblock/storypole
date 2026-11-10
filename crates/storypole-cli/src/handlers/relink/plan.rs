@@ -13,7 +13,7 @@ use storypole_core::ticket_keys::Remint;
 use storypole_core::workspace::discovery::discover_members;
 
 use crate::handlers::remint::events::rewrite_event;
-use crate::handlers::remint::rewrite::rewrite_task;
+use crate::handlers::remint::rewrite::{PlanPath, rewrite_task};
 
 /// A ticket that a dead key used to name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -102,6 +102,12 @@ pub fn ticket_keys(store: &Path) -> BTreeSet<String> {
 ///
 /// Shared with the apply pass so the plan cannot promise something the apply does not do - the failure mode the
 /// remint's first version shipped with.
+///
+/// Two things differ from a remint's rewrite, both from `GB-351`. **Nothing moves on disk here**, so a plan's stored path
+/// is left as written; a remint renames the blueprint beside the ticket and would otherwise make this pass point at a
+/// file that never moved. And **only the payload that wins on replay is rewritten**: replay keeps the last
+/// `task_updated` description, so rewriting a superseded one edits history for no effect on state - which kept a
+/// corrected ticket reporting work to do.
 pub fn rewrite_document(document: &mut Value, mapping: &[Remint]) -> (usize, usize) {
     let lookup: BTreeMap<String, String> = mapping
         .iter()
@@ -109,13 +115,20 @@ pub fn rewrite_document(document: &mut Value, mapping: &[Remint]) -> (usize, usi
         .collect();
     let (mut edges, mut citations) = (0, 0);
     if let Some(ticket) = document.get_mut("ticket") {
-        let (e, c) = rewrite_task(ticket, &lookup, mapping);
+        let (e, c) = rewrite_task(ticket, &lookup, mapping, PlanPath::Stays);
         edges += e;
         citations += c;
     }
     if let Some(events) = document.get_mut("events").and_then(Value::as_array_mut) {
-        for event in events {
-            let (e, c) = rewrite_event(event, &lookup, mapping);
+        let winning_update = events
+            .iter()
+            .rposition(|event| event.get("event").and_then(Value::as_str) == Some("task_updated"));
+        for (index, event) in events.iter_mut().enumerate() {
+            let is_update = event.get("event").and_then(Value::as_str) == Some("task_updated");
+            if is_update && Some(index) != winning_update {
+                continue;
+            }
+            let (e, c) = rewrite_event(event, &lookup, mapping, PlanPath::Stays);
             edges += e;
             citations += c;
         }

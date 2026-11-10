@@ -8,6 +8,7 @@ pub mod lifecycle_cmds;
 pub mod migrate_cmds;
 pub mod plan_audit;
 pub mod plan_cmds;
+pub mod plan_collect;
 pub mod relink;
 pub mod relink_cmds;
 pub mod remint;

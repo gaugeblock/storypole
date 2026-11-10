@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 use super::remint::events::rewrite_event;
 use super::remint::record::{self, AppliedRemint};
-use super::remint::rewrite::rewrite_task;
+use super::remint::rewrite::{PlanPath, rewrite_task};
 use super::remint::verify::verify_replay;
 use super::remint_cmds::{prefix_of, read_refs};
 use super::remint_store::{rename_plan, store_tickets};
@@ -105,7 +105,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
                 ticket["ticket_key"] = Value::String(new_key.clone());
                 applied.keys += 1;
             }
-            let (edges, citations) = rewrite_task(ticket, &lookup, &mapping);
+            let (edges, citations) = rewrite_task(ticket, &lookup, &mapping, PlanPath::Moves);
             applied.edges += edges;
             applied.citations += citations;
         }
@@ -115,7 +115,8 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
         // `super::remint::events` for which, and why rewriting the projection alone still passed verification.
         if let Some(events) = document.get_mut("events").and_then(Value::as_array_mut) {
             for snapshot in events {
-                let (edges, citations) = rewrite_event(snapshot, &lookup, &mapping);
+                let (edges, citations) =
+                    rewrite_event(snapshot, &lookup, &mapping, PlanPath::Moves);
                 applied.edges += edges;
                 applied.citations += citations;
             }

@@ -190,6 +190,19 @@ still uses is not dead, and a key two stores both claim is reported rather than 
 is written by uuid, not by key, so it survives the next rename; and it is appended as an `edge_added` event, because
 replay rebuilds the task from the log.
 
+A blueprint is a file named for its ticket, and the ticket carries a pointer to it. When the two disagree - the file sits
+in the canonical plans directory while the ticket lives in a member, or the pointer names a file that was never written -
+nothing said so until `ledger-verify` began auditing it. The move is mechanical once the pointer is trusted, because the
+pointer already names the destination:
+
+```bash
+# Report the blueprints that can be placed, and the pointers that cannot be
+storypole plan collect
+
+# Move them
+storypole plan collect --apply
+```
+
 ### Training-trace outbox
 
 `storypole verify` appends one record per verified head to

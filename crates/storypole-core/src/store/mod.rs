@@ -228,7 +228,7 @@ mod writes;
 /// not in a suite keeps exactly the configuration it had before. A malformed suite config also yields nothing -
 /// the suite's own tooling is the right place to complain about it, and a member should not refuse to open because
 /// a file it does not own is broken.
-fn chains_declared_by_suite(root_dir: &Path) -> Vec<(String, String)> {
+pub fn chains_declared_by_suite(root_dir: &Path) -> Vec<(String, String)> {
     let Some(membership) = gaugeblock_workspace::Membership::containing(root_dir) else {
         return Vec::new();
     };

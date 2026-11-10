@@ -41,10 +41,32 @@ fn check_workspace(root_dir: &Path, json: bool) -> Result<()> {
     let topology = gaugeblock_workspace::WorkspaceTopology::discover(root_dir);
     let mut audited = Vec::new();
 
+    let mut inherited_from_suite: Vec<String> = Vec::new();
+
     for member in topology.members() {
         let legacy = member.path.join(".gaugeblock/storypole/config.toml");
         if let Ok(config) = StorypoleConfig::load_unified_or_legacy(&member.path, &legacy) {
+            // The audit still reads the file rather than opening a store - it must not leave index files in
+            // repositories it merely inspects - but it applies the same inheritance `verify` does, or it reports a
+            // fallback that no longer happens (`SP-3`).
+            let declared_locally = !config.verification_commands.is_empty();
+            let config = config.inheriting(storypole_core::store::chains_declared_by_suite(
+                &member.path,
+            ));
+            if !declared_locally && !config.verification_commands.is_empty() {
+                inherited_from_suite.push(member.name.clone());
+            }
             audited.push((Some(member.name.clone()), config.audit()));
+        }
+    }
+
+    // Named rather than silent: a member that passes this audit because of another repository's configuration should
+    // say so, or the next reader has no way to tell which file they are looking at (`SP-3`).
+    if !json {
+        for name in &inherited_from_suite {
+            eprintln!(
+                "note: {name} declares no verification chains of its own; it uses the suite root's, as does `storypole verify`"
+            );
         }
     }
 

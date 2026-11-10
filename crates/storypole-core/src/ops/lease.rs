@@ -41,12 +41,7 @@ fn owns(store: &StorypoleStore, key: &str) -> bool {
 
 /// How to name the repository that owns a ticket, for a message a person can act on.
 fn owner_label(root: &Path, dot_dir: &Path) -> String {
-    let repo = if dot_dir.ends_with(".gaugeblock/storypole") {
-        dot_dir.parent().and_then(Path::parent).unwrap_or(dot_dir)
-    } else {
-        dot_dir.parent().unwrap_or(dot_dir)
-    };
-    match repo
+    match crate::workspace::lookup::repo_root_of(dot_dir)
         .strip_prefix(root)
         .ok()
         .and_then(Path::file_name)

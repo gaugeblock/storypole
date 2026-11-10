@@ -43,6 +43,19 @@ pub fn holds(dot_dir: &Path, key: &str) -> bool {
         .unwrap_or(false)
 }
 
+/// The repository a store's dot-directory belongs to.
+///
+/// The canonical layout nests one level deeper than the legacy one, so a caller that needs to open the owning store from
+/// a dot-directory - rather than only name it - has to undo that nesting (`GB-352`).
+#[must_use]
+pub fn repo_root_of(dot_dir: &Path) -> &Path {
+    if dot_dir.ends_with(".gaugeblock/storypole") {
+        dot_dir.parent().and_then(Path::parent).unwrap_or(dot_dir)
+    } else {
+        dot_dir.parent().unwrap_or(dot_dir)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #![allow(clippy::unwrap_used, clippy::expect_used)]

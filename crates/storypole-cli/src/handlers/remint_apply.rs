@@ -4,14 +4,13 @@
 //! step with nowhere to bisect.
 //!
 //! Keys, edge targets, citations and plan filenames move in the same pass, because a key that moves without its
-//! references leaves a live graph pointing at nothing - and a missing edge target renders as a graph with fewer links
-//! rather than as a broken one.
+//! references leaves a live graph pointing at nothing.
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use storypole_core::ticket_keys::plan_remint;
+use storypole_core::ticket_keys::{Remint, plan_remint};
 
 use super::remint_cmds::{cites, prefix_of, read_refs};
 
@@ -32,8 +31,8 @@ pub struct Applied {
 ///
 /// # Errors
 ///
-/// Returns an error when the store's prefix is unknown, when a ticket file cannot be read or written, or when the
-/// post-condition check finds a key still off-prefix afterwards.
+/// Returns an error when the store's prefix is unknown, when a ticket file cannot be read or written, or when any key
+/// is still off-prefix afterwards.
 pub fn apply_remint(store: &Path) -> Result<Applied> {
     let prefix = prefix_of(store)?;
     let mut files = store_tickets(store);
@@ -91,113 +90,8 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
         }
 
         if let Some(new_key) = &new_key {
-            applied.plans += rename_plan(store, &old_key, new_key)?;
+            applied.plans += rename_plan(path, &old_key, new_key)?;
         }
-    }
-
-    /// Points every edge at the reminted key, when the edge names one that moved.
-    fn rewrite_edge_targets(
-        ticket: &mut serde_json::Value,
-        lookup: &BTreeMap<String, String>,
-    ) -> usize {
-        let Some(edges) = ticket
-            .get_mut("edges")
-            .and_then(|edges| edges.as_array_mut())
-        else {
-            return 0;
-        };
-        let mut rewritten = 0;
-        for edge in edges.iter_mut() {
-            let Some(target) = edge
-                .get("target_ticket_key")
-                .and_then(serde_json::Value::as_str)
-                .map(str::to_string)
-            else {
-                continue;
-            };
-            if let Some(new_key) = lookup.get(&target) {
-                edge["target_ticket_key"] = serde_json::Value::String(new_key.clone());
-                rewritten += 1;
-            }
-        }
-        rewritten
-    }
-
-    /// Rewrites whole-token citations of a moved key in the ticket body.
-    fn rewrite_citations(
-        ticket: &mut serde_json::Value,
-        mapping: &[storypole_core::ticket_keys::Remint],
-    ) -> usize {
-        let Some(original) = ticket
-            .get("description")
-            .and_then(serde_json::Value::as_str)
-            .map(str::to_string)
-        else {
-            return 0;
-        };
-        let mut body = original;
-        let mut rewritten = 0;
-        for remint in mapping {
-            if cites(&body, &remint.from) {
-                body = replace_token(&body, &remint.from, &remint.to);
-                rewritten += 1;
-            }
-        }
-        if rewritten > 0 {
-            ticket["description"] = serde_json::Value::String(body);
-        }
-        rewritten
-    }
-
-    /// Replaces whole-token occurrences of `from` with `to`, leaving `GB-1` inside `GB-10` alone.
-    fn replace_token(text: &str, from: &str, to: &str) -> String {
-        let mut out = String::with_capacity(text.len());
-        let mut cursor = 0;
-        while let Some(offset) = text[cursor..].find(from) {
-            let at = cursor + offset;
-            let before = text[..at].chars().next_back();
-            let after = text[at + from.len()..].chars().next();
-            let boundary = |c: Option<char>| c.is_none_or(|c| !c.is_alphanumeric() && c != '-');
-            out.push_str(&text[cursor..at]);
-            out.push_str(if boundary(before) && boundary(after) {
-                to
-            } else {
-                from
-            });
-            cursor = at + from.len();
-        }
-        out.push_str(&text[cursor..]);
-        out
-    }
-
-    /// Renames the plan blueprint named after a ticket, returning 1 when one moved.
-    fn rename_plan(store: &Path, old_key: &str, new_key: &str) -> Result<usize> {
-        let plans = store.join("plans");
-        let from = plans.join(format!("{old_key}.md"));
-        if !from.exists() {
-            return Ok(0);
-        }
-        let to = plans.join(format!("{new_key}.md"));
-        std::fs::rename(&from, &to)
-            .with_context(|| format!("could not rename {} to {}", from.display(), to.display()))?;
-        Ok(1)
-    }
-
-    /// Refuses to finish with a key still off-prefix.
-    fn verify(store: &Path, prefix: &str) -> Result<()> {
-        let wanted = format!("{prefix}-");
-        let remaining = store_tickets(store)
-            .iter()
-            .filter_map(|path| read_refs(path))
-            .filter(|refs| !refs.key.starts_with(&wanted))
-            .count();
-        if remaining > 0 {
-            anyhow::bail!(
-                "{remaining} key(s) still off-prefix in {} after the remint",
-                store.display()
-            );
-        }
-        Ok(())
     }
 
     verify(store, &prefix)?;
@@ -205,7 +99,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
 }
 
 /// The ticket files of the store at `store` itself - not its members, because applying is one store at a time.
-pub(crate) fn store_tickets(store: &Path) -> Vec<PathBuf> {
+fn store_tickets(store: &Path) -> Vec<PathBuf> {
     let mut paths = Vec::new();
     for base in [
         store.join(".gaugeblock").join("storypole"),
@@ -222,4 +116,115 @@ pub(crate) fn store_tickets(store: &Path) -> Vec<PathBuf> {
         );
     }
     paths
+}
+
+/// Points every edge at the reminted key, when the edge names one that moved.
+fn rewrite_edge_targets(
+    ticket: &mut serde_json::Value,
+    lookup: &BTreeMap<String, String>,
+) -> usize {
+    let Some(edges) = ticket
+        .get_mut("edges")
+        .and_then(|edges| edges.as_array_mut())
+    else {
+        return 0;
+    };
+    let mut rewritten = 0;
+    for edge in edges.iter_mut() {
+        let Some(target) = edge
+            .get("target_ticket_key")
+            .and_then(serde_json::Value::as_str)
+            .map(str::to_string)
+        else {
+            continue;
+        };
+        if let Some(new_key) = lookup.get(&target) {
+            edge["target_ticket_key"] = serde_json::Value::String(new_key.clone());
+            rewritten += 1;
+        }
+    }
+    rewritten
+}
+
+/// Rewrites whole-token citations of a moved key in the ticket body.
+fn rewrite_citations(ticket: &mut serde_json::Value, mapping: &[Remint]) -> usize {
+    let Some(original) = ticket
+        .get("description")
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_string)
+    else {
+        return 0;
+    };
+    let mut body = original;
+    let mut rewritten = 0;
+    for remint in mapping {
+        if cites(&body, &remint.from) {
+            body = replace_token(&body, &remint.from, &remint.to);
+            rewritten += 1;
+        }
+    }
+    if rewritten > 0 {
+        ticket["description"] = serde_json::Value::String(body);
+    }
+    rewritten
+}
+
+/// Replaces whole-token occurrences of `from` with `to`, leaving `GB-1` inside `GB-10` alone.
+fn replace_token(text: &str, from: &str, to: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut cursor = 0;
+    while let Some(offset) = text[cursor..].find(from) {
+        let at = cursor + offset;
+        let before = text[..at].chars().next_back();
+        let after = text[at + from.len()..].chars().next();
+        let boundary = |c: Option<char>| c.is_none_or(|c| !c.is_alphanumeric() && c != '-');
+        out.push_str(&text[cursor..at]);
+        out.push_str(if boundary(before) && boundary(after) {
+            to
+        } else {
+            from
+        });
+        cursor = at + from.len();
+    }
+    out.push_str(&text[cursor..]);
+    out
+}
+
+/// Renames the plan blueprint named after a ticket, returning 1 when one moved.
+///
+/// The plans directory is derived from the ticket path, exactly as `read_refs` derives it when counting. Taking it from
+/// the store root instead put it one directory too high, so the dry run promised a rename the apply never performed.
+fn rename_plan(ticket_path: &Path, old_key: &str, new_key: &str) -> Result<usize> {
+    let Some(plans) = ticket_path
+        .parent()
+        .and_then(|tickets| tickets.parent())
+        .map(|store| store.join("plans"))
+    else {
+        return Ok(0);
+    };
+    let from = plans.join(format!("{old_key}.md"));
+    if !from.exists() {
+        return Ok(0);
+    }
+    let to = plans.join(format!("{new_key}.md"));
+    std::fs::rename(&from, &to)
+        .with_context(|| format!("could not rename {} to {}", from.display(), to.display()))?;
+    Ok(1)
+}
+
+/// Refuses to finish with a key still off-prefix.
+///
+/// Re-lists the store rather than reusing the paths it started with: those files have been renamed, so checking the old
+/// paths would read nothing and pass vacuously - a check that cannot fail is not a check.
+fn verify(store: &Path, prefix: &str) -> Result<()> {
+    let wanted = format!("{prefix}-");
+    let remaining = store_tickets(store)
+        .iter()
+        .filter_map(|path| read_refs(path))
+        .filter(|refs| !refs.key.starts_with(&wanted))
+        .count();
+    if remaining > 0 {
+        anyhow::bail!("{remaining} key(s) still off-prefix after the remint");
+    }
+    Ok(())
 }

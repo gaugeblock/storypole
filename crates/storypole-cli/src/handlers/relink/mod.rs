@@ -17,4 +17,6 @@ pub mod build;
 pub mod plan;
 
 #[cfg(test)]
+mod citation_tests;
+#[cfg(test)]
 mod tests;

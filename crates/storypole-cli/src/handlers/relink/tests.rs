@@ -13,7 +13,7 @@ use storypole_core::model::LedgerEvent;
 use storypole_core::tickets::TicketRecord;
 
 use crate::handlers::remint::record;
-use crate::handlers::remint::test_support::{task, update_citing};
+use crate::handlers::remint::test_support::task;
 
 use super::apply;
 use super::build;
@@ -29,7 +29,7 @@ fn described(key: &str, cited: &str) -> TicketRecord {
 }
 
 /// Writes one record into `dir`.
-fn write_record(dir: &Path, record: &TicketRecord) {
+pub(super) fn write_record(dir: &Path, record: &TicketRecord) {
     std::fs::create_dir_all(dir).unwrap();
     std::fs::write(
         dir.join(format!("{}.json", record.ticket.ticket_key)),
@@ -39,7 +39,12 @@ fn write_record(dir: &Path, record: &TicketRecord) {
 }
 
 /// A suite with one harness ticket and one member whose ticket was reminted from `from` to `to`.
-fn suite(harness: &str, cited: &str, from: &str, to: &str) -> (TempDir, PathBuf, TicketRecord) {
+pub(super) fn suite(
+    harness: &str,
+    cited: &str,
+    from: &str,
+    to: &str,
+) -> (TempDir, PathBuf, TicketRecord) {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path().to_path_buf();
     let member_ticket = task(to);
@@ -64,12 +69,12 @@ fn suite(harness: &str, cited: &str, from: &str, to: &str) -> (TempDir, PathBuf,
 }
 
 /// Where the harness keeps its tickets.
-fn root_store(root: &Path) -> PathBuf {
+pub(super) fn root_store(root: &Path) -> PathBuf {
     root.join(".gaugeblock/storypole/tickets")
 }
 
 /// Where the member keeps its tickets.
-fn member_store(root: &Path) -> PathBuf {
+pub(super) fn member_store(root: &Path) -> PathBuf {
     root.join("member/.gaugeblock/storypole/tickets")
 }
 
@@ -169,55 +174,4 @@ fn recording_a_remint_twice_adds_it_once() {
         0
     );
     assert_eq!(record::load(dir.path()).unwrap().len(), 1);
-}
-
-#[test]
-fn a_filename_is_not_a_citation() {
-    // `GB-350`'s note quotes blueprints by filename, which produced three links to unrelated tickets before this rule:
-    // a file named for a key is data, not a reference to the ticket that key used to name (GB-351).
-    let (_dir, root, _harness) = suite("GB-1", "plans/GB-9.md", "GB-9", "MTR-1");
-
-    let planned = build::build(&root).unwrap();
-    assert!(planned.links.is_empty(), "a path is not a link");
-    assert!(planned.repairs.is_empty(), "a path is not a citation");
-}
-
-#[test]
-fn a_superseded_payload_is_left_alone() {
-    // Replay keeps the last `task_updated` description, so rewriting an earlier one edits history for no effect on
-    // state - and kept a corrected ticket reporting work to do (GB-351).
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path().to_path_buf();
-    write_record(
-        &member_store(&root),
-        &TicketRecord::new(task("MTR-1"), Vec::new()),
-    );
-    record::append(
-        &root.join("member"),
-        &[record::AppliedRemint {
-            id: task("MTR-1").id,
-            from: "GB-9".to_string(),
-            to: "MTR-1".to_string(),
-        }],
-    )
-    .unwrap();
-
-    // Two updates: the older cites the dead key, the newer - the one replay serves - does not.
-    let created = task("GB-1");
-    let id = created.id;
-    let mut older = update_citing(id, "GB-9");
-    if let LedgerEvent::TaskUpdated { timestamp_ms, .. } = &mut older {
-        *timestamp_ms = 5;
-    }
-    let newer = update_citing(id, "an unrelated note");
-    write_record(
-        &root_store(&root),
-        &TicketRecord::new(created, vec![older, newer]),
-    );
-
-    let planned = build::build(&root).unwrap();
-    assert!(
-        planned.repairs.is_empty(),
-        "the citing payload is superseded, so the served text needs no repair"
-    );
 }

@@ -10,7 +10,7 @@ use serde_json::{Value, json};
 use uuid::Uuid;
 
 use super::events::rewrite_event;
-use super::rewrite::{PlanPath, rewrite_plan, rewrite_task};
+use super::rewrite::{Rewrite, rewrite_plan, rewrite_task};
 use super::test_support::{lookup, mapping, record_described_with};
 
 #[test]
@@ -25,7 +25,7 @@ fn a_task_update_rewrites_the_text_replay_installs() {
         "acceptance_criteria": ["GB-182 lands"],
         "timestamp_ms": 5
     });
-    let (edges, citations) = rewrite_event(&mut event, &lookup(), &mapping(), PlanPath::Moves);
+    let (edges, citations) = rewrite_event(&mut event, &lookup(), &mapping(), Rewrite::REMINT);
     assert_eq!((edges, citations), (0, 3));
     assert_eq!(event["title"], json!("blocked by SP-7"));
     assert_eq!(
@@ -44,7 +44,7 @@ fn an_edge_event_moves_its_target_and_leaves_others_alone() {
         "timestamp_ms": 5
     });
     assert_eq!(
-        rewrite_event(&mut event, &lookup(), &mapping(), PlanPath::Moves).0,
+        rewrite_event(&mut event, &lookup(), &mapping(), Rewrite::REMINT).0,
         1
     );
     assert_eq!(event["edge"]["target_ticket_key"], json!("SP-7"));
@@ -54,7 +54,7 @@ fn an_edge_event_moves_its_target_and_leaves_others_alone() {
         "edge": {"kind": "related_to", "target_ticket_key": "GB-999"}
     });
     assert_eq!(
-        rewrite_event(&mut other, &lookup(), &mapping(), PlanPath::Moves).0,
+        rewrite_event(&mut other, &lookup(), &mapping(), Rewrite::REMINT).0,
         0
     );
     assert_eq!(other["edge"]["target_ticket_key"], json!("GB-999"));
@@ -70,7 +70,7 @@ fn a_plan_moves_its_path_and_the_markdown_it_stores_inline() {
                    "verification_gate": "GB-182 passes", "completed": false}],
         "updated_at_epoch_ms": 5
     });
-    assert_eq!(rewrite_plan(&mut plan, &mapping(), PlanPath::Moves), 6);
+    assert_eq!(rewrite_plan(&mut plan, &mapping(), Rewrite::REMINT), 6);
     assert_eq!(plan["plan_file_path"], json!(".storypole/plans/SP-7.md"));
     assert!(
         plan["design_markdown"]
@@ -89,7 +89,7 @@ fn a_claim_branch_is_history_and_stays_as_it_was() {
         "claim": {"agent_id": "an-agent", "branch": "feat/GB-182-remint", "base_commit_sha": "abc"}
     });
     assert_eq!(
-        rewrite_event(&mut event, &lookup(), &mapping(), PlanPath::Moves),
+        rewrite_event(&mut event, &lookup(), &mapping(), Rewrite::REMINT),
         (0, 0)
     );
     assert_eq!(event["claim"]["branch"], json!("feat/GB-182-remint"));
@@ -108,7 +108,7 @@ fn a_creation_snapshot_rewrites_its_title_as_well_as_its_description() {
             "edges": [{"kind": "related_to", "target_ticket_key": "GB-182"}]
         }
     });
-    let (edges, citations) = rewrite_event(&mut snapshot, &lookup(), &mapping(), PlanPath::Moves);
+    let (edges, citations) = rewrite_event(&mut snapshot, &lookup(), &mapping(), Rewrite::REMINT);
     assert_eq!((edges, citations), (1, 2));
     assert_eq!(snapshot["task"]["title"], json!("depends on SP-7"));
     assert_eq!(snapshot["task"]["description"], json!("SP-7 again"));
@@ -122,11 +122,11 @@ fn a_creation_snapshot_rewrites_its_title_as_well_as_its_description() {
 fn a_value_that_is_not_a_ticket_is_left_alone() {
     let mut scalar = Value::Number(1.into());
     assert_eq!(
-        rewrite_event(&mut scalar, &lookup(), &mapping(), PlanPath::Moves),
+        rewrite_event(&mut scalar, &lookup(), &mapping(), Rewrite::REMINT),
         (0, 0)
     );
     assert_eq!(
-        rewrite_task(&mut scalar, &lookup(), &mapping(), PlanPath::Moves),
+        rewrite_task(&mut scalar, &lookup(), &mapping(), Rewrite::REMINT),
         (0, 0)
     );
 }

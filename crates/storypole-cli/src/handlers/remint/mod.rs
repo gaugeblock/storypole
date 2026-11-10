@@ -8,6 +8,7 @@
 pub mod events;
 pub mod record;
 pub mod rewrite;
+pub mod rules;
 pub mod verify;
 
 #[cfg(test)]

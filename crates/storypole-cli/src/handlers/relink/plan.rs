@@ -13,7 +13,7 @@ use storypole_core::ticket_keys::Remint;
 use storypole_core::workspace::discovery::discover_members;
 
 use crate::handlers::remint::events::rewrite_event;
-use crate::handlers::remint::rewrite::{PlanPath, rewrite_task};
+use crate::handlers::remint::rewrite::{Rewrite, rewrite_task};
 
 /// A ticket that a dead key used to name.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -115,7 +115,7 @@ pub fn rewrite_document(document: &mut Value, mapping: &[Remint]) -> (usize, usi
         .collect();
     let (mut edges, mut citations) = (0, 0);
     if let Some(ticket) = document.get_mut("ticket") {
-        let (e, c) = rewrite_task(ticket, &lookup, mapping, PlanPath::Stays);
+        let (e, c) = rewrite_task(ticket, &lookup, mapping, Rewrite::RELINK);
         edges += e;
         citations += c;
     }
@@ -128,7 +128,7 @@ pub fn rewrite_document(document: &mut Value, mapping: &[Remint]) -> (usize, usi
             if is_update && Some(index) != winning_update {
                 continue;
             }
-            let (e, c) = rewrite_event(event, &lookup, mapping, PlanPath::Stays);
+            let (e, c) = rewrite_event(event, &lookup, mapping, Rewrite::RELINK);
             edges += e;
             citations += c;
         }

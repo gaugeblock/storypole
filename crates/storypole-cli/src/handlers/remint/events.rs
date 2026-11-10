@@ -15,7 +15,7 @@ use serde_json::Value;
 use storypole_core::ticket_keys::Remint;
 
 use super::rewrite::{
-    PlanPath, rewrite_decision, rewrite_edge_target, rewrite_handoff, rewrite_plan, rewrite_prose,
+    Rewrite, rewrite_decision, rewrite_edge_target, rewrite_handoff, rewrite_plan, rewrite_prose,
     rewrite_prose_list, rewrite_task,
 };
 
@@ -24,7 +24,7 @@ pub(crate) fn rewrite_event(
     event: &mut Value,
     lookup: &BTreeMap<String, String>,
     mapping: &[Remint],
-    plan_path: PlanPath,
+    rules: Rewrite,
 ) -> (usize, usize) {
     let (mut edges, mut citations) = (0, 0);
     let tag = event
@@ -36,7 +36,7 @@ pub(crate) fn rewrite_event(
         // The whole task travels in the payload, so its own key moves with it.
         "task_created" | "deferred_item_captured" => {
             if let Some(task) = event.get_mut("task") {
-                let (e, c) = remap_task(task, lookup, mapping, plan_path);
+                let (e, c) = remap_task(task, lookup, mapping, rules);
                 edges += e;
                 citations += c;
             }
@@ -47,7 +47,7 @@ pub(crate) fn rewrite_event(
                 .and_then(Value::as_array_mut)
             {
                 for child in children {
-                    let (e, c) = remap_task(child, lookup, mapping, plan_path);
+                    let (e, c) = remap_task(child, lookup, mapping, rules);
                     edges += e;
                     citations += c;
                 }
@@ -55,9 +55,9 @@ pub(crate) fn rewrite_event(
         }
         // Replay overwrites the task's description, title and criteria from here.
         "task_updated" => {
-            citations += rewrite_prose(event, "description", mapping);
-            citations += rewrite_prose(event, "title", mapping);
-            citations += rewrite_prose_list(event, "acceptance_criteria", mapping);
+            citations += rewrite_prose(event, "description", mapping, rules);
+            citations += rewrite_prose(event, "title", mapping, rules);
+            citations += rewrite_prose_list(event, "acceptance_criteria", mapping, rules);
         }
         // Replay pushes the edge straight into the task's edge list.
         "edge_added" | "edge_removed" => {
@@ -67,35 +67,35 @@ pub(crate) fn rewrite_event(
         }
         "decision_raised" => {
             if let Some(decision) = event.get_mut("decision") {
-                citations += rewrite_decision(decision, mapping);
+                citations += rewrite_decision(decision, mapping, rules);
             }
         }
         "decision_resolved" => {
-            citations += rewrite_prose(event, "chosen_option", mapping);
-            citations += rewrite_prose(event, "rationale", mapping);
-            citations += rewrite_prose(event, "appended_criterion", mapping);
+            citations += rewrite_prose(event, "chosen_option", mapping, rules);
+            citations += rewrite_prose(event, "rationale", mapping, rules);
+            citations += rewrite_prose(event, "appended_criterion", mapping, rules);
             if let Some(followup) = event.get_mut("spawned_followup") {
-                citations += rewrite_decision(followup, mapping);
+                citations += rewrite_decision(followup, mapping, rules);
             }
         }
         "decision_superseded" | "status_changed" => {
-            citations += rewrite_prose(event, "reason", mapping);
+            citations += rewrite_prose(event, "reason", mapping, rules);
         }
         "handoff_recorded" => {
             if let Some(handoff) = event.get_mut("handoff") {
-                citations += rewrite_handoff(handoff, mapping);
+                citations += rewrite_handoff(handoff, mapping, rules);
             }
         }
         // Replay installs this plan wholesale, so the attachment is the served state.
         "plan_updated" => {
             if let Some(plan) = event.get_mut("plan") {
-                citations += rewrite_plan(plan, mapping, plan_path);
+                citations += rewrite_plan(plan, mapping, rules);
             }
         }
         "task_verified" => {
             if let Some(receipt) = event.get_mut("receipt") {
-                citations += rewrite_prose(receipt, "summary", mapping);
-                citations += rewrite_prose(receipt, "command", mapping);
+                citations += rewrite_prose(receipt, "summary", mapping, rules);
+                citations += rewrite_prose(receipt, "command", mapping, rules);
             }
         }
         // Attachment, release, archive and unarchive carry no prose that replay serves. `task_claimed` carries
@@ -110,7 +110,7 @@ fn remap_task(
     task: &mut Value,
     lookup: &BTreeMap<String, String>,
     mapping: &[Remint],
-    plan_path: PlanPath,
+    rules: Rewrite,
 ) -> (usize, usize) {
     let old_key = task
         .get("ticket_key")
@@ -122,5 +122,5 @@ fn remap_task(
     {
         object.insert("ticket_key".to_string(), Value::String(new_key.clone()));
     }
-    rewrite_task(task, lookup, mapping, plan_path)
+    rewrite_task(task, lookup, mapping, rules)
 }

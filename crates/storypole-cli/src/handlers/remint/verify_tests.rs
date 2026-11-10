@@ -10,7 +10,7 @@ use serde_json::json;
 use tempfile::tempdir;
 
 use super::events::rewrite_event;
-use super::rewrite::{PlanPath, rewrite_task};
+use super::rewrite::{Rewrite, rewrite_task};
 use super::test_support::{lookup, mapping, record_described_with};
 use super::verify::verify_replay;
 
@@ -20,10 +20,10 @@ fn a_rewritten_record_replays_to_the_new_key() {
     let mut document = serde_json::to_value(&record).unwrap();
     if let Some(ticket) = document.get_mut("ticket") {
         ticket["ticket_key"] = json!("SP-7");
-        rewrite_task(ticket, &lookup(), &mapping(), PlanPath::Moves);
+        rewrite_task(ticket, &lookup(), &mapping(), Rewrite::REMINT);
     }
     for event in document["events"].as_array_mut().unwrap() {
-        rewrite_event(event, &lookup(), &mapping(), PlanPath::Moves);
+        rewrite_event(event, &lookup(), &mapping(), Rewrite::REMINT);
     }
     record = serde_json::from_value(document).unwrap();
 

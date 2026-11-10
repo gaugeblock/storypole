@@ -21,7 +21,7 @@ use uuid::Uuid;
 
 use super::remint::events::rewrite_event;
 use super::remint::record::{self, AppliedRemint};
-use super::remint::rewrite::{PlanPath, rewrite_task};
+use super::remint::rewrite::{Rewrite, rewrite_task};
 use super::remint::verify::verify_replay;
 use super::remint_cmds::{prefix_of, read_refs};
 use super::remint_store::{rename_plan, store_tickets};
@@ -105,7 +105,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
                 ticket["ticket_key"] = Value::String(new_key.clone());
                 applied.keys += 1;
             }
-            let (edges, citations) = rewrite_task(ticket, &lookup, &mapping, PlanPath::Moves);
+            let (edges, citations) = rewrite_task(ticket, &lookup, &mapping, Rewrite::REMINT);
             applied.edges += edges;
             applied.citations += citations;
         }
@@ -116,7 +116,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
         if let Some(events) = document.get_mut("events").and_then(Value::as_array_mut) {
             for snapshot in events {
                 let (edges, citations) =
-                    rewrite_event(snapshot, &lookup, &mapping, PlanPath::Moves);
+                    rewrite_event(snapshot, &lookup, &mapping, Rewrite::REMINT);
                 applied.edges += edges;
                 applied.citations += citations;
             }

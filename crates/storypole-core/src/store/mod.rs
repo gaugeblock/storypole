@@ -240,7 +240,13 @@ fn chains_declared_by_suite(root_dir: &Path) -> Vec<(String, String)> {
         return Vec::new();
     };
     let Some(entries) = table
-        .get("verification_commands")
+        // The chains live under `[storypole]`, not at the top level: the suite config opens that section a few
+        // lines above `verification_commands`. Reading the root table - which the first version of this function
+        // did - finds nothing and inherits nothing, silently, which is the same wrong-place lookup this ticket was
+        // filed about (`SP-1`).
+        .get("storypole")
+        .and_then(|value| value.as_table())
+        .and_then(|section| section.get("verification_commands"))
         .and_then(|v| v.as_array())
     else {
         return Vec::new();

@@ -13,9 +13,36 @@ use super::schema::{apply_connection_pragmas, init_schema};
 
 /// Semantics version of the replay. Bump when a change alters how events are interpreted, which
 /// no ledger edit would signal on its own.
-const REPLAY_VERSION: &str = "2";
+///
+/// 3: until `GB-353` a store index could hold the *suite* view, because the workspace wrote its rows into the same file
+/// and the meta row still claimed the file was current. Those files must be rebuilt rather than trusted, and a version
+/// bump is the only signal available: the ledgers are untouched, so nothing else would invalidate them.
+const REPLAY_VERSION: &str = "3";
 
 /// Open or synchronize the ephemeral SQLite database against `ledger.jsonl`.
+/// Opens — or creates — an index that its caller fills, such as the suite-wide view.
+///
+/// No ledger is consulted and nothing is rebuilt from one: the caller inserts what belongs in it. Keeping this separate
+/// from [`open_and_sync_index`] is the point. That function rebuilds an index from a *single* store's ledger, and using it
+/// for the unified view is what made one file hold two different scopes (`GB-353`).
+///
+/// # Errors
+///
+/// [`StorypoleError`] when the directory cannot be created, the database cannot be opened, or the schema cannot be
+/// initialised.
+pub fn open_index(sqlite_path: &Path) -> Result<Connection, StorypoleError> {
+    if let Some(parent) = sqlite_path.parent() {
+        fs::create_dir_all(parent).map_err(|e| StorypoleError::IoWithPath {
+            path: parent.to_path_buf(),
+            source: e,
+        })?;
+    }
+    let conn = Connection::open(sqlite_path).map_err(StorypoleError::Sqlite)?;
+    apply_connection_pragmas(&conn)?;
+    init_schema(&conn)?;
+    Ok(conn)
+}
+
 pub fn open_and_sync_index(
     sqlite_path: &Path,
     ledger_path: &Path,

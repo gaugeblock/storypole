@@ -144,7 +144,7 @@ impl StorypoleStore {
 
         let gitignore_path = dot_dir.join(".gitignore");
         if !gitignore_path.exists() {
-            let ignore_content = "index.sqlite\nindex.sqlite-shm\nindex.sqlite-wal\n";
+            let ignore_content = "index.sqlite\nindex.sqlite-shm\nindex.sqlite-wal\nworkspace.sqlite\nworkspace.sqlite-shm\nworkspace.sqlite-wal\n";
             fs::write(&gitignore_path, ignore_content).map_err(|e| StorypoleError::IoWithPath {
                 path: gitignore_path.clone(),
                 source: e,
@@ -204,6 +204,16 @@ impl StorypoleStore {
     /// Path to `index.sqlite`.
     pub fn sqlite_path(&self) -> PathBuf {
         self.dot_dir.join("index.sqlite")
+    }
+
+    /// Path to the suite-wide index this store's directory owns when it is a workspace root.
+    ///
+    /// Deliberately a different file from [`Self::sqlite_path`]. Both used to be `index.sqlite`, so a store-scoped
+    /// command rebuilt it from one ledger and a suite-scoped command rebuilt it from every store: whichever ran last
+    /// decided what a board saw, and a partial view was indistinguishable from a broken suite (`GB-353`).
+    #[must_use]
+    pub fn workspace_sqlite_path(&self) -> PathBuf {
+        self.dot_dir.join("workspace.sqlite")
     }
 
     /// Which layout this store reads and writes.

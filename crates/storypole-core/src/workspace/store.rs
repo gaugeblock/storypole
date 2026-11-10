@@ -1,7 +1,6 @@
 //! Workspace store facade providing unified rollups and routing across member repositories.
 
 use crate::error::StorypoleError;
-use crate::index::open_and_sync_index;
 use crate::ledger::read_events;
 use crate::ledger::replay::replay_events;
 use crate::model::LedgerEvent;
@@ -43,9 +42,11 @@ impl StorypoleWorkspaceStore {
             }
         }
 
-        // Use root store's SQLite index if available, otherwise ephemeral in-memory index
+        // The unified view gets its OWN file. Sharing the root store's `index.sqlite` meant a store-scoped command
+        // rebuilt it from the root ledger alone, truncating the suite to the harness and leaving a board to read
+        // whichever command ran last (`GB-353`). `sync_all_members` fills this one from every store below.
         let unified_conn = if let Some(ref rs) = root_store {
-            open_and_sync_index(&rs.sqlite_path(), &rs.ledger_path())?
+            crate::index::open_index(&rs.workspace_sqlite_path())?
         } else {
             let conn = Connection::open_in_memory().map_err(StorypoleError::Sqlite)?;
             crate::index::apply_connection_pragmas(&conn)?;

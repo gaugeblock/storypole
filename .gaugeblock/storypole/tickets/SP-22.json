@@ -1,0 +1,142 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [
+          "Unknown --kind values exit non-zero listing the valid kinds",
+          "add, defer and update agree on one spelling per flag"
+        ],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793307242355,
+        "decisions": [],
+        "description": "storypole add --kind perf created a Feature, and defer --kind docs did the same, so a typo in a kind is accepted instead of rejected. Two consequences: ticket kind is unreliable for filtering, and the mistake is invisible because the command succeeds. Should validate against the TaskKind vocabulary and exit non-zero with the allowed values. Also fix the flag-naming split while in there: add and defer take --files/--criteria/--symbols while update takes --file/--criterion/--symbol, which cost three failed invocations during the GB-182 and GB-189 close-outs.",
+        "edges": [],
+        "id": "b8f88962-30d5-4b8f-af75-704421e62488",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "storypole/crates/storypole-cli/src/args.rs",
+            "storypole/crates/storypole-cli/src/task_args.rs"
+          ],
+          "target_symbols": []
+        },
+        "slug": "storypole-add-kind-silently-falls-back-to-feature-for-an-unknown-value-b8f889",
+        "status": "ready",
+        "ticket_key": "SP-22",
+        "title": "storypole add --kind silently falls back to Feature for an unknown value",
+        "updated_at_epoch_ms": 1793307242355,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793467165532,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793470765532
+      },
+      "event": "task_claimed",
+      "task_id": "b8f88962-30d5-4b8f-af75-704421e62488"
+    },
+    {
+      "event": "status_changed",
+      "from": "ready",
+      "reason": "Claimed by cline",
+      "task_id": "b8f88962-30d5-4b8f-af75-704421e62488",
+      "timestamp_ms": 1793467165532,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "cf0ec9293419c8ed59410268347e54b338033bbe"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793467165838,
+        "verifier": "manual"
+      },
+      "task_id": "b8f88962-30d5-4b8f-af75-704421e62488"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "b8f88962-30d5-4b8f-af75-704421e62488",
+      "timestamp_ms": 1793953228310,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "b8f88962-30d5-4b8f-af75-704421e62488",
+      "timestamp_ms": 1794038016410
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "Unknown --kind values exit non-zero listing the valid kinds",
+      "add, defer and update agree on one spelling per flag"
+    ],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038016410,
+    "created_at_epoch_ms": 1793307242355,
+    "decisions": [],
+    "description": "storypole add --kind perf created a Feature, and defer --kind docs did the same, so a typo in a kind is accepted instead of rejected. Two consequences: ticket kind is unreliable for filtering, and the mistake is invisible because the command succeeds. Should validate against the TaskKind vocabulary and exit non-zero with the allowed values. Also fix the flag-naming split while in there: add and defer take --files/--criteria/--symbols while update takes --file/--criterion/--symbol, which cost three failed invocations during the GB-182 and GB-189 close-outs.",
+    "edges": [],
+    "id": "b8f88962-30d5-4b8f-af75-704421e62488",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "storypole/crates/storypole-cli/src/args.rs",
+        "storypole/crates/storypole-cli/src/task_args.rs"
+      ],
+      "target_symbols": []
+    },
+    "slug": "storypole-add-kind-silently-falls-back-to-feature-for-an-unknown-value-b8f889",
+    "status": "verified",
+    "ticket_key": "SP-22",
+    "title": "storypole add --kind silently falls back to Feature for an unknown value",
+    "updated_at_epoch_ms": 1794038016410,
+    "verification_receipt": {
+      "base_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "cf0ec9293419c8ed59410268347e54b338033bbe"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793467165838,
+      "verifier": "manual"
+    }
+  }
+}

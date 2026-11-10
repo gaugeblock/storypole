@@ -1,0 +1,171 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793304923313,
+        "decisions": [],
+        "description": "AGENTS.md law 3 instructs 'storypole defer --kind <kind> --symbol \"<crate::path>\" --title \"...\"', but the CLI takes the title as a positional argument and spells the flag --symbols. Following the documented recipe fails with a clap usage error, which is exactly the wrong moment to fail - it is the escape hatch for out-of-scope findings.",
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+          }
+        ],
+        "id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "AGENTS.md"
+          ],
+          "target_symbols": []
+        },
+        "slug": "agents-md-defer-recipe-does-not-match-the-cli-it-tells-agents-to-run-b74a0b",
+        "status": "deferred",
+        "ticket_key": "SP-18",
+        "title": "AGENTS.md defer recipe does not match the CLI it tells agents to run",
+        "updated_at_epoch_ms": 1793304923313,
+        "verification_receipt": null
+      }
+    },
+    {
+      "acceptance_criteria": [
+        "Every documented storypole recipe in AGENTS.md and CONTRIBUTING.md runs verbatim"
+      ],
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": "storypole-cli",
+        "labels": [],
+        "module_path": null,
+        "repo": null,
+        "target_files": [
+          "AGENTS.md",
+          "CONTRIBUTING.md"
+        ],
+        "target_symbols": []
+      },
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+      "timestamp_ms": 1793305183493,
+      "title": null
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793469246906,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793472846906
+      },
+      "event": "task_claimed",
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128"
+    },
+    {
+      "event": "status_changed",
+      "from": "deferred",
+      "reason": "Claimed by cline",
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+      "timestamp_ms": 1793469246906,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "cf0ec9293419c8ed59410268347e54b338033bbe"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793469246993,
+        "verifier": "manual"
+      },
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+      "timestamp_ms": 1793953222687,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+      "timestamp_ms": 1794038015697
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "Every documented storypole recipe in AGENTS.md and CONTRIBUTING.md runs verbatim"
+    ],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038015697,
+    "created_at_epoch_ms": 1793304923313,
+    "decisions": [],
+    "description": "AGENTS.md law 3 instructs 'storypole defer --kind <kind> --symbol \"<crate::path>\" --title \"...\"', but the CLI takes the title as a positional argument and spells the flag --symbols. Following the documented recipe fails with a clap usage error, which is exactly the wrong moment to fail - it is the escape hatch for out-of-scope findings.",
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+      }
+    ],
+    "id": "b74a0b2f-87d1-480b-92cf-ba5f8fbb3128",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "AGENTS.md",
+        "CONTRIBUTING.md"
+      ],
+      "target_symbols": []
+    },
+    "slug": "agents-md-defer-recipe-does-not-match-the-cli-it-tells-agents-to-run-b74a0b",
+    "status": "verified",
+    "ticket_key": "SP-18",
+    "title": "AGENTS.md defer recipe does not match the CLI it tells agents to run",
+    "updated_at_epoch_ms": 1794038015697,
+    "verification_receipt": {
+      "base_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "cf0ec9293419c8ed59410268347e54b338033bbe"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "cf0ec9293419c8ed59410268347e54b338033bbe",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793469246993,
+      "verifier": "manual"
+    }
+  }
+}

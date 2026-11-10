@@ -1,0 +1,140 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793241330761,
+        "decisions": [],
+        "description": "handoff_task now returns the effective status, which pushed workflow.rs to 224 lines. Split handoff/heartbeat into ops/handoff.rs and leave next_task with the claim lifecycle.",
+        "edges": [],
+        "id": "55ae408a-c916-4eca-8fe0-fde535e9449b",
+        "kind": "tech_debt",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ops/workflow.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::ops::workflow::handoff_task"
+          ]
+        },
+        "slug": "split-ops-workflow-rs-past-the-200-line-target-55ae40",
+        "status": "triage",
+        "ticket_key": "SP-13",
+        "title": "Split ops/workflow.rs past the 200-line target",
+        "updated_at_epoch_ms": 1793241330761,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793244980610,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793248580610
+      },
+      "event": "task_claimed",
+      "task_id": "55ae408a-c916-4eca-8fe0-fde535e9449b"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "55ae408a-c916-4eca-8fe0-fde535e9449b",
+      "timestamp_ms": 1793244980610,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "f0fec441786d691743b898bec690c54a6eba1a7d",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "f0fec441786d691743b898bec690c54a6eba1a7d"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "f0fec441786d691743b898bec690c54a6eba1a7d",
+        "repo": null,
+        "summary": "Split on storypole main at f0fec44: heartbeat and handoff_task moved to ops/handoff.rs (75 lines), leaving ops/workflow.rs at 162 for claim, repo resolution and scheduling. Both functions are re-exported from ops::workflow as well as ops, so storypole_core::ops::workflow::handoff_task still resolves and the existing tests needed no import changes. Gates: fmt clean, clippy --workspace --all-targets -D warnings clean, nextest 33/33.",
+        "verified_at_epoch_ms": 1793244980786,
+        "verifier": "cline"
+      },
+      "task_id": "55ae408a-c916-4eca-8fe0-fde535e9449b"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "55ae408a-c916-4eca-8fe0-fde535e9449b",
+      "timestamp_ms": 1793289291243,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "55ae408a-c916-4eca-8fe0-fde535e9449b",
+      "timestamp_ms": 1794038011352
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038011352,
+    "created_at_epoch_ms": 1793241330761,
+    "decisions": [],
+    "description": "handoff_task now returns the effective status, which pushed workflow.rs to 224 lines. Split handoff/heartbeat into ops/handoff.rs and leave next_task with the claim lifecycle.",
+    "edges": [],
+    "id": "55ae408a-c916-4eca-8fe0-fde535e9449b",
+    "kind": "tech_debt",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ops/workflow.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::ops::workflow::handoff_task"
+      ]
+    },
+    "slug": "split-ops-workflow-rs-past-the-200-line-target-55ae40",
+    "status": "verified",
+    "ticket_key": "SP-13",
+    "title": "Split ops/workflow.rs past the 200-line target",
+    "updated_at_epoch_ms": 1794038011352,
+    "verification_receipt": {
+      "base_commit_sha": "f0fec441786d691743b898bec690c54a6eba1a7d",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "f0fec441786d691743b898bec690c54a6eba1a7d"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "f0fec441786d691743b898bec690c54a6eba1a7d",
+      "repo": null,
+      "summary": "Split on storypole main at f0fec44: heartbeat and handoff_task moved to ops/handoff.rs (75 lines), leaving ops/workflow.rs at 162 for claim, repo resolution and scheduling. Both functions are re-exported from ops::workflow as well as ops, so storypole_core::ops::workflow::handoff_task still resolves and the existing tests needed no import changes. Gates: fmt clean, clippy --workspace --all-targets -D warnings clean, nextest 33/33.",
+      "verified_at_epoch_ms": 1793244980786,
+      "verifier": "cline"
+    }
+  }
+}

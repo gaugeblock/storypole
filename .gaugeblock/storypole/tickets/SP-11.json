@@ -1,0 +1,140 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793221117641,
+        "decisions": [],
+        "description": "Observed on GB-143: ask-decision marked the task Blocked, then storypole handoff <KEY> <AGENT> moved it to Ready while the Pending decision was still attached. An agent reading storypole next/ list would see a ready task whose architectural decision is unanswered. Handoff should preserve a Blocked state when a Pending decision exists (or recompute status from the decision set).",
+        "edges": [],
+        "id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ops/workflow.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::ops::workflow::record_handoff"
+          ]
+        },
+        "slug": "a-handoff-packet-clears-a-pending-decision-block-and-leaves-the-task-ready-5c8488",
+        "status": "triage",
+        "ticket_key": "SP-11",
+        "title": "A handoff packet clears a pending-decision block and leaves the task Ready",
+        "updated_at_epoch_ms": 1793221117641,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793241335465,
+        "git_branch": "fix/storypole-handoff-decision",
+        "lease_expires_at_epoch_ms": 1793244935465
+      },
+      "event": "task_claimed",
+      "task_id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba",
+      "timestamp_ms": 1793241335465,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "03cab2c1b513c37f7118f09955a7a6d7565a57e0",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "03cab2c1b513c37f7118f09955a7a6d7565a57e0"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "03cab2c1b513c37f7118f09955a7a6d7565a57e0",
+        "repo": null,
+        "summary": "Fixed on storypole main at 03cab2c: handoff_task now returns the effective status and downgrades a requested Ready to Blocked while any DecisionStatus::Pending decision remains, matching the rule dag::is_task_dependency_ready already applies at claim time. The packet is still recorded and the lease released; Failed passes through unchanged because it is not claimable work. CLI prints the effective status and explains the downgrade on stderr; MCP storypole_handoff returns the status the task actually reached. New tests/handoff_decision_guard.rs has three cases (blocked handoff, post-resolution handoff, failure pass-through) and was proven to fail with the guard disabled: 'requesting ready must not win over an unanswered decision'. Gates: fmt clean, clippy --workspace --all-targets -D warnings clean, nextest 33/33.",
+        "verified_at_epoch_ms": 1793241335602,
+        "verifier": "cline"
+      },
+      "task_id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba",
+      "timestamp_ms": 1793289292004,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba",
+      "timestamp_ms": 1794038009283
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038009283,
+    "created_at_epoch_ms": 1793221117641,
+    "decisions": [],
+    "description": "Observed on GB-143: ask-decision marked the task Blocked, then storypole handoff <KEY> <AGENT> moved it to Ready while the Pending decision was still attached. An agent reading storypole next/ list would see a ready task whose architectural decision is unanswered. Handoff should preserve a Blocked state when a Pending decision exists (or recompute status from the decision set).",
+    "edges": [],
+    "id": "5c8488c7-0405-4901-a1aa-c476d91fe4ba",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ops/workflow.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::ops::workflow::record_handoff"
+      ]
+    },
+    "slug": "a-handoff-packet-clears-a-pending-decision-block-and-leaves-the-task-ready-5c8488",
+    "status": "verified",
+    "ticket_key": "SP-11",
+    "title": "A handoff packet clears a pending-decision block and leaves the task Ready",
+    "updated_at_epoch_ms": 1794038009283,
+    "verification_receipt": {
+      "base_commit_sha": "03cab2c1b513c37f7118f09955a7a6d7565a57e0",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "03cab2c1b513c37f7118f09955a7a6d7565a57e0"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "03cab2c1b513c37f7118f09955a7a6d7565a57e0",
+      "repo": null,
+      "summary": "Fixed on storypole main at 03cab2c: handoff_task now returns the effective status and downgrades a requested Ready to Blocked while any DecisionStatus::Pending decision remains, matching the rule dag::is_task_dependency_ready already applies at claim time. The packet is still recorded and the lease released; Failed passes through unchanged because it is not claimable work. CLI prints the effective status and explains the downgrade on stderr; MCP storypole_handoff returns the status the task actually reached. New tests/handoff_decision_guard.rs has three cases (blocked handoff, post-resolution handoff, failure pass-through) and was proven to fail with the guard disabled: 'requesting ready must not win over an unanswered decision'. Gates: fmt clean, clippy --workspace --all-targets -D warnings clean, nextest 33/33.",
+      "verified_at_epoch_ms": 1793241335602,
+      "verifier": "cline"
+    }
+  }
+}

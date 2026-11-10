@@ -1,0 +1,192 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793948510600,
+        "decisions": [],
+        "description": "Observed 2026-11-06: recording progress on GB-204, OF-5 and GB-79 meant reading the full description with 'show --json', concatenating in python, and writing it back with --desc, four times. The description is the ticket's memory and it is now several kilobytes on GB-204, so every append re-sends the whole thing through the model's context - expensive, and one truncation away from destroying the history. A '--append-desc <TEXT>' (or '--desc-from -' reading stdin) would make the normal workflow one cheap call, and makes it impossible to lose the earlier text by accident.",
+        "edges": [],
+        "id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [
+            "storypole,cli,agent-ergonomics,tokens"
+          ],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "storypole-update-should-append-to-a-description-instead-of-requiring-the-whole-text-back-36e434",
+        "status": "deferred",
+        "ticket_key": "SP-25",
+        "title": "storypole update should append to a description instead of requiring the whole text back",
+        "updated_at_epoch_ms": 1793948510600,
+        "verification_receipt": null
+      }
+    },
+    {
+      "acceptance_criteria": [
+        "HIT AGAIN 2026-11-06",
+        " repeatedly",
+        " in one session: every 'storypole update --criterion' overwrites nothing but is hard to use for capture",
+        " and there is no append-only way to record a date-stamped note. Observations worth adding to this ticket: (1) update takes one criterion at a time",
+        " so recording three findings from one run means three invocations and three chances to mistype a key; (2) a criterion passed twice silently duplicates rather than erroring; (3) the cost was paid at least six times today",
+        " each time with a 1-2k character shell-quoted blob. An --append-desc plus a repeatable --criterion would have saved most of it",
+        " and a --criterion-from-file (or - for stdin) would remove the quoting risk entirely - I had two commits mangled by shell escaping today",
+        " one of which silently committed nothing."
+      ],
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794002488269,
+      "title": null
+    },
+    {
+      "acceptance_criteria": [
+        "NEW EVIDENCE 2026-11-06",
+        " same class as the escaping failures already recorded here: backticks inside a double-quoted --criterion argument are SHELL-EXECUTED by zsh before storypole sees them. Two terms in a GB-278 criterion were silently replaced by empty output; the command still exited 0",
+        " so the damage was invisible until I read the ticket back. That is a third silent-corruption path through this interface today",
+        " alongside mangled multi-flag commits and an aborted add. It strengthens the case for --criterion-from-file (or - for stdin): the shell never touches the content",
+        " so no escaping rule can be forgotten."
+      ],
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794007659369,
+      "title": null
+    },
+    {
+      "acceptance_criteria": [
+        "criterion read from a file: commas, backticks `like this`, and \"quotes\" survive intact"
+      ],
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794007940419,
+      "title": null
+    },
+    {
+      "claim": {
+        "agent_id": "cline-agent",
+        "base_commit_sha": "756fe424ad9605025aedd1445a97c60e5b22406f",
+        "claimed_at_epoch_ms": 1794105782176,
+        "git_branch": "feat/gb-250-append-desc",
+        "lease_expires_at_epoch_ms": 1794109382176
+      },
+      "event": "task_claimed",
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40"
+    },
+    {
+      "event": "status_changed",
+      "from": "deferred",
+      "reason": "Claimed by cline-agent",
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794105782176,
+      "to": "in_progress"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Observed 2026-11-06: recording progress on GB-204, OF-5 and GB-79 meant reading the full description with 'show --json', concatenating in python, and writing it back with --desc, four times. The description is the ticket's memory and it is now several kilobytes on GB-204, so every append re-sends the whole thing through the model's context - expensive, and one truncation away from destroying the history. A '--append-desc <TEXT>' (or '--desc-from -' reading stdin) would make the normal workflow one cheap call, and makes it impossible to lose the earlier text by accident.\n\nLive check: this paragraph was appended by --append-desc rather than resending the whole field.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794105926918,
+      "title": null
+    },
+    {
+      "acceptance_criteria": [
+        "DONE 2026-11-07, commit 6285754 (storypole). `storypole update --append-desc <TEXT>` and `--append-desc-file <PATH|->` append a paragraph instead of requiring the whole description back. `--desc` conflicts with both, because replace and append in one call is ambiguous and the ambiguity would resolve silently.\n\nWhy it matters: recording progress on three tickets in this session meant reading the description with `show --json`, concatenating in python and writing it back with `--desc`, four times. Each round trip could lose the earlier text, and one nearly did.\n\nSeparator behaviour is the part with tests, four of them: exactly one blank line between paragraphs; no leading newline when the description was empty; no accumulation of trailing whitespace across repeated appends, since every append would otherwise add another separator to the end of the field; and an empty addition changes nothing.\n\nFound while verifying, filed separately: `storypole show` prints no description at all, and `show --json` returns a briefing envelope rather than the task. That combination is why the append initially looked broken - I read a task snapshot from the ledger, and TaskUpdated carries a delta, so the snapshot could not contain the answer. The same error as GB-281: query something that cannot contain the result, then believe its silence. `list --json` shows the replayed state and the paragraph is there.\n\nTier 2: clippy -p storypole-cli --all-targets -D warnings clean, 7 tests green in the package, installed to PATH before the live check rather than after the chain was wired to depend on it."
+      ],
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+      "timestamp_ms": 1794105974754,
+      "title": null
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "756fe424ad9605025aedd1445a97c60e5b22406f",
+        "chain_key": null,
+        "command": "miter contracts && outfeed lockfiles && miter audit --path . --threshold 250 --paths && chalkline docs check --workspace",
+        "commit_shas": [
+          "62857545ce96c4a9e63d9c7209bb17ced35cc2df"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "feat/gb-250-append-desc",
+        "head_commit_sha": "62857545ce96c4a9e63d9c7209bb17ced35cc2df",
+        "repo": null,
+        "summary": "Polyglot Contract Verification across SQL, Rust, and TypeScript\n================================================================================\nVerified Multi-Language Entities: 0\nEntities with Contract Drift:     0\n\nALL CONTRACTS CONSISTENT: No cross-language schema drifts detected.\nREPOSITORY     LOCKFILE     FRESH   \n------------------------------------\n\nAll 0 repositories track a fresh Cargo.lock.\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit (Workspace) ===\nWorkspace Root: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\nRepo           README CONTRIB PROD   ARCH   SPEC   DESIGN   ROADMAP   CHANGELOG   AGENTS   Status    \n-----------------------------------------------------------------------------------------------\nworkspace      [OK]   [OK]    [OK]   [OK]   [OK]   [OK]     [OK]      [OK]        [OK]     CLEAN     \n\nSummary: 1 targets audited, 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794105975090,
+        "verifier": "storypole-verify"
+      },
+      "task_id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40"
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "DONE 2026-11-07, commit 6285754 (storypole). `storypole update --append-desc <TEXT>` and `--append-desc-file <PATH|->` append a paragraph instead of requiring the whole description back. `--desc` conflicts with both, because replace and append in one call is ambiguous and the ambiguity would resolve silently.\n\nWhy it matters: recording progress on three tickets in this session meant reading the description with `show --json`, concatenating in python and writing it back with `--desc`, four times. Each round trip could lose the earlier text, and one nearly did.\n\nSeparator behaviour is the part with tests, four of them: exactly one blank line between paragraphs; no leading newline when the description was empty; no accumulation of trailing whitespace across repeated appends, since every append would otherwise add another separator to the end of the field; and an empty addition changes nothing.\n\nFound while verifying, filed separately: `storypole show` prints no description at all, and `show --json` returns a briefing envelope rather than the task. That combination is why the append initially looked broken - I read a task snapshot from the ledger, and TaskUpdated carries a delta, so the snapshot could not contain the answer. The same error as GB-281: query something that cannot contain the result, then believe its silence. `list --json` shows the replayed state and the paragraph is there.\n\nTier 2: clippy -p storypole-cli --all-targets -D warnings clean, 7 tests green in the package, installed to PATH before the live check rather than after the chain was wired to depend on it."
+    ],
+    "active_claim": null,
+    "created_at_epoch_ms": 1793948510600,
+    "decisions": [],
+    "description": "Observed 2026-11-06: recording progress on GB-204, OF-5 and GB-79 meant reading the full description with 'show --json', concatenating in python, and writing it back with --desc, four times. The description is the ticket's memory and it is now several kilobytes on GB-204, so every append re-sends the whole thing through the model's context - expensive, and one truncation away from destroying the history. A '--append-desc <TEXT>' (or '--desc-from -' reading stdin) would make the normal workflow one cheap call, and makes it impossible to lose the earlier text by accident.\n\nLive check: this paragraph was appended by --append-desc rather than resending the whole field.",
+    "edges": [],
+    "id": "36e434a9-fb1d-4b60-b28c-a9a479af1c40",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [
+        "storypole,cli,agent-ergonomics,tokens"
+      ],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "storypole-update-should-append-to-a-description-instead-of-requiring-the-whole-text-back-36e434",
+    "status": "verified",
+    "ticket_key": "SP-25",
+    "title": "storypole update should append to a description instead of requiring the whole text back",
+    "updated_at_epoch_ms": 1794105975090,
+    "verification_receipt": {
+      "base_commit_sha": "756fe424ad9605025aedd1445a97c60e5b22406f",
+      "chain_key": null,
+      "command": "miter contracts && outfeed lockfiles && miter audit --path . --threshold 250 --paths && chalkline docs check --workspace",
+      "commit_shas": [
+        "62857545ce96c4a9e63d9c7209bb17ced35cc2df"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "feat/gb-250-append-desc",
+      "head_commit_sha": "62857545ce96c4a9e63d9c7209bb17ced35cc2df",
+      "repo": null,
+      "summary": "Polyglot Contract Verification across SQL, Rust, and TypeScript\n================================================================================\nVerified Multi-Language Entities: 0\nEntities with Contract Drift:     0\n\nALL CONTRACTS CONSISTENT: No cross-language schema drifts detected.\nREPOSITORY     LOCKFILE     FRESH   \n------------------------------------\n\nAll 0 repositories track a fresh Cargo.lock.\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit (Workspace) ===\nWorkspace Root: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\nRepo           README CONTRIB PROD   ARCH   SPEC   DESIGN   ROADMAP   CHANGELOG   AGENTS   Status    \n-----------------------------------------------------------------------------------------------\nworkspace      [OK]   [OK]    [OK]   [OK]   [OK]   [OK]     [OK]      [OK]        [OK]     CLEAN     \n\nSummary: 1 targets audited, 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794105975090,
+      "verifier": "storypole-verify"
+    }
+  }
+}

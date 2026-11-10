@@ -1,0 +1,216 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793174296031,
+        "decisions": [],
+        "description": "build_task_briefing only summarises outgoing RelatedTo/BlockedBy edges. SubtaskOf edges are skipped and incoming edges are ignored entirely, so an epic such as GB-121 reports zero related tasks despite five children, and a parent_epic link made from the benchwork inspector is invisible after being created.",
+        "edges": [],
+        "id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/dag/briefing.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::dag::briefing::build_task_briefing"
+          ]
+        },
+        "slug": "taskbriefing-omits-parent-epic-and-incoming-edges-so-linked-tasks-never-render-in-benchwork-fec81a",
+        "status": "triage",
+        "ticket_key": "SP-9",
+        "title": "TaskBriefing omits parent-epic and incoming edges so linked tasks never render in benchwork",
+        "updated_at_epoch_ms": 1793174296031,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+        "claimed_at_epoch_ms": 1793174319049,
+        "git_branch": "fix/storypole-linked-tasks",
+        "lease_expires_at_epoch_ms": 1793177919049
+      },
+      "event": "task_claimed",
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+      "timestamp_ms": 1793174319049,
+      "to": "in_progress"
+    },
+    {
+      "event": "plan_updated",
+      "plan": {
+        "design_markdown": "# Task Plan: SP-9 — TaskBriefing Omits Parent-Epic and Incoming Edges\n\n> **Task Key:** `SP-9`  \n> **Scope:** `storypole-core`  \n> **Related:** `GB-97` (benchwork wire contracts), `GB-121`/`GB-128` (epics that render empty)  \n> **Status:** Planned\n\n---\n\n## 1. Problem Statement\n\n`build_task_briefing()` summarises only **outgoing** `RelatedTo` / `BlockedBy` edges:\n\n```rust\nif matches!(edge.kind, EdgeKind::RelatedTo | EdgeKind::BlockedBy)\n```\n\nTwo consequences reach the user through both the `storypole show` CLI and the benchwork\ninspector (`InspectorEdges.tsx` → `briefing.related_tasks_summary`):\n\n1. **Epics render empty.** `ParentEpic` edges are stored **on the child** (see\n   `ops::graph::split_task`), so an epic such as `GB-121` — which owns five children in the ledger —\n   reports `Related Tasks & Edges (0)` and the inspector prints \"No linked tasks or dependencies.\"\n2. **Linking appears broken.** Choosing \"Parent Epic\" in the benchwork link modal writes a valid\n   `ParentEpic` edge, but because the parent has no outgoing edge, the freshly created link is\n   invisible on reload. The write succeeds; the read never shows it.\n3. **Dependents are invisible.** A `BlockedBy` edge surfaces on the blocked task only. The blocker\n   never learns which tasks it is holding back, and siblings that recorded a mutual `RelatedTo` link\n   on their own side are invisible to the other endpoint.\n\n---\n\n## 2. Technical Blueprint\n\n1. In `crates/storypole-core/src/dag/briefing.rs` (`build_task_briefing`):\n   * Include `EdgeKind::ParentEpic` alongside `RelatedTo`/`BlockedBy` in the outgoing pass so a\n     child still lists its parent epic (and keeps inheriting resolved parent decisions).\n   * Add a second, **inbound** pass over `all_tasks`: any task whose edge targets this task with one\n     of the three summarised kinds is added to `related_tasks_summary`.\n   * Deduplicate with a `Vec<Uuid>` of already-linked ids so mutual links collapse to one entry.\n2. Wire shape stays `Vec<(String, String, TaskStatus)>` (documented in `CONTRACTS.md`); no schema\n   change, so benchwork's TypeScript tuple type remains valid.\n3. Regression tests in `crates/storypole-core/tests/briefing_edges_tests.rs`:\n   * epic lists its children while each child still lists the epic;\n   * `BlockedBy` surfaces on both endpoints;\n   * mutual `RelatedTo` links are not duplicated;\n   * a child briefing still reaches its ready parent epic.\n\n---\n\n## 3. Execution Steps\n\n* **Step 1:** Extend briefing link summarisation with `ParentEpic` and inbound edges. Gate: `cargo check -p storypole-core`.\n* **Step 2:** Add bidirectional regression tests. Gate: `cargo test -p storypole-core --test briefing_edges_tests`.\n* **Step 3:** Tier 2 verification. Gate: `cargo nextest run -p storypole-core` + `cargo clippy -p storypole-core --all-targets -- -D warnings`.\n* **Step 4:** Documentation + certification. Gate: `chalkline docs check -d storypole`.\n\n---\n\n## 4. Boundaries\n\n* Task **ordering** semantics (`dag::mod` acyclic rules) are untouched — this is a read-model fix.\n* Rendering changes belong to benchwork; `InspectorEdges.tsx` already consumes the tuple list and\n  needs no change.\n* Any further benchwork contract mismatch (e.g. `TaskStatus` casing) stays with `GB-97`.\n",
+        "plan_file_path": ".gaugeblock/storypole/plans/SP-9.md",
+        "steps": [
+          {
+            "completed": false,
+            "step_id": "1",
+            "target_files": [],
+            "title": "Extend briefing link summarisation with ParentEpic and inbound edges",
+            "verification_gate": "cargo check -p storypole-core"
+          },
+          {
+            "completed": false,
+            "step_id": "2",
+            "target_files": [],
+            "title": "Add bidirectional regression tests",
+            "verification_gate": "cargo test -p storypole-core --test briefing_edges_tests"
+          },
+          {
+            "completed": false,
+            "step_id": "3",
+            "target_files": [],
+            "title": "Tier 2 verification",
+            "verification_gate": "cargo nextest run -p storypole-core"
+          },
+          {
+            "completed": false,
+            "step_id": "4",
+            "target_files": [],
+            "title": "Documentation and certification",
+            "verification_gate": "chalkline docs check -d storypole"
+          }
+        ],
+        "summary": "Summarise parent-epic and inbound task edges in TaskBriefing so epics and freshly linked tasks render in storypole show and the benchwork inspector",
+        "updated_at_epoch_ms": 1793174439099
+      },
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+      "timestamp_ms": 1793174439099
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "8a4bf9b9d5b6529831545338a88e482811d77856"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "fix/storypole-linked-tasks",
+        "head_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+        "repo": null,
+        "summary": "Tier 3 gate green on merged storypole main (e125969): fmt --all --check OK, clippy --workspace --all-targets -D warnings OK, nextest run --workspace 21/21, chalkline docs check -d storypole 9/9 clean, workspace docs 99 docs / 0 drifted, miter contracts exit 0. Live check: storypole show GB-121 now lists all five child work packages.",
+        "verified_at_epoch_ms": 1793174796203,
+        "verifier": "cline"
+      },
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+      "timestamp_ms": 1793289350265,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+      "timestamp_ms": 1794038008038
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038008038,
+    "created_at_epoch_ms": 1793174296031,
+    "decisions": [],
+    "description": "build_task_briefing only summarises outgoing RelatedTo/BlockedBy edges. SubtaskOf edges are skipped and incoming edges are ignored entirely, so an epic such as GB-121 reports zero related tasks despite five children, and a parent_epic link made from the benchwork inspector is invisible after being created.",
+    "edges": [],
+    "id": "fec81a48-bcbb-48f7-88d2-32e4da46c0e1",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": {
+      "design_markdown": "# Task Plan: SP-9 — TaskBriefing Omits Parent-Epic and Incoming Edges\n\n> **Task Key:** `SP-9`  \n> **Scope:** `storypole-core`  \n> **Related:** `GB-97` (benchwork wire contracts), `GB-121`/`GB-128` (epics that render empty)  \n> **Status:** Planned\n\n---\n\n## 1. Problem Statement\n\n`build_task_briefing()` summarises only **outgoing** `RelatedTo` / `BlockedBy` edges:\n\n```rust\nif matches!(edge.kind, EdgeKind::RelatedTo | EdgeKind::BlockedBy)\n```\n\nTwo consequences reach the user through both the `storypole show` CLI and the benchwork\ninspector (`InspectorEdges.tsx` → `briefing.related_tasks_summary`):\n\n1. **Epics render empty.** `ParentEpic` edges are stored **on the child** (see\n   `ops::graph::split_task`), so an epic such as `GB-121` — which owns five children in the ledger —\n   reports `Related Tasks & Edges (0)` and the inspector prints \"No linked tasks or dependencies.\"\n2. **Linking appears broken.** Choosing \"Parent Epic\" in the benchwork link modal writes a valid\n   `ParentEpic` edge, but because the parent has no outgoing edge, the freshly created link is\n   invisible on reload. The write succeeds; the read never shows it.\n3. **Dependents are invisible.** A `BlockedBy` edge surfaces on the blocked task only. The blocker\n   never learns which tasks it is holding back, and siblings that recorded a mutual `RelatedTo` link\n   on their own side are invisible to the other endpoint.\n\n---\n\n## 2. Technical Blueprint\n\n1. In `crates/storypole-core/src/dag/briefing.rs` (`build_task_briefing`):\n   * Include `EdgeKind::ParentEpic` alongside `RelatedTo`/`BlockedBy` in the outgoing pass so a\n     child still lists its parent epic (and keeps inheriting resolved parent decisions).\n   * Add a second, **inbound** pass over `all_tasks`: any task whose edge targets this task with one\n     of the three summarised kinds is added to `related_tasks_summary`.\n   * Deduplicate with a `Vec<Uuid>` of already-linked ids so mutual links collapse to one entry.\n2. Wire shape stays `Vec<(String, String, TaskStatus)>` (documented in `CONTRACTS.md`); no schema\n   change, so benchwork's TypeScript tuple type remains valid.\n3. Regression tests in `crates/storypole-core/tests/briefing_edges_tests.rs`:\n   * epic lists its children while each child still lists the epic;\n   * `BlockedBy` surfaces on both endpoints;\n   * mutual `RelatedTo` links are not duplicated;\n   * a child briefing still reaches its ready parent epic.\n\n---\n\n## 3. Execution Steps\n\n* **Step 1:** Extend briefing link summarisation with `ParentEpic` and inbound edges. Gate: `cargo check -p storypole-core`.\n* **Step 2:** Add bidirectional regression tests. Gate: `cargo test -p storypole-core --test briefing_edges_tests`.\n* **Step 3:** Tier 2 verification. Gate: `cargo nextest run -p storypole-core` + `cargo clippy -p storypole-core --all-targets -- -D warnings`.\n* **Step 4:** Documentation + certification. Gate: `chalkline docs check -d storypole`.\n\n---\n\n## 4. Boundaries\n\n* Task **ordering** semantics (`dag::mod` acyclic rules) are untouched — this is a read-model fix.\n* Rendering changes belong to benchwork; `InspectorEdges.tsx` already consumes the tuple list and\n  needs no change.\n* Any further benchwork contract mismatch (e.g. `TaskStatus` casing) stays with `GB-97`.\n",
+      "plan_file_path": ".gaugeblock/storypole/plans/SP-9.md",
+      "steps": [
+        {
+          "completed": false,
+          "step_id": "1",
+          "target_files": [],
+          "title": "Extend briefing link summarisation with ParentEpic and inbound edges",
+          "verification_gate": "cargo check -p storypole-core"
+        },
+        {
+          "completed": false,
+          "step_id": "2",
+          "target_files": [],
+          "title": "Add bidirectional regression tests",
+          "verification_gate": "cargo test -p storypole-core --test briefing_edges_tests"
+        },
+        {
+          "completed": false,
+          "step_id": "3",
+          "target_files": [],
+          "title": "Tier 2 verification",
+          "verification_gate": "cargo nextest run -p storypole-core"
+        },
+        {
+          "completed": false,
+          "step_id": "4",
+          "target_files": [],
+          "title": "Documentation and certification",
+          "verification_gate": "chalkline docs check -d storypole"
+        }
+      ],
+      "summary": "Summarise parent-epic and inbound task edges in TaskBriefing so epics and freshly linked tasks render in storypole show and the benchwork inspector",
+      "updated_at_epoch_ms": 1793174439099
+    },
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/dag/briefing.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::dag::briefing::build_task_briefing"
+      ]
+    },
+    "slug": "taskbriefing-omits-parent-epic-and-incoming-edges-so-linked-tasks-never-render-in-benchwork-fec81a",
+    "status": "verified",
+    "ticket_key": "SP-9",
+    "title": "TaskBriefing omits parent-epic and incoming edges so linked tasks never render in benchwork",
+    "updated_at_epoch_ms": 1794038008038,
+    "verification_receipt": {
+      "base_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "8a4bf9b9d5b6529831545338a88e482811d77856"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "fix/storypole-linked-tasks",
+      "head_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+      "repo": null,
+      "summary": "Tier 3 gate green on merged storypole main (e125969): fmt --all --check OK, clippy --workspace --all-targets -D warnings OK, nextest run --workspace 21/21, chalkline docs check -d storypole 9/9 clean, workspace docs 99 docs / 0 drifted, miter contracts exit 0. Live check: storypole show GB-121 now lists all five child work packages.",
+      "verified_at_epoch_ms": 1793174796203,
+      "verifier": "cline"
+    }
+  }
+}

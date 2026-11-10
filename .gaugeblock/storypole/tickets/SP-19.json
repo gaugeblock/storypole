@@ -1,0 +1,255 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793305193677,
+        "decisions": [],
+        "description": "update SP-18 --file AGENTS.md --file CONTRIBUTING.md prints Updated task but show still lists only its original file; the scope branch in update_cmd only takes args.files when non-empty, so either the flag binding or the scope merge is dropping them. Found while widening SP-18 scope during the GB-182 close-out.",
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+          }
+        ],
+        "id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::update_cmd::handle_update"
+          ]
+        },
+        "slug": "storypole-update-file-reports-success-but-leaves-target-files-unchanged-c03e86",
+        "status": "triage",
+        "ticket_key": "SP-19",
+        "title": "storypole update --file reports success but leaves target_files unchanged",
+        "updated_at_epoch_ms": 1793305193677,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793465260192,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793468860192
+      },
+      "event": "task_claimed",
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465260192,
+      "to": "in_progress"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": "storypole-cli",
+        "labels": [],
+        "module_path": null,
+        "repo": null,
+        "target_files": [
+          "crates/storypole-cli/src/handlers/update_cmd.rs"
+        ],
+        "target_symbols": [
+          "storypole_cli::handlers::update_cmd::handle_update"
+        ]
+      },
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465335589,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": "storypole-cli",
+        "labels": [],
+        "module_path": null,
+        "repo": null,
+        "target_files": [
+          "a.rs,b.rs"
+        ],
+        "target_symbols": [
+          "storypole_cli::handlers::update_cmd::handle_update"
+        ]
+      },
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465345059,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": "storypole-cli",
+        "labels": [],
+        "module_path": null,
+        "repo": null,
+        "target_files": [
+          "crates/storypole-cli/src/update_args.rs,crates/storypole-cli/src/handlers/update_cmd.rs"
+        ],
+        "target_symbols": [
+          "storypole_cli::handlers::update_cmd::handle_update"
+        ]
+      },
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465538124,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": "storypole-cli",
+        "labels": [],
+        "module_path": null,
+        "repo": null,
+        "target_files": [
+          "crates/storypole-cli/src/update_args.rs",
+          "crates/storypole-cli/src/handlers/update_cmd.rs"
+        ],
+        "target_symbols": [
+          "storypole_cli::handlers::update_cmd::handle_update"
+        ]
+      },
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465666183,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "The filed symptom did not reproduce: `--file <one path>` stores that path correctly, and the handler has been correct since it was introduced (73e38dd - the only commit that ever touched it).\n\nWhat does reproduce is the shape most people type: `--file a.rs,b.rs`, which stored the single string \"a.rs,b.rs\" and reported success. The scope then held one path that exists nowhere, which is indistinguishable from the update being ignored and is a plausible origin for the report.\n\nFixed by giving all four list arguments `value_delimiter = 0x2C` - file, symbol, label, criterion - since the defect is in list parsing rather than in one field. Repeating the flag still works.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793465683505,
+      "title": "storypole update stored a comma-separated list argument as one bogus value"
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793465683568,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793469283568
+      },
+      "event": "task_claimed",
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "00d9943c050aad05895e6122a759c37935ed5f80",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "00d9943c050aad05895e6122a759c37935ed5f80"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "00d9943c050aad05895e6122a759c37935ed5f80",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793465683655,
+        "verifier": "manual"
+      },
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1793953231948,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+      "timestamp_ms": 1794038015869
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038015869,
+    "created_at_epoch_ms": 1793305193677,
+    "decisions": [],
+    "description": "The filed symptom did not reproduce: `--file <one path>` stores that path correctly, and the handler has been correct since it was introduced (73e38dd - the only commit that ever touched it).\n\nWhat does reproduce is the shape most people type: `--file a.rs,b.rs`, which stored the single string \"a.rs,b.rs\" and reported success. The scope then held one path that exists nowhere, which is indistinguishable from the update being ignored and is a plausible origin for the report.\n\nFixed by giving all four list arguments `value_delimiter = 0x2C` - file, symbol, label, criterion - since the defect is in list parsing rather than in one field. Repeating the flag still works.",
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+      }
+    ],
+    "id": "c03e86fd-25a1-4ff9-aa3d-4a2545f40b69",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "crates/storypole-cli/src/update_args.rs",
+        "crates/storypole-cli/src/handlers/update_cmd.rs"
+      ],
+      "target_symbols": [
+        "storypole_cli::handlers::update_cmd::handle_update"
+      ]
+    },
+    "slug": "storypole-update-file-reports-success-but-leaves-target-files-unchanged-c03e86",
+    "status": "verified",
+    "ticket_key": "SP-19",
+    "title": "storypole update stored a comma-separated list argument as one bogus value",
+    "updated_at_epoch_ms": 1794038015869,
+    "verification_receipt": {
+      "base_commit_sha": "00d9943c050aad05895e6122a759c37935ed5f80",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "00d9943c050aad05895e6122a759c37935ed5f80"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "00d9943c050aad05895e6122a759c37935ed5f80",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793465683655,
+      "verifier": "manual"
+    }
+  }
+}

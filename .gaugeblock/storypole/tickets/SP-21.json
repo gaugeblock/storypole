@@ -1,0 +1,127 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [
+          "File is at or under 250 lines and the CI audit step passes",
+          "No behavior change: verify_task, capture_trace and the spool write path keep their signatures"
+        ],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793307119638,
+        "decisions": [],
+        "description": "Second file over the ceiling in the same repo. miter slice proposes three extractions: resolve_target_dir + run_miter_verify to ops/verification/resolve_target_dir.rs (lines 17-74); verify_task to ops/verification/verify_task.rs (76-232); capture_trace to ops/verification/capture_trace.rs (234-279). The verify_task extraction is flagged has_circular_risk because it needs three parent elevations, while the other two are clean - doing the two clean ones leaves ~150 lines and closes the violation without touching the hot path.",
+        "edges": [],
+        "id": "d6f0e5cc-2d9d-4cb6-a3fd-c402cdb3cff6",
+        "kind": "tech_debt",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 2,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "storypole/crates/storypole-core/src/ops/verification.rs"
+          ],
+          "target_symbols": []
+        },
+        "slug": "split-storypole-core-ops-verification-rs-279-lines-over-the-hard-250-ceiling-d6f0e5",
+        "status": "ready",
+        "ticket_key": "SP-21",
+        "title": "Split storypole-core ops/verification.rs: 279 lines, over the hard 250 ceiling",
+        "updated_at_epoch_ms": 1793307119638,
+        "verification_receipt": null
+      }
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "0e7dde49e58c92022e23ef39adfc5a0a57b0116c",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "8e8aba3288174d7af3a5ae1569a775afd7d933ad",
+          "167bcf8a3d47c5739745c4279bd2984031b7afd9",
+          "0f51add598b8ae496f8c426006f965b1dffaacf3",
+          "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "refactor/gb-191-split-index-mod",
+        "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+        "repo": null,
+        "summary": "ops/verification.rs 279 lines became mod.rs 177 + target 64 + capture_trace 53; fmt/clippy/nextest green; verify_task keeps its public path",
+        "verified_at_epoch_ms": 1793308082713,
+        "verifier": "cargo-nextest"
+      },
+      "task_id": "d6f0e5cc-2d9d-4cb6-a3fd-c402cdb3cff6"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "d6f0e5cc-2d9d-4cb6-a3fd-c402cdb3cff6",
+      "timestamp_ms": 1793953244301,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "d6f0e5cc-2d9d-4cb6-a3fd-c402cdb3cff6",
+      "timestamp_ms": 1794038003522
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "File is at or under 250 lines and the CI audit step passes",
+      "No behavior change: verify_task, capture_trace and the spool write path keep their signatures"
+    ],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038003522,
+    "created_at_epoch_ms": 1793307119638,
+    "decisions": [],
+    "description": "Second file over the ceiling in the same repo. miter slice proposes three extractions: resolve_target_dir + run_miter_verify to ops/verification/resolve_target_dir.rs (lines 17-74); verify_task to ops/verification/verify_task.rs (76-232); capture_trace to ops/verification/capture_trace.rs (234-279). The verify_task extraction is flagged has_circular_risk because it needs three parent elevations, while the other two are clean - doing the two clean ones leaves ~150 lines and closes the violation without touching the hot path.",
+    "edges": [],
+    "id": "d6f0e5cc-2d9d-4cb6-a3fd-c402cdb3cff6",
+    "kind": "tech_debt",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 2,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "storypole/crates/storypole-core/src/ops/verification.rs"
+      ],
+      "target_symbols": []
+    },
+    "slug": "split-storypole-core-ops-verification-rs-279-lines-over-the-hard-250-ceiling-d6f0e5",
+    "status": "verified",
+    "ticket_key": "SP-21",
+    "title": "Split storypole-core ops/verification.rs: 279 lines, over the hard 250 ceiling",
+    "updated_at_epoch_ms": 1794038003522,
+    "verification_receipt": {
+      "base_commit_sha": "0e7dde49e58c92022e23ef39adfc5a0a57b0116c",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "8e8aba3288174d7af3a5ae1569a775afd7d933ad",
+        "167bcf8a3d47c5739745c4279bd2984031b7afd9",
+        "0f51add598b8ae496f8c426006f965b1dffaacf3",
+        "71a337ab000d69f5d87be83d54715ff5906ecbbd"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "refactor/gb-191-split-index-mod",
+      "head_commit_sha": "71a337ab000d69f5d87be83d54715ff5906ecbbd",
+      "repo": null,
+      "summary": "ops/verification.rs 279 lines became mod.rs 177 + target 64 + capture_trace 53; fmt/clippy/nextest green; verify_task keeps its public path",
+      "verified_at_epoch_ms": 1793308082713,
+      "verifier": "cargo-nextest"
+    }
+  }
+}

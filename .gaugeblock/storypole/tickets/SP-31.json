@@ -1,0 +1,129 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794110017928,
+        "decisions": [],
+        "description": "Three gaps, one theme: a plan can be lost without anyone being told.\n\n1. plan set REPLACES the whole plan. Passing only --file and --summary silently dropped six recorded steps on SP-29; the call reported success. Observed live, not theorised.\n2. Nothing queries the next unfinished step. plan step can mark one complete and plan show prints the list, but a briefing cannot say what to do next without the reader parsing rows.\n3. Nothing refuses to destroy progress. A plan with completed steps can be overwritten by a plan that has none, and the completion history goes with it.\n\nPROPOSED, smallest honest shape:\n  plan set --file F            merges: keeps recorded step state for step ids that still exist\n  plan set --file F --replace   the current behaviour, explicit\n  plan set ... (no --force)     refuses when the update would DROP a completed step\n  plan next                     prints the first unfinished step and its gate\n  plan show / briefing          renders progress as n/m so truncation is visible at a glance\n\nWhy not just make it additive: a plan that cannot be corrected is a plan nobody maintains. The rule is not that plans are immutable - it is that destroying recorded progress must be asked for.\n\nNOT overkill, and the reason is the pattern this suite keeps removing: a call that reports success while discarding what it was given. SP-30 records the replace half.",
+        "edges": [],
+        "id": "c550a59c-517d-48da-a999-1d3f9c91c334",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::plan_cmds,storypole_core::ops::plan_ops"
+          ]
+        },
+        "slug": "plans-should-carry-their-progress-query-the-next-step-and-refuse-to-drop-a-completed-one-without-being-asked-c550a5",
+        "status": "ready",
+        "ticket_key": "SP-31",
+        "title": "Plans should carry their progress: query the next step, and refuse to drop a completed one without being asked",
+        "updated_at_epoch_ms": 1794110017928,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline-agent",
+        "base_commit_sha": "9c7b97266f71dcf99c9bc4cb04399713d597ca15",
+        "claimed_at_epoch_ms": 1794118421680,
+        "git_branch": "main",
+        "lease_expires_at_epoch_ms": 1794122021680
+      },
+      "event": "task_claimed",
+      "task_id": "c550a59c-517d-48da-a999-1d3f9c91c334"
+    },
+    {
+      "event": "status_changed",
+      "from": "ready",
+      "reason": "Claimed by cline-agent",
+      "task_id": "c550a59c-517d-48da-a999-1d3f9c91c334",
+      "timestamp_ms": 1794118421680,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "9c7b97266f71dcf99c9bc4cb04399713d597ca15",
+        "chain_key": "storypole",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "commit_shas": [
+          "43a0da83cc077f49f5b90cb350e815f4ddcd49c2"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "43a0da83cc077f49f5b90cb350e815f4ddcd49c2",
+        "repo": "storypole",
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794118749555,
+        "verifier": "storypole-verify"
+      },
+      "task_id": "c550a59c-517d-48da-a999-1d3f9c91c334"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Three gaps, one theme: a plan can be lost without anyone being told.\n\n1. plan set REPLACES the whole plan. Passing only --file and --summary silently dropped six recorded steps on SP-29; the call reported success. Observed live, not theorised.\n2. Nothing queries the next unfinished step. plan step can mark one complete and plan show prints the list, but a briefing cannot say what to do next without the reader parsing rows.\n3. Nothing refuses to destroy progress. A plan with completed steps can be overwritten by a plan that has none, and the completion history goes with it.\n\nPROPOSED, smallest honest shape:\n  plan set --file F            merges: keeps recorded step state for step ids that still exist\n  plan set --file F --replace   the current behaviour, explicit\n  plan set ... (no --force)     refuses when the update would DROP a completed step\n  plan next                     prints the first unfinished step and its gate\n  plan show / briefing          renders progress as n/m so truncation is visible at a glance\n\nWhy not just make it additive: a plan that cannot be corrected is a plan nobody maintains. The rule is not that plans are immutable - it is that destroying recorded progress must be asked for.\n\nNOT overkill, and the reason is the pattern this suite keeps removing: a call that reports success while discarding what it was given. SP-30 records the replace half.\n\nLIVE 2026-11-07, after the fix: `storypole plan set SP-29 --file ... --step scope-resolution|...` keeps all six steps at 6/6 complete; `--replace` refuses and names all six completed steps. `plan next SP-29` reports that every step is complete rather than an absence.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "c550a59c-517d-48da-a999-1d3f9c91c334",
+      "timestamp_ms": 1794118783060,
+      "title": null
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "created_at_epoch_ms": 1794110017928,
+    "decisions": [],
+    "description": "Three gaps, one theme: a plan can be lost without anyone being told.\n\n1. plan set REPLACES the whole plan. Passing only --file and --summary silently dropped six recorded steps on SP-29; the call reported success. Observed live, not theorised.\n2. Nothing queries the next unfinished step. plan step can mark one complete and plan show prints the list, but a briefing cannot say what to do next without the reader parsing rows.\n3. Nothing refuses to destroy progress. A plan with completed steps can be overwritten by a plan that has none, and the completion history goes with it.\n\nPROPOSED, smallest honest shape:\n  plan set --file F            merges: keeps recorded step state for step ids that still exist\n  plan set --file F --replace   the current behaviour, explicit\n  plan set ... (no --force)     refuses when the update would DROP a completed step\n  plan next                     prints the first unfinished step and its gate\n  plan show / briefing          renders progress as n/m so truncation is visible at a glance\n\nWhy not just make it additive: a plan that cannot be corrected is a plan nobody maintains. The rule is not that plans are immutable - it is that destroying recorded progress must be asked for.\n\nNOT overkill, and the reason is the pattern this suite keeps removing: a call that reports success while discarding what it was given. SP-30 records the replace half.\n\nLIVE 2026-11-07, after the fix: `storypole plan set SP-29 --file ... --step scope-resolution|...` keeps all six steps at 6/6 complete; `--replace` refuses and names all six completed steps. `plan next SP-29` reports that every step is complete rather than an absence.",
+    "edges": [],
+    "id": "c550a59c-517d-48da-a999-1d3f9c91c334",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": [
+        "storypole_cli::handlers::plan_cmds,storypole_core::ops::plan_ops"
+      ]
+    },
+    "slug": "plans-should-carry-their-progress-query-the-next-step-and-refuse-to-drop-a-completed-one-without-being-asked-c550a5",
+    "status": "verified",
+    "ticket_key": "SP-31",
+    "title": "Plans should carry their progress: query the next step, and refuse to drop a completed one without being asked",
+    "updated_at_epoch_ms": 1794118783060,
+    "verification_receipt": {
+      "base_commit_sha": "9c7b97266f71dcf99c9bc4cb04399713d597ca15",
+      "chain_key": "storypole",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "commit_shas": [
+        "43a0da83cc077f49f5b90cb350e815f4ddcd49c2"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "43a0da83cc077f49f5b90cb350e815f4ddcd49c2",
+      "repo": "storypole",
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794118749555,
+      "verifier": "storypole-verify"
+    }
+  }
+}

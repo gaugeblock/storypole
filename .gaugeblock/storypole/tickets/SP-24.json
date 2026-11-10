@@ -1,0 +1,71 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793942209462,
+        "decisions": [],
+        "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug GB-189 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
+        "edges": [],
+        "id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [
+            "spool,paths,gb-189,telemetry"
+          ],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::verification::capture_trace::capture_trace"
+          ]
+        },
+        "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
+        "status": "triage",
+        "ticket_key": "SP-24",
+        "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
+        "updated_at_epoch_ms": 1793942209462,
+        "verification_receipt": null
+      }
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "created_at_epoch_ms": 1793942209462,
+    "decisions": [],
+    "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug GB-189 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
+    "edges": [],
+    "id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [
+        "spool,paths,gb-189,telemetry"
+      ],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::verification::capture_trace::capture_trace"
+      ]
+    },
+    "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
+    "status": "triage",
+    "ticket_key": "SP-24",
+    "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
+    "updated_at_epoch_ms": 1793942209462,
+    "verification_receipt": null
+  }
+}

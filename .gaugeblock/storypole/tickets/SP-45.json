@@ -1,0 +1,131 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794202377102,
+        "decisions": [],
+        "description": "Found by the SP-35 two-client test. storypole resolves its store by walking ancestors for .gaugeblock/storypole or .storypole, which cannot see a linked worktree: a worktree is a sibling directory, so the walk finds nothing above it and the command either fails or builds a second store. GaugeblockPaths::discover does the right thing (it resolves through the git common dir), and ADR 0001 rests on exactly that property, but store_locate does not consult it. Evidence from the test: eight concurrent storypole update calls, four run from the worktree checkout, returned Task not found for a ticket that exists - the four that ran from the main checkout succeeded. This is the load-bearing gap for parallel agent work: until the store follows the common dir, two agents in two worktrees are not working on one store.",
+        "edges": [],
+        "id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": null,
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::store_locate"
+          ]
+        },
+        "slug": "storypole-cannot-find-its-store-from-a-git-worktree-974d6f",
+        "status": "triage",
+        "ticket_key": "SP-45",
+        "title": "storypole cannot find its store from a git worktree",
+        "updated_at_epoch_ms": 1794202377102,
+        "verification_receipt": null
+      }
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": 1,
+      "scope": null,
+      "task_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+      "timestamp_ms": 1794202495506,
+      "title": null
+    },
+    {
+      "claim": {
+        "agent_id": "cline-agent",
+        "base_commit_sha": "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+        "claimed_at_epoch_ms": 1794202823600,
+        "git_branch": "fix/gb-346-worktree-store",
+        "lease_expires_at_epoch_ms": 1794206423600
+      },
+      "event": "task_claimed",
+      "task_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline-agent",
+      "task_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+      "timestamp_ms": 1794202823600,
+      "to": "in_progress"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": null,
+        "labels": [],
+        "module_path": null,
+        "repo": "storypole",
+        "target_files": [],
+        "target_symbols": [
+          "storypole_core::store_locate"
+        ]
+      },
+      "task_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+      "timestamp_ms": 1794202823601,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Found by the SP-35 two-client test. storypole resolves its store by walking ancestors for .gaugeblock/storypole or .storypole, which cannot see a linked worktree: a worktree is a sibling directory, so the walk finds nothing above it and the command either fails or builds a second store. GaugeblockPaths::discover does the right thing (it resolves through the git common dir), and ADR 0001 rests on exactly that property, but store_locate does not consult it. Evidence from the test: eight concurrent storypole update calls, four run from the worktree checkout, returned Task not found for a ticket that exists - the four that ran from the main checkout succeeded. This is the load-bearing gap for parallel agent work: until the store follows the common dir, two agents in two worktrees are not working on one store.\n\nCORRECTED 2026-11-08, after measuring instead of theorising.\n\nThe symptom was real; the cause was not what this ticket said. A linked worktree carries its own copies of\ntracked files - measured: ledger.jsonl has different inodes in main (56762556) and in agent-b (56762621) -\nso .gaugeblock/storypole is checked out per branch and the ancestor walk correctly found the worktree's own\ncopy. It reported Task not found because that copy held a ledger with no tickets: the tickets were created\non another branch after the commit the worktree was cut from.\n\nSo the failure was ADR 0009 working as intended (tracked source follows the branch), not a resolution bug.\n\nThe genuine gap, which IS fixed (f05a136): when a checkout has no local .gaugeblock at all, the ancestor walk\neither failed or built a second store. Resolution now consults the git common dir, after the caller's own\nstore and before the suite fallback, and accepts it only when it is the same repository.\n\nWHAT THIS TICKET SHOULD NOW OWN: the derived layer still resolves to the working tree instead of the common\ndir. Two worktrees therefore keep two index.sqlite files and would keep two lease registries, which is\nwasteful for the index and wrong for leases - a claim in one worktree must be visible in the other before any\nmerge. That is SP-39's requirement arriving from a different direction, and the two should be decided\nonce: derived state resolves through the common dir, tracked state follows the branch.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+      "timestamp_ms": 1794202958320,
+      "title": null
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": {
+      "agent_id": "cline-agent",
+      "base_commit_sha": "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+      "claimed_at_epoch_ms": 1794202823600,
+      "git_branch": "fix/gb-346-worktree-store",
+      "lease_expires_at_epoch_ms": 1794206423600
+    },
+    "created_at_epoch_ms": 1794202377102,
+    "decisions": [],
+    "description": "Found by the SP-35 two-client test. storypole resolves its store by walking ancestors for .gaugeblock/storypole or .storypole, which cannot see a linked worktree: a worktree is a sibling directory, so the walk finds nothing above it and the command either fails or builds a second store. GaugeblockPaths::discover does the right thing (it resolves through the git common dir), and ADR 0001 rests on exactly that property, but store_locate does not consult it. Evidence from the test: eight concurrent storypole update calls, four run from the worktree checkout, returned Task not found for a ticket that exists - the four that ran from the main checkout succeeded. This is the load-bearing gap for parallel agent work: until the store follows the common dir, two agents in two worktrees are not working on one store.\n\nCORRECTED 2026-11-08, after measuring instead of theorising.\n\nThe symptom was real; the cause was not what this ticket said. A linked worktree carries its own copies of\ntracked files - measured: ledger.jsonl has different inodes in main (56762556) and in agent-b (56762621) -\nso .gaugeblock/storypole is checked out per branch and the ancestor walk correctly found the worktree's own\ncopy. It reported Task not found because that copy held a ledger with no tickets: the tickets were created\non another branch after the commit the worktree was cut from.\n\nSo the failure was ADR 0009 working as intended (tracked source follows the branch), not a resolution bug.\n\nThe genuine gap, which IS fixed (f05a136): when a checkout has no local .gaugeblock at all, the ancestor walk\neither failed or built a second store. Resolution now consults the git common dir, after the caller's own\nstore and before the suite fallback, and accepts it only when it is the same repository.\n\nWHAT THIS TICKET SHOULD NOW OWN: the derived layer still resolves to the working tree instead of the common\ndir. Two worktrees therefore keep two index.sqlite files and would keep two lease registries, which is\nwasteful for the index and wrong for leases - a claim in one worktree must be visible in the other before any\nmerge. That is SP-39's requirement arriving from a different direction, and the two should be decided\nonce: derived state resolves through the common dir, tracked state follows the branch.",
+    "edges": [],
+    "id": "974d6fca-edf3-4f62-b904-f0dc21259d0b",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": null,
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::store_locate"
+      ]
+    },
+    "slug": "storypole-cannot-find-its-store-from-a-git-worktree-974d6f",
+    "status": "in_progress",
+    "ticket_key": "SP-45",
+    "title": "storypole cannot find its store from a git worktree",
+    "updated_at_epoch_ms": 1794202958320,
+    "verification_receipt": null
+  }
+}

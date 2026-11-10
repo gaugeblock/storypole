@@ -1,0 +1,67 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794108876811,
+        "decisions": [],
+        "description": "",
+        "edges": [],
+        "id": "100bb5d2-7e38-4970-9238-c0a04ec15ef6",
+        "kind": "tech_debt",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::plan_cmds"
+          ]
+        },
+        "slug": "plan-set-silently-replaces-the-whole-plan-so-a-summary-only-update-drops-every-recorded-step-100bb5",
+        "status": "triage",
+        "ticket_key": "SP-30",
+        "title": "plan set silently replaces the whole plan, so a summary-only update drops every recorded step",
+        "updated_at_epoch_ms": 1794108876811,
+        "verification_receipt": null
+      }
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "created_at_epoch_ms": 1794108876811,
+    "decisions": [],
+    "description": "",
+    "edges": [],
+    "id": "100bb5d2-7e38-4970-9238-c0a04ec15ef6",
+    "kind": "tech_debt",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": [
+        "storypole_cli::handlers::plan_cmds"
+      ]
+    },
+    "slug": "plan-set-silently-replaces-the-whole-plan-so-a-summary-only-update-drops-every-recorded-step-100bb5",
+    "status": "triage",
+    "ticket_key": "SP-30",
+    "title": "plan set silently replaces the whole plan, so a summary-only update drops every recorded step",
+    "updated_at_epoch_ms": 1794108876811,
+    "verification_receipt": null
+  }
+}

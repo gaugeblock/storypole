@@ -1,0 +1,113 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [
+          "both ADRs accepted; ADR 0001 carries a superseded-in-part note pointing at 0009; the adapter contract states what is deliberately out of scope"
+        ],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794167026453,
+        "decisions": [],
+        "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.",
+        "edges": [],
+        "id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+        "kind": "chore",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 1,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "adr-0009-amends-worktree-resolution-adr-0010-records-the-ticket-record-contract-d54f15",
+        "status": "ready",
+        "ticket_key": "SP-42",
+        "title": "ADR 0009 amends worktree resolution; ADR 0010 records the ticket record contract",
+        "updated_at_epoch_ms": 1794167026453,
+        "verification_receipt": null
+      }
+    },
+    {
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_repo": "storypole",
+        "target_ticket_key": "SP-34"
+      },
+      "event": "edge_added",
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+      "timestamp_ms": 1794167026611
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.\n\nDONE 2026-11-08 (commit cdf4bd3, docs/decisions/0010-a-ticket-is-a-file.md).\n\nThe ticket-record contract is written down now that the migration has run and other code depends on it: one file\nper ticket, identity is the task uuid, a duplicate uuid is corruption rather than a merge, the owner is scope.repo,\na key prefix is a minting convention and never an owner, edges reference with a locator instead of copying, replay\norders by the record, and writes are exclusive and atomic.\n\nAlso recorded: the integration seam (an external field, no adapter, and why building one before knowing the\nworkflow is how a six-step epic closes at 0/6), and an explicit \"what this does not decide\" section - rendering the\nlocator, and the judgement still required when a crate name is ambiguous.\n\nADR 0009 decided which copy of state a command sees; 0010 decides what a ticket is. ADR 0001's ledger append is\nsuperseded by both while its rule about where state lives stands.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+      "timestamp_ms": 1794212639679,
+      "title": null
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": null,
+        "chain_key": "storypole",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "commit_shas": [
+          "5bca943e8066a9a6f15a29e1402df5f447e47b0f"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "5bca943e8066a9a6f15a29e1402df5f447e47b0f",
+        "repo": "storypole",
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794212684118,
+        "verifier": "storypole-verify"
+      },
+      "task_id": "d54f1525-cadb-418f-92c4-508ca8a44771"
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "both ADRs accepted; ADR 0001 carries a superseded-in-part note pointing at 0009; the adapter contract states what is deliberately out of scope"
+    ],
+    "active_claim": null,
+    "created_at_epoch_ms": 1794167026453,
+    "decisions": [],
+    "description": "ADR 0009 amends 0001: source state (ticket files, plans) is worktree-local and tracked, so a change rides the branch that made it and merges per file; derived state (index, rollup, leases, telemetry) resolves through the git common dir and is never tracked. ADR 0001 chose common-dir resolution to prevent a split-brain append-only log, a reason that per-ticket files remove. ADR 0010 records the ticket record shape (ticket, ordered events, external mapping), the invariants (one file per ticket, owner by scope.repo, a prefix is not an owner, edges carry a locator, a duplicate uuid is corruption) and the integration seam: an external field plus a written adapter contract, explicitly not an implementation.",
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_repo": "storypole",
+        "target_ticket_key": "SP-34"
+      }
+    ],
+    "id": "d54f1525-cadb-418f-92c4-508ca8a44771",
+    "kind": "chore",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "adr-0009-amends-worktree-resolution-adr-0010-records-the-ticket-record-contract-d54f15",
+    "status": "ready",
+    "ticket_key": "SP-42",
+    "title": "ADR 0009 amends worktree resolution; ADR 0010 records the ticket record contract",
+    "updated_at_epoch_ms": 1794167026611,
+    "verification_receipt": null
+  }
+}

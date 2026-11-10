@@ -1,0 +1,146 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793304918196,
+        "decisions": [],
+        "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to SP-16 by hand.",
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+          }
+        ],
+        "id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::mutations::add_task"
+          ]
+        },
+        "slug": "concurrent-storypole-defers-allocate-the-same-ticket-key-and-poison-the-index-9b28f6",
+        "status": "triage",
+        "ticket_key": "SP-17",
+        "title": "Concurrent storypole defers allocate the same ticket key and poison the index",
+        "updated_at_epoch_ms": 1793304918196,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793466042848,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793469642848
+      },
+      "event": "task_claimed",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "timestamp_ms": 1793466042848,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "b8f9f54f177f4094f5bb795fb98b51f394f69ad6"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793466130693,
+        "verifier": "manual"
+      },
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "timestamp_ms": 1793953212882,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+      "timestamp_ms": 1794038015487
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038015487,
+    "created_at_epoch_ms": 1793304918196,
+    "decisions": [],
+    "description": "Two defer invocations started in the same second both read max_ticket_number from the SQLite index and both allocated GB-183, so the ledger gained two events with one key and every later command failed to rebuild the index with 'UNIQUE constraint failed: tasks.ticket_key_lower'. Distinct from SP-12 (spliced ledger writes): here both events are well-formed and the ledger parses cleanly - only the key allocation races. Observed while closing GB-182; repaired by re-keying the second event to SP-16 by hand.",
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+      }
+    ],
+    "id": "9b28f622-faf3-44e0-843d-64571a1a8c63",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::mutations::add_task"
+      ]
+    },
+    "slug": "concurrent-storypole-defers-allocate-the-same-ticket-key-and-poison-the-index-9b28f6",
+    "status": "verified",
+    "ticket_key": "SP-17",
+    "title": "Concurrent storypole defers allocate the same ticket key and poison the index",
+    "updated_at_epoch_ms": 1794038015487,
+    "verification_receipt": {
+      "base_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "b8f9f54f177f4094f5bb795fb98b51f394f69ad6"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "b8f9f54f177f4094f5bb795fb98b51f394f69ad6",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793466130693,
+      "verifier": "manual"
+    }
+  }
+}

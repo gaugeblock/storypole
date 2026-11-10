@@ -1,0 +1,157 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793304856201,
+        "decisions": [],
+        "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing GB-182, whose plan was written at close-out.",
+        "edges": [
+          {
+            "kind": "discovered_from",
+            "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+          }
+        ],
+        "id": "d2374d3f-a8a2-4944-9450-ddded4f330c2",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "storypole-cli",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::plan_ops::set_task_plan"
+          ]
+        },
+        "slug": "storypole-plan-no-verb-marks-a-plan-step-complete-d2374d",
+        "status": "deferred",
+        "ticket_key": "SP-16",
+        "title": "storypole plan: no verb marks a plan step complete",
+        "updated_at_epoch_ms": 1793304856201,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793469427862,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793473027862
+      },
+      "event": "task_claimed",
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2"
+    },
+    {
+      "event": "status_changed",
+      "from": "deferred",
+      "reason": "Claimed by cline",
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2",
+      "timestamp_ms": 1793469427862,
+      "to": "in_progress"
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793469663630,
+        "git_branch": null,
+        "lease_expires_at_epoch_ms": 1793473263630
+      },
+      "event": "task_claimed",
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "09557e72cc489b9aff4b064e2de3e0e64c092e41",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "09557e72cc489b9aff4b064e2de3e0e64c092e41"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "09557e72cc489b9aff4b064e2de3e0e64c092e41",
+        "repo": null,
+        "summary": "Manual verification confirmed",
+        "verified_at_epoch_ms": 1793470011140,
+        "verifier": "manual"
+      },
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2",
+      "timestamp_ms": 1793953243590,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "d2374d3f-a8a2-4944-9450-ddded4f330c2",
+      "timestamp_ms": 1794038015291
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038015291,
+    "created_at_epoch_ms": 1793304856201,
+    "decisions": [],
+    "description": "Attaching a plan sets every PlanStep.completed=false and nothing can flip it, so a finished plan still prints [ ] for all steps. Observed while closing GB-182, whose plan was written at close-out.",
+    "edges": [
+      {
+        "kind": "discovered_from",
+        "target_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d"
+      }
+    ],
+    "id": "d2374d3f-a8a2-4944-9450-ddded4f330c2",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "storypole-cli",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::plan_ops::set_task_plan"
+      ]
+    },
+    "slug": "storypole-plan-no-verb-marks-a-plan-step-complete-d2374d",
+    "status": "verified",
+    "ticket_key": "SP-16",
+    "title": "storypole plan: no verb marks a plan step complete",
+    "updated_at_epoch_ms": 1794038015291,
+    "verification_receipt": {
+      "base_commit_sha": "09557e72cc489b9aff4b064e2de3e0e64c092e41",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "09557e72cc489b9aff4b064e2de3e0e64c092e41"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "09557e72cc489b9aff4b064e2de3e0e64c092e41",
+      "repo": null,
+      "summary": "Manual verification confirmed",
+      "verified_at_epoch_ms": 1793470011140,
+      "verifier": "manual"
+    }
+  }
+}

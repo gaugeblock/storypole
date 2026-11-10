@@ -1,0 +1,180 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794202377047,
+        "decisions": [],
+        "description": "Found by the SP-35 two-client test on its first run. Two concurrent storypole add invocations in two worktrees of one repository mint the same ticket key (both read the highest key from the index and add one), then both write tickets/SP-1.json, and the second record replaces the first. Result: one ticket silently disappears - not an error, not a conflict, just gone from the index and the filesystem. The probe: two adds in parallel produced exactly one file, [SP-1.json]. The per-ticket lock does not help because the two writers never touch the same path until the moment they overwrite it, and the key is allocated before the file exists. Options: allocate under a store-level lock spanning key choice and record creation, or make creation create-new so a collision surfaces as a retryable error instead of an overwrite.",
+        "edges": [],
+        "id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": null,
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops"
+          ]
+        },
+        "slug": "concurrent-add-in-two-worktrees-mints-the-same-key-and-silently-loses-a-ticket-2c7319",
+        "status": "triage",
+        "ticket_key": "SP-44",
+        "title": "Concurrent add in two worktrees mints the same key and silently loses a ticket",
+        "updated_at_epoch_ms": 1794202377047,
+        "verification_receipt": null
+      }
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": 1,
+      "scope": null,
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+      "timestamp_ms": 1794202495420,
+      "title": null
+    },
+    {
+      "claim": {
+        "agent_id": "cline-agent",
+        "base_commit_sha": "f05a13686a67c0de312e9019f72c908a9be4dfe1",
+        "claimed_at_epoch_ms": 1794203038637,
+        "git_branch": "fix/gb-345-key-collision",
+        "lease_expires_at_epoch_ms": 1794206638637
+      },
+      "event": "task_claimed",
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline-agent",
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+      "timestamp_ms": 1794203038637,
+      "to": "in_progress"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": null,
+      "event": "task_updated",
+      "priority": null,
+      "scope": {
+        "crate_name": null,
+        "labels": [],
+        "module_path": null,
+        "repo": "storypole",
+        "target_files": [],
+        "target_symbols": [
+          "storypole_core::ops"
+        ]
+      },
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+      "timestamp_ms": 1794203038638,
+      "title": null
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Found by the SP-35 two-client test on its first run. Two concurrent storypole add invocations in two worktrees of one repository mint the same ticket key (both read the highest key from the index and add one), then both write tickets/SP-1.json, and the second record replaces the first. Result: one ticket silently disappears - not an error, not a conflict, just gone from the index and the filesystem. The probe: two adds in parallel produced exactly one file, [SP-1.json]. The per-ticket lock does not help because the two writers never touch the same path until the moment they overwrite it, and the key is allocated before the file exists. Options: allocate under a store-level lock spanning key choice and record creation, or make creation create-new so a collision surfaces as a retryable error instead of an overwrite.\n\nSCOPE CORRECTED AND FIXED 2026-11-08 (commit 17672a9).\n\nThis ticket said two worktree adds mint the same key and lose a ticket. Measurement refined that: two\nworktrees are two stores by design (ADR 0009), so those two adds each wrote their own SP-1 and nothing was\nlost. The loss is real but happens INSIDE one store, where two writers choose the same number and the second\nrecord replaces the first.\n\nFixed: a new record is published with a hard link, which is atomic and fails when the destination exists, so\nthe OS arbitrates; record_creation reports whether the key was free and add_task retries the next number.\nProven by a unit test: two different tickets under one key, the second refused, the first still on disk.\n\nThe cross-branch case is filed as SP-46 and is a design question, not a race: every branch counts keys from\nits own store, so branches mint colliding numbers and merge as an add/add conflict with no specified\nresolution.\n\nResidual, stated: ledger mode still has the duplicate-key window, because an append has no exclusive form.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+      "timestamp_ms": 1794203251305,
+      "title": null
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "4d59a59256ad0c1121c4931df8904ff2350a0ca3",
+        "chain_key": "storypole",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "commit_shas": [
+          "04d0f5e9b17b4c55a4615182c58bcb0d62f1f20e",
+          "cdeb457d807521a1bd566e50c5f29f98289c0cce",
+          "bb3f59dd803c43ff42ea2f6147556d8a96945afe",
+          "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+          "f05a13686a67c0de312e9019f72c908a9be4dfe1",
+          "17672a99df9a5fcaa63202edf75af3820095ce57"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "fix/gb-345-key-collision",
+        "head_commit_sha": "17672a99df9a5fcaa63202edf75af3820095ce57",
+        "repo": "storypole",
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794203251411,
+        "verifier": "storypole-verify"
+      },
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "Found by the SP-35 two-client test on its first run. Two concurrent storypole add invocations in two worktrees of one repository mint the same ticket key (both read the highest key from the index and add one), then both write tickets/SP-1.json, and the second record replaces the first. Result: one ticket silently disappears - not an error, not a conflict, just gone from the index and the filesystem. The probe: two adds in parallel produced exactly one file, [SP-1.json]. The per-ticket lock does not help because the two writers never touch the same path until the moment they overwrite it, and the key is allocated before the file exists. Options: allocate under a store-level lock spanning key choice and record creation, or make creation create-new so a collision surfaces as a retryable error instead of an overwrite.\n\nSCOPE CORRECTED AND FIXED 2026-11-08 (commit 17672a9).\n\nThis ticket said two worktree adds mint the same key and lose a ticket. Measurement refined that: two\nworktrees are two stores by design (ADR 0009), so those two adds each wrote their own SP-1 and nothing was\nlost. The loss is real but happens INSIDE one store, where two writers choose the same number and the second\nrecord replaces the first.\n\nFixed: a new record is published with a hard link, which is atomic and fails when the destination exists, so\nthe OS arbitrates; record_creation reports whether the key was free and add_task retries the next number.\nProven by a unit test: two different tickets under one key, the second refused, the first still on disk.\n\nThe cross-branch case is filed as SP-46 and is a design question, not a race: every branch counts keys from\nits own store, so branches mint colliding numbers and merge as an add/add conflict with no specified\nresolution.\n\nResidual, stated: ledger mode still has the duplicate-key window, because an append has no exclusive form.\n\nPORTABILITY 2026-11-08 (commit 6d40a0c, branch fix/gb-345-portable-create).\n\nAsked whether the fix was cross-platform, and it was not. Hard links - the first mechanism - work on APFS,\next4 and NTFS and do not exist on exFAT or FAT32, which is how an external drive is usually formatted, and aresometimes refused by network filesystems. Since creating a ticket is the one operation every session performs,\nthat would have been a portability defect rather than an edge case.\n\nReplaced with O_CREAT | O_EXCL on a claim file, which is universal and specified atomic over NFS too: reserve\nthe key exclusively, refuse if the record already exists (the claim serialises creators, so existence means an\nearlier creation finished), write the record and rename it into place, drop the claim. Exclusivity no longer\ncomes from the hard link, and atomic publication still comes from the rename.\n\nAlso fixed while testing: the staleness helper compared age with greater-than, and as_millis() truncates, so\na file created microseconds ago reports zero and a zero threshold never fired. Greater-or-equal now.\n\nNot re-verified: the receipt for this ticket covers its own branch and commit window, and re-running verify for\na refinement would leave two receipts for one act - the divergence GB-79 documents. The evidence here is the\n126-test run and the two new tests, recorded in the commit.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+      "timestamp_ms": 1794203848592,
+      "title": null
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "created_at_epoch_ms": 1794202377047,
+    "decisions": [],
+    "description": "Found by the SP-35 two-client test on its first run. Two concurrent storypole add invocations in two worktrees of one repository mint the same ticket key (both read the highest key from the index and add one), then both write tickets/SP-1.json, and the second record replaces the first. Result: one ticket silently disappears - not an error, not a conflict, just gone from the index and the filesystem. The probe: two adds in parallel produced exactly one file, [SP-1.json]. The per-ticket lock does not help because the two writers never touch the same path until the moment they overwrite it, and the key is allocated before the file exists. Options: allocate under a store-level lock spanning key choice and record creation, or make creation create-new so a collision surfaces as a retryable error instead of an overwrite.\n\nSCOPE CORRECTED AND FIXED 2026-11-08 (commit 17672a9).\n\nThis ticket said two worktree adds mint the same key and lose a ticket. Measurement refined that: two\nworktrees are two stores by design (ADR 0009), so those two adds each wrote their own SP-1 and nothing was\nlost. The loss is real but happens INSIDE one store, where two writers choose the same number and the second\nrecord replaces the first.\n\nFixed: a new record is published with a hard link, which is atomic and fails when the destination exists, so\nthe OS arbitrates; record_creation reports whether the key was free and add_task retries the next number.\nProven by a unit test: two different tickets under one key, the second refused, the first still on disk.\n\nThe cross-branch case is filed as SP-46 and is a design question, not a race: every branch counts keys from\nits own store, so branches mint colliding numbers and merge as an add/add conflict with no specified\nresolution.\n\nResidual, stated: ledger mode still has the duplicate-key window, because an append has no exclusive form.\n\nPORTABILITY 2026-11-08 (commit 6d40a0c, branch fix/gb-345-portable-create).\n\nAsked whether the fix was cross-platform, and it was not. Hard links - the first mechanism - work on APFS,\next4 and NTFS and do not exist on exFAT or FAT32, which is how an external drive is usually formatted, and aresometimes refused by network filesystems. Since creating a ticket is the one operation every session performs,\nthat would have been a portability defect rather than an edge case.\n\nReplaced with O_CREAT | O_EXCL on a claim file, which is universal and specified atomic over NFS too: reserve\nthe key exclusively, refuse if the record already exists (the claim serialises creators, so existence means an\nearlier creation finished), write the record and rename it into place, drop the claim. Exclusivity no longer\ncomes from the hard link, and atomic publication still comes from the rename.\n\nAlso fixed while testing: the staleness helper compared age with greater-than, and as_millis() truncates, so\na file created microseconds ago reports zero and a zero threshold never fired. Greater-or-equal now.\n\nNot re-verified: the receipt for this ticket covers its own branch and commit window, and re-running verify for\na refinement would leave two receipts for one act - the divergence GB-79 documents. The evidence here is the\n126-test run and the two new tests, recorded in the commit.",
+    "edges": [],
+    "id": "2c731962-ecd5-4c29-8036-99308c95a1a6",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": null,
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops"
+      ]
+    },
+    "slug": "concurrent-add-in-two-worktrees-mints-the-same-key-and-silently-loses-a-ticket-2c7319",
+    "status": "verified",
+    "ticket_key": "SP-44",
+    "title": "Concurrent add in two worktrees mints the same key and silently loses a ticket",
+    "updated_at_epoch_ms": 1794203848592,
+    "verification_receipt": {
+      "base_commit_sha": "4d59a59256ad0c1121c4931df8904ff2350a0ca3",
+      "chain_key": "storypole",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "commit_shas": [
+        "04d0f5e9b17b4c55a4615182c58bcb0d62f1f20e",
+        "cdeb457d807521a1bd566e50c5f29f98289c0cce",
+        "bb3f59dd803c43ff42ea2f6147556d8a96945afe",
+        "830b9cc5e7b7a25bc1077400bfdc14d96e46923d",
+        "f05a13686a67c0de312e9019f72c908a9be4dfe1",
+        "17672a99df9a5fcaa63202edf75af3820095ce57"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "fix/gb-345-key-collision",
+      "head_commit_sha": "17672a99df9a5fcaa63202edf75af3820095ce57",
+      "repo": "storypole",
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794203251411,
+      "verifier": "storypole-verify"
+    }
+  }
+}

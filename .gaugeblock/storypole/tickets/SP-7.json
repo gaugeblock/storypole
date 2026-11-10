@@ -1,0 +1,131 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793149822146,
+        "decisions": [],
+        "description": "Comprehensive documentation for storypole: append-only ledger architecture, Git branch claim leasing, DAG resolution, MCP tool reference, ADRs, state machines, and AGENTS.md directives",
+        "edges": [],
+        "id": "4ed6874b-4499-4490-9453-080efbe44f0b",
+        "kind": "feature",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 1,
+        "scope": {
+          "crate_name": "storypole-core",
+          "labels": [],
+          "module_path": null,
+          "repo": "storypole",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "elevate-storypole-documentation-across-all-9-canonical-documents-4ed687",
+        "status": "ready",
+        "ticket_key": "SP-7",
+        "title": "Elevate storypole documentation across all 9 canonical documents",
+        "updated_at_epoch_ms": 1793149822146,
+        "verification_receipt": null
+      }
+    },
+    {
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "d7468114-0e27-49e0-81d7-06545afdbd7b",
+        "target_repo": "workspace",
+        "target_ticket_key": "GB-106"
+      },
+      "event": "edge_added",
+      "task_id": "4ed6874b-4499-4490-9453-080efbe44f0b",
+      "timestamp_ms": 1793149826070
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "eed78249006ec23d23a2e423990152a4d0eaea8a",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "e12bf0cbe3a053df6d9edca07d7ffa20e8457350",
+          "cfc2caffca583376e1f8ff30fe07f2ecab2f7316",
+          "7d1d5229ac573e102172c11f3ccd202799c47cc5",
+          "d16c2e2a9c316ac4e8549a94bdf968269628fd99",
+          "a44f7ec6e5589064e5a3284e22416d565868aa16",
+          "8a4bf9b9d5b6529831545338a88e482811d77856"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "fix/storypole-linked-tasks",
+        "head_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+        "repo": null,
+        "summary": "Already shipped: storypole/CHANGELOG.md records 'Elevated the storypole 9-document architecture to gold standard. [SP-7]'. Verified structurally with chalkline docs check -d storypole: 9 present, 0 missing, 0 drifted, and SPEC now carries invariants 1-4. Status was stale.",
+        "verified_at_epoch_ms": 1793174806849,
+        "verifier": "cline"
+      },
+      "task_id": "4ed6874b-4499-4490-9453-080efbe44f0b"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "4ed6874b-4499-4490-9453-080efbe44f0b",
+      "timestamp_ms": 1794037977263
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794037977263,
+    "created_at_epoch_ms": 1793149822146,
+    "decisions": [],
+    "description": "Comprehensive documentation for storypole: append-only ledger architecture, Git branch claim leasing, DAG resolution, MCP tool reference, ADRs, state machines, and AGENTS.md directives",
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "d7468114-0e27-49e0-81d7-06545afdbd7b",
+        "target_repo": "workspace",
+        "target_ticket_key": "GB-106"
+      }
+    ],
+    "id": "4ed6874b-4499-4490-9453-080efbe44f0b",
+    "kind": "feature",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 1,
+    "scope": {
+      "crate_name": "storypole-core",
+      "labels": [],
+      "module_path": null,
+      "repo": "storypole",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "elevate-storypole-documentation-across-all-9-canonical-documents-4ed687",
+    "status": "verified",
+    "ticket_key": "SP-7",
+    "title": "Elevate storypole documentation across all 9 canonical documents",
+    "updated_at_epoch_ms": 1794037977263,
+    "verification_receipt": {
+      "base_commit_sha": "eed78249006ec23d23a2e423990152a4d0eaea8a",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "e12bf0cbe3a053df6d9edca07d7ffa20e8457350",
+        "cfc2caffca583376e1f8ff30fe07f2ecab2f7316",
+        "7d1d5229ac573e102172c11f3ccd202799c47cc5",
+        "d16c2e2a9c316ac4e8549a94bdf968269628fd99",
+        "a44f7ec6e5589064e5a3284e22416d565868aa16",
+        "8a4bf9b9d5b6529831545338a88e482811d77856"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "fix/storypole-linked-tasks",
+      "head_commit_sha": "8a4bf9b9d5b6529831545338a88e482811d77856",
+      "repo": null,
+      "summary": "Already shipped: storypole/CHANGELOG.md records 'Elevated the storypole 9-document architecture to gold standard. [SP-7]'. Verified structurally with chalkline docs check -d storypole: 9 present, 0 missing, 0 drifted, and SPEC now carries invariants 1-4. Status was stale.",
+      "verified_at_epoch_ms": 1793174806849,
+      "verifier": "cline"
+    }
+  }
+}

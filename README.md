@@ -81,6 +81,7 @@ Autonomous coding agents (Claude Code, Cursor, Cline, Windsurf) excel at localiz
 | `archive <KEY>` | Archive a completed or closed task out of active backlog views. | — |
 | `unarchive <KEY>` | Restore an archived task back to active backlog views. | — |
 | `remint` | Report, or with `--apply` perform, the key remint a store needs to mint under its own prefix, rewriting every reference in the same pass. | — |
+| `relink` | Report, or with `--apply` perform, the cross-store repair a per-store remint cannot do: rewrite citations of keys that moved elsewhere and link harness tickets to the tickets carrying the work. | — |
 | `workspace` | Manage multi-repository workspace members and store routing. Subcommands: `list`, `init`, `distribute`. | — |
 | `spool migrate` | Rewrite legacy bare-trace outbox lines into canonical `SpoolEntry` envelopes. | — |
 | `mcp` | Launch the Model Context Protocol (JSON-RPC 2.0 stdio) server. | — |
@@ -170,6 +171,24 @@ records where work happened, and renaming it would name a branch that never exis
 
 `remint` changes what a ticket is called now, never what it was called when it shipped - changelogs and commit messages
 are history and are not touched.
+
+A remint records what it moved in `<store>/remints.json`, keyed by the task uuid, because a key is a name and the next
+migration needs to resolve a reference to it. That record is what makes the other half possible:
+
+```bash
+# Report the references a per-store remint could not see, and the links it would write
+storypole relink
+
+# Repair them and write the links
+storypole relink --apply
+```
+
+A remint works one store at a time, so it cannot see that the harness store still cites `GB-189` after common's
+`GB-189` became `CO-7`. `relink` reads every store's record, decides which keys are genuinely dead (a key the harness
+still uses is not dead, and a key two stores both claim is reported rather than guessed), rewrites those citations, and
+- when the citing ticket is a harness ticket - writes a `related_to` edge to the ticket now carrying the work. The edge
+is written by uuid, not by key, so it survives the next rename; and it is appended as an `edge_added` event, because
+replay rebuilds the task from the log.
 
 ### Training-trace outbox
 

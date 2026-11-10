@@ -15,7 +15,7 @@ use storypole_core::ticket_keys::Remint;
 use storypole_core::tickets::TicketRecord;
 
 /// The mapping every test moves: one key, `GB-182 -> SP-7`.
-pub(super) fn mapping() -> Vec<Remint> {
+pub(crate) fn mapping() -> Vec<Remint> {
     vec![Remint {
         from: "GB-182".to_string(),
         to: "SP-7".to_string(),
@@ -23,12 +23,12 @@ pub(super) fn mapping() -> Vec<Remint> {
 }
 
 /// The same mapping as a lookup, which is how edge targets resolve.
-pub(super) fn lookup() -> BTreeMap<String, String> {
+pub(crate) fn lookup() -> BTreeMap<String, String> {
     BTreeMap::from([("GB-182".to_string(), "SP-7".to_string())])
 }
 
 /// A task with the fields a record actually reads.
-pub(super) fn task(key: &str) -> TaskNode {
+pub(crate) fn task(key: &str) -> TaskNode {
     TaskNode {
         id: Uuid::new_v4(),
         ticket_key: key.to_string(),
@@ -60,7 +60,7 @@ pub(super) fn task(key: &str) -> TaskNode {
 }
 
 /// A task update that cites `cited`, the field replay takes the description from.
-pub(super) fn update_citing(id: Uuid, cited: &str) -> LedgerEvent {
+pub(crate) fn update_citing(id: Uuid, cited: &str) -> LedgerEvent {
     LedgerEvent::TaskUpdated {
         task_id: id,
         title: None,
@@ -73,7 +73,7 @@ pub(super) fn update_citing(id: Uuid, cited: &str) -> LedgerEvent {
 }
 
 /// A record that was created and then had its description set, which is how a ticket comes to cite a key.
-pub(super) fn record_described_with(key: &str, cited: &str) -> TicketRecord {
+pub(crate) fn record_described_with(key: &str, cited: &str) -> TicketRecord {
     let created = task(key);
     let id = created.id;
     TicketRecord::new(

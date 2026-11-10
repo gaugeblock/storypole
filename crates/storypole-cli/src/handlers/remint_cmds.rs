@@ -34,16 +34,18 @@ pub fn handle_remint(root_dir: &Path, apply: bool, json: bool) -> Result<()> {
                         "edges": applied.edges,
                         "citations": applied.citations,
                         "plans": applied.plans,
+                        "recorded": applied.recorded,
                     }
                 }),
             )?;
         } else {
             println!(
-                "{} key(s) reminted, {} edge target(s) rewritten, {} citation(s) rewritten, {} plan file(s) renamed in {}",
+                "{} key(s) reminted, {} edge target(s) rewritten, {} citation(s) rewritten, {} plan file(s) renamed, {} key(s) recorded in {}",
                 applied.keys,
                 applied.edges,
                 applied.citations,
                 applied.plans,
+                applied.recorded,
                 label(root_dir, root_dir)
             );
         }

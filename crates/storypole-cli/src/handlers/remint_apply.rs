@@ -17,8 +17,10 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use serde_json::Value;
 use storypole_core::ticket_keys::plan_remint;
+use uuid::Uuid;
 
 use super::remint::events::rewrite_event;
+use super::remint::record::{self, AppliedRemint};
 use super::remint::rewrite::rewrite_task;
 use super::remint::verify::verify_replay;
 use super::remint_cmds::{prefix_of, read_refs};
@@ -35,6 +37,8 @@ pub struct Applied {
     pub citations: usize,
     /// Plan blueprints renamed alongside their ticket.
     pub plans: usize,
+    /// Keys written to the store's remint record, so a later pass can resolve a reference to them.
+    pub recorded: usize,
 }
 
 /// Renames every off-prefix key in the store at `store`, rewriting what points at them.
@@ -65,6 +69,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
         .collect();
 
     let mut applied = Applied::default();
+    let mut history: Vec<AppliedRemint> = Vec::new();
     for path in &files {
         let text = std::fs::read_to_string(path)
             .with_context(|| format!("could not read {}", path.display()))?;
@@ -78,6 +83,22 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
             .unwrap_or_default()
             .to_string();
         let new_key = lookup.get(&old_key).cloned();
+
+        // Recorded before the file moves: the uuid is what a later cross-store pass resolves a reference against.
+        if let (Some(new_key), Some(id)) = (
+            new_key.as_ref(),
+            document
+                .get("ticket")
+                .and_then(|ticket| ticket.get("id"))
+                .and_then(Value::as_str)
+                .and_then(|text| Uuid::parse_str(text).ok()),
+        ) {
+            history.push(AppliedRemint {
+                id,
+                from: old_key.clone(),
+                to: new_key.clone(),
+            });
+        }
 
         if let Some(ticket) = document.get_mut("ticket") {
             if let Some(new_key) = &new_key {
@@ -116,6 +137,7 @@ pub fn apply_remint(store: &Path) -> Result<Applied> {
         }
     }
 
+    applied.recorded = record::append(store, &history)?;
     verify_prefix(store, &prefix)?;
     verify_replay(store, &mapping)?;
     Ok(applied)

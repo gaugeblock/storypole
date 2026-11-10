@@ -8,6 +8,7 @@ mod format_decisions;
 mod handlers;
 mod json_out;
 mod plan_args;
+mod store_args;
 mod task_args;
 mod update_args;
 mod workspace_args;
@@ -68,9 +69,12 @@ fn main() -> Result<()> {
                     Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
                     Commands::LedgerVerify => handle_ledger_verify(&root_dir, cli.json)?,
                     Commands::LedgerReconcile => handle_ledger_reconcile(&root_dir, cli.json)?,
-                    Commands::Remint { apply } => {
-                        crate::handlers::remint_cmds::handle_remint(&root_dir, apply, cli.json)?
-                    }
+                    Commands::Remint(args) => crate::handlers::remint_cmds::handle_remint(
+                        &root_dir, args.apply, cli.json,
+                    )?,
+                    Commands::Relink(args) => crate::handlers::relink_cmds::handle_relink(
+                        &root_dir, args.apply, cli.json,
+                    )?,
                     Commands::Config(args) => {
                         handle_config(&store, &root_dir, args.command, cli.json)?
                     }
@@ -118,11 +122,11 @@ fn main() -> Result<()> {
                     Commands::Update(args) => handle_update(&mut store, args, cli.json)?,
                     Commands::Plan(args) => handle_plan(&mut store, args, cli.json)?,
                     Commands::Graph { format } => handle_graph(&store, &format, cli.json)?,
-                    Commands::Migrate {
-                        dry_run,
-                        scope_only,
-                    } => crate::handlers::migrate_cmds::handle_migrate(
-                        &root_dir, dry_run, scope_only, cli.json,
+                    Commands::Migrate(args) => crate::handlers::migrate_cmds::handle_migrate(
+                        &root_dir,
+                        args.dry_run,
+                        args.scope_only,
+                        cli.json,
                     )?,
                     Commands::Spool(args) => match args.command {
                         SpoolCommands::Migrate { path, dry_run } => {

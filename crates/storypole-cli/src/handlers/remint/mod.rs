@@ -6,11 +6,12 @@
 //! it is why nine stores were still broken while `remint --apply` reported success (`GB-347`).
 
 pub mod events;
+pub mod record;
 pub mod rewrite;
 pub mod verify;
 
 #[cfg(test)]
-mod test_support;
+pub(crate) mod test_support;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 // Task lifecycle, deferral and decision arguments live in `task_args` to hold this file under the
 // hard 250-line ceiling; re-exported here so `crate::args::*` still resolves every name.
+pub use crate::store_args::{MigrateArgs, RelinkArgs, RemintArgs, SpoolArgs, SpoolCommands};
 pub use crate::task_args::{
     AskDecisionArgs, DecideArgs, DeferArgs, HandoffArgs, SplitArgs, VerifyArgs,
 };
@@ -38,19 +39,15 @@ pub enum Commands {
     /// Compare the unified index against the ledger replay
     LedgerReconcile,
     /// Report the key remint a store would need to mint under its own prefix (GB-347)
-    Remint {
-        /// Apply the remint, rewriting every key, edge target, citation and plan path it moves.
-        #[arg(long)]
-        apply: bool,
-    },
+    Remint(RemintArgs),
+    /// Repair references a per-store remint could not see, and link harness tickets to the work
+    Relink(RelinkArgs),
     /// Inspect the repository configuration
     Config(ConfigArgs),
     /// List backlog tasks matching filters
     List(ListArgs),
     /// Show full context briefing for a task
-    Show {
-        identifier: String,
-    },
+    Show { identifier: String },
     /// Find next ready task with context briefing and collision warnings
     Next(NextArgs),
     /// Acquire an active agent claim lease on a task
@@ -106,52 +103,17 @@ pub enum Commands {
         format: String,
     },
     /// Archive a completed or closed task out of active backlog views
-    Archive {
-        identifier: String,
-    },
+    Archive { identifier: String },
     /// Restore an archived task back to active backlog
-    Unarchive {
-        identifier: String,
-    },
+    Unarchive { identifier: String },
     /// Manage multi-repository workspace members and distributed migration
     Workspace(crate::workspace_args::WorkspaceArgs),
     /// Inspect or repair the local telemetry spool outbox
-    /// Split one store's tickets into the repositories that own them
-    Migrate {
-        /// Report what would move without writing anything
-        #[arg(long)]
-        dry_run: bool,
-        /// Move only the tickets whose own scope names their repository, leaving adoptions for review
-        #[arg(long)]
-        scope_only: bool,
-    },
     Spool(SpoolArgs),
+    /// Split one store's tickets into the repositories that own them
+    Migrate(MigrateArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,
-}
-
-/// Arguments for the `spool` command group.
-#[derive(Debug, Args)]
-pub struct SpoolArgs {
-    #[command(subcommand)]
-    pub command: SpoolCommands,
-}
-
-/// Subcommands that operate on the append-only telemetry outbox.
-#[derive(Debug, Subcommand)]
-pub enum SpoolCommands {
-    /// Rewrite legacy bare-trace lines into canonical `SpoolEntry` envelopes
-    ///
-    /// Idempotent: lines already carrying an envelope are left byte-for-byte untouched, so a second
-    /// run reports zero rewrites.
-    Migrate {
-        /// Outbox path (defaults to `<.gaugeblock>/spool/outbox.jsonl`)
-        #[arg(long)]
-        path: Option<PathBuf>,
-        /// Report what would be rewritten without touching the file
-        #[arg(long)]
-        dry_run: bool,
-    },
 }
 
 #[derive(Debug, Args)]

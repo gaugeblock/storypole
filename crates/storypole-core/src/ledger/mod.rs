@@ -1,6 +1,7 @@
 //! Append-only JSONL ledger reader and writer with git conflict resilience.
 
 pub mod audit;
+pub mod discovery;
 pub mod replay;
 
 use crate::error::StorypoleError;

@@ -7,7 +7,7 @@
 //! Reconciliation against the index is separate, because it needs the unified store.
 
 use std::collections::{BTreeMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use serde::Serialize;
 
@@ -52,31 +52,6 @@ impl LedgerAudit {
     pub fn is_structurally_sound(&self) -> bool {
         self.unparsable == 0 && self.duplicates == 0
     }
-}
-
-/// Finds the root ledger and every member ledger under `root`.
-#[must_use]
-pub fn discover_ledgers(root: &Path) -> Vec<PathBuf> {
-    let mut paths = Vec::new();
-
-    let root_ledger = gaugeblock_workspace::GaugeblockPaths::at(root).ledger();
-    if root_ledger.exists() {
-        paths.push(root_ledger);
-    }
-
-    if let Ok(entries) = std::fs::read_dir(root) {
-        let mut members: Vec<PathBuf> = entries
-            .flatten()
-            .map(|entry| entry.path())
-            .filter(|path| path.is_dir())
-            .map(|dir| dir.join(".storypole").join("ledger.jsonl"))
-            .filter(|path| path.exists())
-            .collect();
-        members.sort();
-        paths.extend(members);
-    }
-
-    paths
 }
 
 /// Audits every ledger under `root` and replays what parsed.
@@ -125,6 +100,62 @@ pub fn audit_ledgers(root: &Path) -> Result<LedgerAudit, StorypoleError> {
             unparsable: file_bad,
             duplicates: file_dup,
         });
+    }
+
+    // Post-migration (ADR 0010) a repository keeps one file per ticket and no append-only ledger, so the discovery
+    // above finds nothing - and this audit would then certify an empty set, reporting "0 events, 0 duplicate" as
+    // health while the store holds hundreds of tickets (`GB-345`). When there is no ledger to read, read the ticket
+    // files: a green result from an integrity check that examined nothing is worse than no check at all.
+    if files.is_empty() {
+        for path in discover_ticket_files(root) {
+            let (mut file_events, mut file_bad, mut file_dup) = (0usize, 0usize, 0usize);
+            let mut seen: HashSet<String> = HashSet::new();
+
+            let text = std::fs::read_to_string(&path).map_err(StorypoleError::Io)?;
+            match serde_json::from_str::<serde_json::Value>(&text) {
+                Ok(document) => {
+                    let ticket_events = document
+                        .get("events")
+                        .and_then(serde_json::Value::as_array)
+                        .cloned()
+                        .unwrap_or_default();
+                    for value in ticket_events {
+                        total_events += 1;
+                        // Duplicates are compared on the serialised event, as the ledger path does with lines:
+                        // two identical events in one ticket are the same damage however they were stored.
+                        if !seen.insert(value.to_string()) {
+                            file_dup += 1;
+                            duplicates += 1;
+                        }
+                        match serde_json::from_value(value) {
+                            Ok(event) => {
+                                file_events += 1;
+                                events.push(event);
+                            }
+                            Err(_) => {
+                                file_bad += 1;
+                                unparsable += 1;
+                            }
+                        }
+                    }
+                }
+                Err(_) => {
+                    file_bad += 1;
+                    unparsable += 1;
+                }
+            }
+
+            files.push(LedgerFileAudit {
+                path: path
+                    .strip_prefix(root)
+                    .unwrap_or(&path)
+                    .display()
+                    .to_string(),
+                events: file_events,
+                unparsable: file_bad,
+                duplicates: file_dup,
+            });
+        }
     }
 
     let tasks = replay_events(&events);
@@ -182,3 +213,6 @@ pub fn format_ledger_audit(audit: &LedgerAudit) -> String {
     ));
     out
 }
+
+/// Discovery lives next door so `audit` asks "where are the events?" in one place (`GB-345`).
+pub use crate::ledger::discovery::{discover_ledgers, discover_ticket_files};

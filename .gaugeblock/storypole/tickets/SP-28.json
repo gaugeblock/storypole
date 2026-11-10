@@ -1,150 +1,156 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "user",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794105974450,
-        "decisions": [],
-        "description": "",
-        "edges": [],
-        "id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
-        "kind": "bug",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": null,
-          "labels": [],
-          "module_path": null,
-          "repo": null,
-          "target_files": [],
-          "target_symbols": [
-            "storypole_cli::handlers::core_cmds::handle_show"
-          ]
-        },
-        "slug": "storypole-show-omits-the-description-so-the-field-every-update-edits-cannot-be-read-before-editing-it-123c5e",
-        "status": "triage",
-        "ticket_key": "SP-28",
-        "title": "storypole show omits the description, so the field every update edits cannot be read before editing it",
-        "updated_at_epoch_ms": 1794105974450,
-        "verification_receipt": null
-      }
-    },
-    {
-      "claim": {
-        "agent_id": "cline-agent",
-        "base_commit_sha": "77844a1faae69943307987f452d20c30db65f368",
-        "claimed_at_epoch_ms": 1794119292257,
-        "git_branch": "main",
-        "lease_expires_at_epoch_ms": 1794122892257
-      },
-      "event": "task_claimed",
-      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb"
-    },
-    {
-      "event": "status_changed",
-      "from": "triage",
-      "reason": "Claimed by cline-agent",
-      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
-      "timestamp_ms": 1794119292257,
-      "to": "in_progress"
-    },
-    {
-      "acceptance_criteria": null,
-      "description": null,
-      "event": "task_updated",
-      "priority": null,
-      "scope": {
-        "crate_name": null,
-        "labels": [],
-        "module_path": null,
-        "repo": "storypole",
-        "target_files": [],
-        "target_symbols": [
-          "storypole_cli::handlers::core_cmds::handle_show"
-        ]
-      },
-      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
-      "timestamp_ms": 1794119292258,
-      "title": null
-    },
-    {
-      "event": "task_verified",
-      "receipt": {
-        "base_commit_sha": null,
-        "chain_key": "storypole",
-        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
-        "commit_shas": [
-          "77844a1faae69943307987f452d20c30db65f368"
-        ],
-        "diagnostic_count": null,
-        "exit_code": 0,
-        "git_branch": "main",
-        "head_commit_sha": "77844a1faae69943307987f452d20c30db65f368",
-        "repo": "storypole",
-        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-        "verified_at_epoch_ms": 1794119292657,
-        "verifier": "storypole-verify"
-      },
-      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb"
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "OBSERVED 2026-11-07, while answering \"what is GB-320\": `storypole show` printed every field but the description, so the answer required reading the ledger with `list --json` and a python filter. It happened twice in two turns. The fix renders the description with paragraph breaks preserved and prints nothing for an empty one (commit 77844a1, 3 tests).\n\nPROCESS NOTE, recorded because it caused this ticket to exist in the first place: filed title-only via `storypole defer` without --desc, even though the flag exists. Several tickets from this session carry a title and no evidence.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
-      "timestamp_ms": 1794119323743,
-      "title": null
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794105974450,
-    "decisions": [],
-    "description": "OBSERVED 2026-11-07, while answering \"what is GB-320\": `storypole show` printed every field but the description, so the answer required reading the ledger with `list --json` and a python filter. It happened twice in two turns. The fix renders the description with paragraph breaks preserved and prints nothing for an empty one (commit 77844a1, 3 tests).\n\nPROCESS NOTE, recorded because it caused this ticket to exist in the first place: filed title-only via `storypole defer` without --desc, even though the flag exists. Several tickets from this session carry a title and no evidence.",
-    "edges": [],
     "id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+    "ticket_key": "SP-28",
+    "slug": "storypole-show-omits-the-description-so-the-field-every-update-edits-cannot-be-read-before-editing-it-123c5e",
+    "title": "storypole show omits the description, so the field every update edits cannot be read before editing it",
+    "description": "OBSERVED 2026-11-07, while answering \"what is GB-320\": `storypole show` printed every field but the description, so the answer required reading the ledger with `list --json` and a python filter. It happened twice in two turns. The fix renders the description with paragraph breaks preserved and prints nothing for an empty one (commit 77844a1, 3 tests).\n\nPROCESS NOTE, recorded because it caused this ticket to exist in the first place: filed title-only via `storypole defer` without --desc, even though the flag exists. Several tickets from this session carry a title and no evidence.",
     "kind": "bug",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "verified",
     "priority": 3,
     "scope": {
-      "crate_name": null,
-      "labels": [],
-      "module_path": null,
       "repo": "storypole",
+      "crate_name": null,
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "storypole_cli::handlers::core_cmds::handle_show"
-      ]
+      ],
+      "labels": []
     },
-    "slug": "storypole-show-omits-the-description-so-the-field-every-update-edits-cannot-be-read-before-editing-it-123c5e",
-    "status": "verified",
-    "ticket_key": "SP-28",
-    "title": "storypole show omits the description, so the field every update edits cannot be read before editing it",
-    "updated_at_epoch_ms": 1794119323743,
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
     "verification_receipt": {
-      "base_commit_sha": null,
-      "chain_key": "storypole",
+      "verifier": "storypole-verify",
       "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794119292657,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "77844a1faae69943307987f452d20c30db65f368",
       "commit_shas": [
         "77844a1faae69943307987f452d20c30db65f368"
       ],
-      "diagnostic_count": null,
-      "exit_code": 0,
-      "git_branch": "main",
-      "head_commit_sha": "77844a1faae69943307987f452d20c30db65f368",
       "repo": "storypole",
-      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-      "verified_at_epoch_ms": 1794119292657,
-      "verifier": "storypole-verify"
+      "chain_key": "storypole"
+    },
+    "created_at_epoch_ms": 1794105974450,
+    "updated_at_epoch_ms": 1794119323743
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+        "ticket_key": "SP-28",
+        "slug": "storypole-show-omits-the-description-so-the-field-every-update-edits-cannot-be-read-before-editing-it-123c5e",
+        "title": "storypole show omits the description, so the field every update edits cannot be read before editing it",
+        "description": "",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::core_cmds::handle_show"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794105974450,
+        "updated_at_epoch_ms": 1794105974450
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794119292257,
+        "lease_expires_at_epoch_ms": 1794122892257,
+        "git_branch": "main",
+        "base_commit_sha": "77844a1faae69943307987f452d20c30db65f368"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794119292257
+    },
+    {
+      "event": "task_updated",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": {
+        "repo": "storypole",
+        "crate_name": null,
+        "module_path": null,
+        "target_files": [],
+        "target_symbols": [
+          "storypole_cli::handlers::core_cmds::handle_show"
+        ],
+        "labels": []
+      },
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794119292258
+    },
+    {
+      "event": "task_verified",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794119292657,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "77844a1faae69943307987f452d20c30db65f368",
+        "commit_shas": [
+          "77844a1faae69943307987f452d20c30db65f368"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "title": null,
+      "description": "OBSERVED 2026-11-07, while answering \"what is GB-320\": `storypole show` printed every field but the description, so the answer required reading the ledger with `list --json` and a python filter. It happened twice in two turns. The fix renders the description with paragraph breaks preserved and prints nothing for an empty one (commit 77844a1, 3 tests).\n\nPROCESS NOTE, recorded because it caused this ticket to exist in the first place: filed title-only via `storypole defer` without --desc, even though the flag exists. Several tickets from this session carry a title and no evidence.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794119323743
+    },
+    {
+      "event": "task_archived",
+      "task_id": "123c5e25-0df1-4474-9082-3bb4e9c9bbcb",
+      "status": "verified",
+      "timestamp_ms": 1794343385200
     }
-  }
+  ]
 }

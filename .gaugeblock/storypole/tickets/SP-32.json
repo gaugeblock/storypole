@@ -1,131 +1,137 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "user",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794110979415,
-        "decisions": [],
-        "description": "",
-        "edges": [],
-        "id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
-        "kind": "bug",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": "storypole-cli",
-          "labels": [],
-          "module_path": null,
-          "repo": "storypole",
-          "target_files": [],
-          "target_symbols": [
-            "storypole_cli::handlers::lifecycle_cmds"
-          ]
-        },
-        "slug": "verifying-a-ticket-does-not-check-that-its-commits-are-reachable-from-any-merged-branch-so-work-can-be-certified-and-stranded-bcc0c7",
-        "status": "triage",
-        "ticket_key": "SP-32",
-        "title": "verifying a ticket does not check that its commits are reachable from any merged branch, so work can be certified and stranded",
-        "updated_at_epoch_ms": 1794110979415,
-        "verification_receipt": null
-      }
-    },
-    {
-      "claim": {
-        "agent_id": "cline-agent",
-        "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
-        "claimed_at_epoch_ms": 1794111247130,
-        "git_branch": "feat/gb-316-repository-identity",
-        "lease_expires_at_epoch_ms": 1794114847130
-      },
-      "event": "task_claimed",
-      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4"
-    },
-    {
-      "event": "status_changed",
-      "from": "triage",
-      "reason": "Claimed by cline-agent",
-      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
-      "timestamp_ms": 1794111247130,
-      "to": "in_progress"
-    },
-    {
-      "event": "task_verified",
-      "receipt": {
-        "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
-        "chain_key": "storypole",
-        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
-        "commit_shas": [
-          "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9"
-        ],
-        "diagnostic_count": null,
-        "exit_code": 0,
-        "git_branch": "feat/gb-316-repository-identity",
-        "head_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
-        "repo": "storypole",
-        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-        "verified_at_epoch_ms": 1794111247936,
-        "verifier": "storypole-verify"
-      },
-      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4"
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "OBSERVED 2026-11-07: two verified tickets had commits on branches `main` never received. SP-25 was found only because a flag its ticket certified was missing from the installed binary; GB-302 was found by auditing every repository for unmerged branches, which was a question asked by the user rather than a check the tooling performs. Both were merged. FIXED in de95b8c: `show` warns and `show --json` carries `unmerged_receipt` when a receipt's head commit is not reachable from main in the repository the receipt names.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
-      "timestamp_ms": 1794119334243,
-      "title": null
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794110979415,
-    "decisions": [],
-    "description": "OBSERVED 2026-11-07: two verified tickets had commits on branches `main` never received. SP-25 was found only because a flag its ticket certified was missing from the installed binary; GB-302 was found by auditing every repository for unmerged branches, which was a question asked by the user rather than a check the tooling performs. Both were merged. FIXED in de95b8c: `show` warns and `show --json` carries `unmerged_receipt` when a receipt's head commit is not reachable from main in the repository the receipt names.",
-    "edges": [],
     "id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+    "ticket_key": "SP-32",
+    "slug": "verifying-a-ticket-does-not-check-that-its-commits-are-reachable-from-any-merged-branch-so-work-can-be-certified-and-stranded-bcc0c7",
+    "title": "verifying a ticket does not check that its commits are reachable from any merged branch, so work can be certified and stranded",
+    "description": "OBSERVED 2026-11-07: two verified tickets had commits on branches `main` never received. SP-25 was found only because a flag its ticket certified was missing from the installed binary; GB-302 was found by auditing every repository for unmerged branches, which was a question asked by the user rather than a check the tooling performs. Both were merged. FIXED in de95b8c: `show` warns and `show --json` carries `unmerged_receipt` when a receipt's head commit is not reachable from main in the repository the receipt names.",
     "kind": "bug",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "verified",
     "priority": 3,
     "scope": {
-      "crate_name": "storypole-cli",
-      "labels": [],
-      "module_path": null,
       "repo": "storypole",
+      "crate_name": "storypole-cli",
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "storypole_cli::handlers::lifecycle_cmds"
-      ]
+      ],
+      "labels": []
     },
-    "slug": "verifying-a-ticket-does-not-check-that-its-commits-are-reachable-from-any-merged-branch-so-work-can-be-certified-and-stranded-bcc0c7",
-    "status": "verified",
-    "ticket_key": "SP-32",
-    "title": "verifying a ticket does not check that its commits are reachable from any merged branch, so work can be certified and stranded",
-    "updated_at_epoch_ms": 1794119334243,
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
     "verification_receipt": {
-      "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
-      "chain_key": "storypole",
+      "verifier": "storypole-verify",
       "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794111247936,
+      "git_branch": "feat/gb-316-repository-identity",
+      "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
+      "head_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
       "commit_shas": [
         "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9"
       ],
-      "diagnostic_count": null,
-      "exit_code": 0,
-      "git_branch": "feat/gb-316-repository-identity",
-      "head_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
       "repo": "storypole",
-      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-      "verified_at_epoch_ms": 1794111247936,
-      "verifier": "storypole-verify"
+      "chain_key": "storypole"
+    },
+    "created_at_epoch_ms": 1794110979415,
+    "updated_at_epoch_ms": 1794119334243
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+        "ticket_key": "SP-32",
+        "slug": "verifying-a-ticket-does-not-check-that-its-commits-are-reachable-from-any-merged-branch-so-work-can-be-certified-and-stranded-bcc0c7",
+        "title": "verifying a ticket does not check that its commits are reachable from any merged branch, so work can be certified and stranded",
+        "description": "",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-cli",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::lifecycle_cmds"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794110979415,
+        "updated_at_epoch_ms": 1794110979415
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794111247130,
+        "lease_expires_at_epoch_ms": 1794114847130,
+        "git_branch": "feat/gb-316-repository-identity",
+        "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794111247130
+    },
+    {
+      "event": "task_verified",
+      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794111247936,
+        "git_branch": "feat/gb-316-repository-identity",
+        "base_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
+        "head_commit_sha": "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9",
+        "commit_shas": [
+          "de95b8c29ab1b0a1d13f9c6611d8bb77fd3bb6f9"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+      "title": null,
+      "description": "OBSERVED 2026-11-07: two verified tickets had commits on branches `main` never received. SP-25 was found only because a flag its ticket certified was missing from the installed binary; GB-302 was found by auditing every repository for unmerged branches, which was a question asked by the user rather than a check the tooling performs. Both were merged. FIXED in de95b8c: `show` warns and `show --json` carries `unmerged_receipt` when a receipt's head commit is not reachable from main in the repository the receipt names.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794119334243
+    },
+    {
+      "event": "task_archived",
+      "task_id": "bcc0c718-362e-4fae-bc7d-9fb00b09aef4",
+      "status": "verified",
+      "timestamp_ms": 1794343401201
     }
-  }
+  ]
 }

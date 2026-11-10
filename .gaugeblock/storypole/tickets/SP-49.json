@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+    "ticket_key": "SP-49",
+    "slug": "storypole-verify-summary-fabricates-a-manual-receipt-with-exit-code-0-instead-of-annotating-the-executed-chain-9030e8",
+    "title": "storypole verify --summary fabricates a manual receipt with exit_code 0 instead of annotating the executed chain",
+    "description": "Measured 2026-11-10 while verifying SP-24. lifecycle_cmds/mod.rs:159 builds the receipt override when args.verifier.is_some() OR args.summary.is_some(), and the record it builds is verifier manual with command n/a, exit_code Some(0), chain_key None and no commit window. So --summary, a flag whose documented purpose is to record what was verified, is an alias for a manual attestation: it does not annotate the executed chain, it replaces it with a claim that ran nothing. The failure is currently masked rather than absent, because refusal 2 (SP-40) fires whenever the task has a resolvable chain, which is how it surfaced: storypole verify SP-24 --summary was refused with the manual-receipt message even though --manual was never passed. In a repository whose config resolves no chain the same code path would write a receipt reading exit_code 0 after running nothing, which is precisely the failure GB-272 was filed to end. Wanted: --manual alone selects the attestation path; --summary and --verifier annotate the receipt the chain produced, so the command, exit code and chain key stay those of the run; and the attestation path keeps refusing when a chain exists. Acceptance: verify --summary on a task with a chain executes the chain and the receipt names it with the caller note attached, verify --manual without a chain still records an attestation, and a test pins that --summary alone never yields verifier manual.",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-cli",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_cli::handlers::lifecycle_cmds::handle_verify,storypole_core::ops::verification::receipts::build"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794352161764,
+    "updated_at_epoch_ms": 1794352161764
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+        "ticket_key": "SP-49",
+        "slug": "storypole-verify-summary-fabricates-a-manual-receipt-with-exit-code-0-instead-of-annotating-the-executed-chain-9030e8",
+        "title": "storypole verify --summary fabricates a manual receipt with exit_code 0 instead of annotating the executed chain",
+        "description": "Measured 2026-11-10 while verifying SP-24. lifecycle_cmds/mod.rs:159 builds the receipt override when args.verifier.is_some() OR args.summary.is_some(), and the record it builds is verifier manual with command n/a, exit_code Some(0), chain_key None and no commit window. So --summary, a flag whose documented purpose is to record what was verified, is an alias for a manual attestation: it does not annotate the executed chain, it replaces it with a claim that ran nothing. The failure is currently masked rather than absent, because refusal 2 (SP-40) fires whenever the task has a resolvable chain, which is how it surfaced: storypole verify SP-24 --summary was refused with the manual-receipt message even though --manual was never passed. In a repository whose config resolves no chain the same code path would write a receipt reading exit_code 0 after running nothing, which is precisely the failure GB-272 was filed to end. Wanted: --manual alone selects the attestation path; --summary and --verifier annotate the receipt the chain produced, so the command, exit code and chain key stay those of the run; and the attestation path keeps refusing when a chain exists. Acceptance: verify --summary on a task with a chain executes the chain and the receipt names it with the caller note attached, verify --manual without a chain still records an attestation, and a test pins that --summary alone never yields verifier manual.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-cli",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_cli::handlers::lifecycle_cmds::handle_verify,storypole_core::ops::verification::receipts::build"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794352161764,
+        "updated_at_epoch_ms": 1794352161764
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

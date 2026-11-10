@@ -1,71 +1,110 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "cline",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1793942209462,
-        "decisions": [],
-        "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug CO-7 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
-        "edges": [],
-        "id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
-        "kind": "bug",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": "storypole-core",
-          "labels": [
-            "spool,paths,gb-189,telemetry"
-          ],
-          "module_path": null,
-          "repo": "storypole",
-          "target_files": [],
-          "target_symbols": [
-            "storypole_core::ops::verification::capture_trace::capture_trace"
-          ]
-        },
-        "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
-        "status": "triage",
-        "ticket_key": "SP-24",
-        "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
-        "updated_at_epoch_ms": 1793942209462,
-        "verification_receipt": null
-      }
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1793942209462,
-    "decisions": [],
-    "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug CO-7 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
-    "edges": [],
     "id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+    "ticket_key": "SP-24",
+    "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
+    "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
+    "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug CO-7 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
     "kind": "bug",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "triage",
     "priority": 3,
     "scope": {
-      "crate_name": "storypole-core",
-      "labels": [
-        "spool,paths,gb-189,telemetry"
-      ],
-      "module_path": null,
       "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "storypole_core::ops::verification::capture_trace::capture_trace"
+      ],
+      "labels": [
+        "spool,paths,gb-189,telemetry"
       ]
     },
-    "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
-    "status": "triage",
-    "ticket_key": "SP-24",
-    "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
-    "updated_at_epoch_ms": 1793942209462,
-    "verification_receipt": null
-  }
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1793942209462,
+    "updated_at_epoch_ms": 1793942209462
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+        "ticket_key": "SP-24",
+        "slug": "storypole-verify-dir-member-writes-silver-traces-to-member-spool-outbox-jsonl-instead-of-the-canonical-gaugeblock-spool-2243f2",
+        "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
+        "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug CO-7 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::verification::capture_trace::capture_trace"
+          ],
+          "labels": [
+            "spool,paths,gb-189,telemetry"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793942209462,
+        "updated_at_epoch_ms": 1793942209462
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794351660419,
+        "lease_expires_at_epoch_ms": 1794355260419,
+        "git_branch": "fix/sp-24-canonical-spool",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794351660419
+    },
+    {
+      "event": "task_verified",
+      "task_id": "2243f2a1-7af9-4f77-b67f-c777b4f6014e",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794352161875,
+        "git_branch": "fix/sp-24-canonical-spool",
+        "base_commit_sha": "c79ed8e490548cb1a65c5dd08756cea61c1b33d3",
+        "head_commit_sha": "8d80b4cdd6fd72509ccea231d659fd67226e3f7e",
+        "commit_shas": [
+          "8d80b4cdd6fd72509ccea231d659fd67226e3f7e"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    }
+  ]
 }

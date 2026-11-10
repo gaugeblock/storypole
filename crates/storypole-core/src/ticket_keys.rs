@@ -157,3 +157,54 @@ mod tests {
         assert!(leftovers.is_empty(), "locks do not linger: {leftovers:?}");
     }
 }
+
+/// One ticket's prospective remint: the key it holds and the key it would receive (`GB-347`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Remint {
+    /// The key as stored today.
+    pub from: String,
+    /// The key this repository's prefix would give it.
+    pub to: String,
+}
+
+/// Plans the remint of every key that does not already carry `prefix`.
+///
+/// Numbering continues from the highest number that prefix already uses, so a remint never collides with a ticket that
+/// is already correct - the collision that made `GB-346` expensive. Keys are ordered by their numeric part, so `SP-9`
+/// is reminted before `SP-10` and the mapping reads the way a person expects.
+///
+/// Nothing here decides whether a ticket *should* be reminted. A ticket in this repository is single-repository work by
+/// construction; harness-level work lives at the harness and links out to it (`GB-346`).
+#[must_use]
+pub fn plan_remint(prefix: &str, keys: &[String]) -> Vec<Remint> {
+    let owned = format!("{prefix}-");
+
+    let mut next = keys
+        .iter()
+        .filter_map(|key| key.strip_prefix(&owned))
+        .filter_map(|suffix| suffix.parse::<u32>().ok())
+        .max()
+        .unwrap_or(0)
+        + 1;
+
+    let mut unknown: Vec<&String> = keys.iter().filter(|key| !key.starts_with(&owned)).collect();
+    unknown.sort_by_key(|key| {
+        // A migrated key is `<PREFIX>-<n>`; a key minted under another repository's prefix still ends in a number, and
+        // one that ends in neither sorts last rather than being dropped.
+        key.rsplit_once('-')
+            .and_then(|(_, tail)| tail.parse::<u32>().ok())
+            .unwrap_or(u32::MAX)
+    });
+
+    unknown
+        .into_iter()
+        .map(|from| {
+            let to = format!("{prefix}-{next}");
+            next += 1;
+            Remint {
+                from: from.clone(),
+                to,
+            }
+        })
+        .collect()
+}

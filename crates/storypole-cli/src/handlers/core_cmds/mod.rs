@@ -12,7 +12,7 @@ use storypole_core::index::query::{
     TaskFilter, get_all_tasks, get_task_by_id, query_tasks, resolve_task_id,
 };
 use storypole_core::model::task::{EdgeKind, TaskKind, TaskScope, TaskStatus};
-use storypole_core::ops::graph::{defer_issue, link_tasks, split_task};
+use storypole_core::ops::graph::{EdgeTarget, defer_issue, link_to_target, split_task};
 use storypole_core::ops::mutations::{CreateTaskParams, add_task};
 use storypole_core::ops::workflow::next_task;
 use storypole_core::store::StorypoleStore;

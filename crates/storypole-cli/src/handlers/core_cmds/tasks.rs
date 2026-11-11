@@ -45,9 +45,39 @@ pub fn handle_link(
     json: bool,
 ) -> Result<()> {
     let src_id = resolve_task_id(store.conn(), src)?;
-    let tgt_id = resolve_task_id(store.conn(), tgt)?;
     let kind = parse_edge_kind(kind_str)?;
-    link_tasks(store, src_id, tgt_id, kind)?;
+    let target = match resolve_task_id(store.conn(), tgt) {
+        Ok(id) => {
+            let node = storypole_core::index::query::get_task_by_id(store.conn(), id)?;
+            EdgeTarget {
+                id,
+                key: node.ticket_key,
+                repo: node.scope.repo,
+                verified: node.status == TaskStatus::Verified,
+            }
+        }
+        // Not in this store. Since ADR 0009 that means another repository owns it, which is a legitimate
+        // target: the edge is written here, into the source's store, carrying the target's uuid and
+        // locator rather than a copy of it (`SP-48`).
+        Err(storypole_core::error::StorypoleError::TaskNotFound(_)) => {
+            let suite_root = storypole_core::workspace::suite_root_of(store.root_dir());
+            let found =
+                storypole_core::workspace::find_task(&suite_root, tgt)?.ok_or_else(|| {
+                    anyhow!(
+                        "Task not found: '{tgt}' - no store under {} holds it",
+                        suite_root.display()
+                    )
+                })?;
+            EdgeTarget {
+                id: found.task.id,
+                key: found.task.ticket_key,
+                repo: found.repo,
+                verified: found.task.status == TaskStatus::Verified,
+            }
+        }
+        Err(other) => return Err(other.into()),
+    };
+    link_to_target(store, src_id, &target, kind)?;
     if json {
         println!("{{\"success\":true}}");
     } else {

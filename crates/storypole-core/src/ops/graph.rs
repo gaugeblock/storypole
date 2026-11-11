@@ -9,6 +9,23 @@ use crate::ops::mutations::slugify;
 use crate::store::StorypoleStore;
 use uuid::Uuid;
 
+/// The target of an edge, wherever it lives (`SP-48`).
+///
+/// Identity is the uuid; the key and repository are the locator a member-only checkout renders. Kept as a
+/// small value rather than a `&TaskNode` because a target in another repository is read from *that*
+/// repository's store, and the writer must not need the node - or a copy of it - to record the edge.
+#[derive(Debug, Clone)]
+pub struct EdgeTarget {
+    /// Stable identity, which is what the edge stores.
+    pub id: Uuid,
+    /// Ticket key for rendering when the owning repository is not reachable.
+    pub key: String,
+    /// Owning repository, from the target's scope or from the store that holds it.
+    pub repo: Option<String>,
+    /// Whether the target is already verified, which decides whether `BlockedBy` blocks.
+    pub verified: bool,
+}
+
 /// Link two tasks with a directed edge, verifying acyclicity.
 pub fn link_tasks(
     store: &mut StorypoleStore,
@@ -16,27 +33,55 @@ pub fn link_tasks(
     target_id: Uuid,
     kind: EdgeKind,
 ) -> Result<(), StorypoleError> {
-    let source = get_task_by_id(store.conn(), source_id)?;
     let target = get_task_by_id(store.conn(), target_id)?;
+    let target = EdgeTarget {
+        id: target.id,
+        key: target.ticket_key.clone(),
+        repo: target.scope.repo.clone(),
+        verified: target.status == TaskStatus::Verified,
+    };
+    link_to_target(store, source_id, &target, kind)
+}
+
+/// Link a task in this store to a target that may live in another repository (`SP-48`).
+///
+/// The edge is written into the *source's* store and carries the target's uuid plus its `repo:key`
+/// locator. Never a copy of the target: two live copies of one task is how `GB-79` diverged, and a copy
+/// would also go stale the moment the original is verified.
+///
+/// Cycle validation is per-store. The reachability walk only knows this store's tasks, so a cycle that
+/// spans two repositories would not be seen here - detecting that needs the workspace rollup, and it is
+/// stated rather than implied to work.
+///
+/// # Errors
+///
+/// [`StorypoleError::TaskNotFound`] when the source is not in this store - an edge belongs to its source,
+/// so a foreign source has to be linked from the repository that owns it.
+pub fn link_to_target(
+    store: &mut StorypoleStore,
+    source_id: Uuid,
+    target: &EdgeTarget,
+    kind: EdgeKind,
+) -> Result<(), StorypoleError> {
+    let source = get_task_by_id(store.conn(), source_id)?;
 
     let all_tasks = get_all_tasks(store.conn())?;
-    validate_no_cycle(&all_tasks, source_id, target_id, kind)?;
+    validate_no_cycle(&all_tasks, source_id, target.id, kind)?;
 
     let now = StorypoleStore::now_ms();
-    let edge = TaskEdge::new(kind, target_id)
-        .with_target_meta(&target.ticket_key, target.scope.repo.as_deref());
+    let edge = TaskEdge::new(kind, target.id).with_target_meta(&target.key, target.repo.as_deref());
     store.record_event(&LedgerEvent::EdgeAdded {
         task_id: source_id,
         edge,
         timestamp_ms: now,
     })?;
 
-    if kind == EdgeKind::BlockedBy && target.status != TaskStatus::Verified {
+    if kind == EdgeKind::BlockedBy && !target.verified {
         store.record_event(&LedgerEvent::StatusChanged {
             task_id: source_id,
             from: source.status,
             to: TaskStatus::Blocked,
-            reason: Some(format!("Blocked by unverified task {}", target.ticket_key)),
+            reason: Some(format!("Blocked by unverified task {}", target.key)),
             timestamp_ms: now,
         })?;
     }

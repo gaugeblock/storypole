@@ -10,6 +10,7 @@
 
 use std::path::{Path, PathBuf};
 
+use crate::error::StorypoleError;
 use crate::store::StorypoleStore;
 use crate::tickets;
 use crate::workspace::discovery::discover_members;
@@ -54,6 +55,55 @@ pub fn repo_root_of(dot_dir: &Path) -> &Path {
     } else {
         dot_dir.parent().unwrap_or(dot_dir)
     }
+}
+
+/// The suite root that `root` belongs to, or `root` itself when no suite claims it (`SP-48`).
+///
+/// Canonicalised before asking, for the same reason every other resolution does: `Membership::containing`
+/// walks ancestors and a relative path stops at the current directory (`OF-42`).
+#[must_use]
+pub fn suite_root_of(root: &Path) -> PathBuf {
+    let canonical = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    gaugeblock_workspace::Membership::containing(&canonical)
+        .map_or_else(|| canonical.clone(), |membership| membership.suite_root)
+}
+
+/// A task read from whichever store holds it, with the repository that store belongs to (`SP-48`).
+#[derive(Debug)]
+pub struct LocatedTask {
+    /// The task itself, read from its owning store.
+    pub task: crate::model::TaskNode,
+    /// Repository name, from the task's own scope or from the directory that holds it.
+    pub repo: Option<String>,
+}
+
+/// Read a task from whichever store in the suite holds it.
+///
+/// [`locate_ticket`] says *where*; this opens that store and answers *what*, which is what a cross-repository
+/// edge needs in order to write a locator and to know whether the target still blocks. Returns `None` when no
+/// store holds the key, so the caller keeps its own not-found wording.
+///
+/// # Errors
+///
+/// [`StorypoleError`] when the owning store cannot be opened or the record cannot be read. A key that is
+/// located but not resolvable is `None`, not an error: the locator is a path walk and the index is the
+/// authority, so a disagreement between them is answered by the authority.
+pub fn find_task(root: &Path, key: &str) -> Result<Option<LocatedTask>, StorypoleError> {
+    let Some(dot_dir) = locate_ticket(root, key) else {
+        return Ok(None);
+    };
+    let repo_root = repo_root_of(&dot_dir);
+    let store = StorypoleStore::open_exact(repo_root)?;
+    let Ok(id) = crate::index::query::resolve_task_id(store.conn(), key) else {
+        return Ok(None);
+    };
+    let task = crate::index::query::get_task_by_id(store.conn(), id)?;
+    let repo = task.scope.repo.clone().or_else(|| {
+        repo_root
+            .file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+    });
+    Ok(Some(LocatedTask { task, repo }))
 }
 
 #[cfg(test)]

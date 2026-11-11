@@ -7,6 +7,7 @@ pub mod store;
 
 pub use config::WorkspaceConfig;
 pub use discovery::{DiscoveredMember, discover_members};
+pub use lookup::{LocatedTask, find_task, suite_root_of};
 pub use store::StorypoleWorkspaceStore;
 
 /// Whether `root` declares suite members, which is what makes its answers a *suite* view (`GB-355`).

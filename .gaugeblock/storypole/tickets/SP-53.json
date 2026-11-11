@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "76a8af5c-5500-415e-9ea1-6f0827bec3f6",
+    "ticket_key": "SP-53",
+    "slug": "verifying-a-cross-store-dependency-never-unblocks-its-dependent-so-a-recorded-cross-repo-block-can-never-be-satisfied-76a8af",
+    "title": "verifying a cross-store dependency never unblocks its dependent, so a recorded cross-repo block can never be satisfied",
+    "description": "Measured 2026-11-10, immediately after MTR-1 was verified. SP-40 carried a blocked_by edge to MTR-1 (recorded when SP-48 made cross-store edges possible), MTR-1 is now Verified in the miter store, and SP-40 still reads Blocked. The reason is the unblock half: verify_task walks its own store looking for Blocked dependents and records StatusChanged to Ready for those whose dependencies are satisfied, so a dependent in another repository is never visited. unpark does not rescue it either - it asks is_task_dependency_ready over the same local map, the foreign target is absent, and is_none_or treats an unknown target as unverified, so unpark parks it straight back to Blocked. That default is the safe one and I do not want it changed blindly: the fix is for readiness to consult the suite when a blocked_by target is not in this store, the same way SP-48 link resolution now does. Consequence for the burn-down: a cross-repository dependency can be recorded but never satisfied, which makes the edge advisory rather than blocking - worse than before SP-48, where it could not be recorded at all and the ticket simply read Ready and lied. Acceptance: verifying MTR-1 moves a dependent SP-40 in another store to Ready without touching SP-40; a dependent whose target is genuinely unverified stays Blocked; and a member-only checkout with the target repository absent keeps it Blocked rather than guessing.",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::verification::verify_task,storypole_core::dag::is_task_dependency_ready,storypole_core::ops::lifecycle::unpark_task"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794432708128,
+    "updated_at_epoch_ms": 1794432708128
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "76a8af5c-5500-415e-9ea1-6f0827bec3f6",
+        "ticket_key": "SP-53",
+        "slug": "verifying-a-cross-store-dependency-never-unblocks-its-dependent-so-a-recorded-cross-repo-block-can-never-be-satisfied-76a8af",
+        "title": "verifying a cross-store dependency never unblocks its dependent, so a recorded cross-repo block can never be satisfied",
+        "description": "Measured 2026-11-10, immediately after MTR-1 was verified. SP-40 carried a blocked_by edge to MTR-1 (recorded when SP-48 made cross-store edges possible), MTR-1 is now Verified in the miter store, and SP-40 still reads Blocked. The reason is the unblock half: verify_task walks its own store looking for Blocked dependents and records StatusChanged to Ready for those whose dependencies are satisfied, so a dependent in another repository is never visited. unpark does not rescue it either - it asks is_task_dependency_ready over the same local map, the foreign target is absent, and is_none_or treats an unknown target as unverified, so unpark parks it straight back to Blocked. That default is the safe one and I do not want it changed blindly: the fix is for readiness to consult the suite when a blocked_by target is not in this store, the same way SP-48 link resolution now does. Consequence for the burn-down: a cross-repository dependency can be recorded but never satisfied, which makes the edge advisory rather than blocking - worse than before SP-48, where it could not be recorded at all and the ticket simply read Ready and lied. Acceptance: verifying MTR-1 moves a dependent SP-40 in another store to Ready without touching SP-40; a dependent whose target is genuinely unverified stays Blocked; and a member-only checkout with the target repository absent keeps it Blocked rather than guessing.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::verification::verify_task,storypole_core::dag::is_task_dependency_ready,storypole_core::ops::lifecycle::unpark_task"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794432708128,
+        "updated_at_epoch_ms": 1794432708128
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

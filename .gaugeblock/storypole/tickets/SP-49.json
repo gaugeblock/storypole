@@ -62,6 +62,84 @@
       },
       "captured_by_agent": "user",
       "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794378494573,
+        "lease_expires_at_epoch_ms": 1794382094573,
+        "git_branch": "fix/sp-49-summary-receipt",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794378494573
+    },
+    {
+      "event": "task_verified",
+      "task_id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+      "receipt": {
+        "verifier": "storypole-verify:cargo-test-fallback",
+        "command": "cargo test",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "summary annotates the executed receipt; the chain runs and names itself\n[fallback: no verification command configured; ran `cargo test`]\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+        "verified_at_epoch_ms": 1794378776577,
+        "git_branch": "fix/sp-49-summary-receipt",
+        "base_commit_sha": "416f66f8ee8abc999756fced348b62a246ed71be",
+        "head_commit_sha": "c27682f0112567e1d98982f817688e006510d324",
+        "commit_shas": [
+          "c27682f0112567e1d98982f817688e006510d324"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": {
+        "repo": "storypole",
+        "crate_name": "storypole-cli",
+        "module_path": null,
+        "target_files": [],
+        "target_symbols": [
+          "storypole_cli::handlers::lifecycle_cmds::handle_verify,storypole_core::ops::verification::receipts::build"
+        ],
+        "labels": []
+      },
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794378826964
+    },
+    {
+      "event": "task_verified",
+      "task_id": "9030e86d-8ddf-469e-8877-4259fbda1414",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "summary annotates the executed receipt; the chain runs and names itself\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794378829689,
+        "git_branch": "fix/sp-49-summary-receipt",
+        "base_commit_sha": "416f66f8ee8abc999756fced348b62a246ed71be",
+        "head_commit_sha": "c27682f0112567e1d98982f817688e006510d324",
+        "commit_shas": [
+          "c27682f0112567e1d98982f817688e006510d324"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
     }
   ]
 }

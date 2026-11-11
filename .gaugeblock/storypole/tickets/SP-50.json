@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "6ce7546d-c9b1-409c-99a3-f1d6329efb5b",
+    "ticket_key": "SP-50",
+    "slug": "a-task-scoped-only-by-crate-name-cannot-reach-its-repository-verification-chain-so-it-certifies-at-cargo-test-and-its-receipt-names-no-repository-6ce754",
+    "title": "a task scoped only by crate name cannot reach its repository verification chain, so it certifies at cargo test and its receipt names no repository",
+    "description": "Measured 2026-11-10 while verifying SP-49 itself. The ticket was scoped crate_name storypole-cli with no repository, which is the normal shape for a crate-level finding. Chain lookup is exact by crate key, then exact by repository key, then the default key; storypole-cli has no entry, the task names no repository so the repository lookup is skipped, and storypole config declares no default entry. The result was the cargo-test fallback: receipt command cargo test, chain_key none, repo none, verifier storypole-verify:cargo-test-fallback, on a repository that does configure a full storypole chain the whole time. The warning and the fallback marker both fired, so the receipt was honest rather than silently weak - the defect is that the chain was unreachable, not that the weakness went unreported. Two consequences: a crate-scoped ticket silently certifies at cargo test even when its repository has fmt+clippy+nextest+audit+docs configured, and the receipt cannot say which repository it measured because scope.repo is what supplies that field. Wanted: resolve the crate to its owning repository through the workspace topology before declaring no chain, and stamp the receipt with the resolved repository. Acceptance: a task scoped only by crate_name storypole-cli reaches the storypole chain, its receipt names repo storypole and chain_key storypole, and a crate no member owns still reports the fallback honestly.",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::config::verification_chain_exact,storypole_core::ops::verification::receipts::build"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794378816344,
+    "updated_at_epoch_ms": 1794378816344
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "6ce7546d-c9b1-409c-99a3-f1d6329efb5b",
+        "ticket_key": "SP-50",
+        "slug": "a-task-scoped-only-by-crate-name-cannot-reach-its-repository-verification-chain-so-it-certifies-at-cargo-test-and-its-receipt-names-no-repository-6ce754",
+        "title": "a task scoped only by crate name cannot reach its repository verification chain, so it certifies at cargo test and its receipt names no repository",
+        "description": "Measured 2026-11-10 while verifying SP-49 itself. The ticket was scoped crate_name storypole-cli with no repository, which is the normal shape for a crate-level finding. Chain lookup is exact by crate key, then exact by repository key, then the default key; storypole-cli has no entry, the task names no repository so the repository lookup is skipped, and storypole config declares no default entry. The result was the cargo-test fallback: receipt command cargo test, chain_key none, repo none, verifier storypole-verify:cargo-test-fallback, on a repository that does configure a full storypole chain the whole time. The warning and the fallback marker both fired, so the receipt was honest rather than silently weak - the defect is that the chain was unreachable, not that the weakness went unreported. Two consequences: a crate-scoped ticket silently certifies at cargo test even when its repository has fmt+clippy+nextest+audit+docs configured, and the receipt cannot say which repository it measured because scope.repo is what supplies that field. Wanted: resolve the crate to its owning repository through the workspace topology before declaring no chain, and stamp the receipt with the resolved repository. Acceptance: a task scoped only by crate_name storypole-cli reaches the storypole chain, its receipt names repo storypole and chain_key storypole, and a crate no member owns still reports the fallback honestly.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::config::verification_chain_exact,storypole_core::ops::verification::receipts::build"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794378816344,
+        "updated_at_epoch_ms": 1794378816344
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

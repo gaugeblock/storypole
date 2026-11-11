@@ -122,10 +122,7 @@ pub fn orphaned_window_warning(store_root: &Path, task: &TaskNode) -> Option<Str
 /// Returns `None` when there is nothing to say: no receipt, no recorded head, no repository to ask, or
 /// commits that are reachable.
 #[must_use]
-pub fn unmerged_receipt_warning(
-    store_root: &Path,
-    task: &TaskNode,
-) -> Option<String> {
+pub fn unmerged_receipt_warning(store_root: &Path, task: &TaskNode) -> Option<String> {
     let receipt = task.verification_receipt.as_ref()?;
     let head = receipt.head_commit_sha.as_deref()?;
     let repo = receipt.repo.as_deref();

@@ -13,7 +13,7 @@ use std::path::Path;
 use storypole_core::config::StorypoleConfig;
 use storypole_core::model::task::TaskScope;
 use storypole_core::ops::mutations::{CreateTaskParams, add_task};
-use storypole_core::ops::verification::verify_task;
+use storypole_core::ops::verification::{verify_task, verify_task_with_note};
 use storypole_core::store::StorypoleStore;
 use tempfile::tempdir;
 
@@ -124,6 +124,60 @@ fn a_repository_chain_is_reached_even_when_the_crate_has_none() {
         receipt.chain_key.as_deref(),
         Some("miter"),
         "the repository chain is reached after the crate lookup misses"
+    );
+}
+
+#[test]
+fn a_note_annotates_the_executed_receipt_instead_of_replacing_it() {
+    // SP-49: `verify --summary` built a manual override - verifier manual, command n/a, exit_code 0, no
+    // chain key - so the flag whose purpose is to record what was verified replaced the run with an
+    // attestation that ran nothing. The note now rides along and the evidence stays the chain's.
+    let tmp = tempdir().expect("tempdir");
+    let mut store = fixture(tmp.path());
+
+    let task = add_task(
+        &mut store,
+        CreateTaskParams {
+            title: "Annotated work".into(),
+            scope: TaskScope {
+                repo: Some("miter".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("add task");
+
+    let receipt = verify_task_with_note(
+        &mut store,
+        task.id,
+        None,
+        true,
+        false,
+        Some("checked the spool route by hand"),
+    )
+    .expect("verify with a note");
+
+    assert_eq!(
+        receipt.verifier, "storypole-verify",
+        "the chain attests, not a person who typed a summary"
+    );
+    assert_eq!(
+        receipt.command, "true",
+        "the receipt names the command that ran, not n/a"
+    );
+    assert_eq!(receipt.exit_code, Some(0));
+    assert_eq!(
+        receipt.chain_key.as_deref(),
+        Some("miter"),
+        "the chain key survives the note"
+    );
+    assert!(
+        receipt
+            .summary
+            .starts_with("checked the spool route by hand"),
+        "the note is attached ahead of the output, got: {}",
+        receipt.summary
     );
 }
 

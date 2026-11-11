@@ -24,6 +24,9 @@ pub(super) struct BuildRequest<'a> {
     pub receipt_override: Option<VerificationReceipt>,
     pub run_command: bool,
     pub run_compiler: bool,
+    /// The caller's statement of what they set out to check (`SP-49`). Attached to the receipt the run
+    /// produced; it never stands in for the run.
+    pub note: Option<&'a str>,
 }
 
 /// Produces the receipt for a verification attempt, and the chain key that ran.
@@ -43,6 +46,7 @@ pub(super) fn build(
         receipt_override,
         run_command,
         run_compiler,
+        note,
     } = request;
     let mut chain_used: Option<String> = None;
     let receipt = if let Some(r) = receipt_override {
@@ -179,5 +183,12 @@ pub(super) fn build(
             ..VerificationReceipt::default()
         }
     };
+    // The caller's note rides along with the evidence the run produced (`SP-49`). Prepended, because a
+    // reader wants the claim first and the raw output beneath it - but never in place of the command, the
+    // exit code or the chain key, which are what make the receipt evidence rather than a sentence.
+    let mut receipt = receipt;
+    if let Some(note) = note {
+        receipt.summary = format!("{note}\n{}", receipt.summary);
+    }
     Ok((receipt, chain_used))
 }

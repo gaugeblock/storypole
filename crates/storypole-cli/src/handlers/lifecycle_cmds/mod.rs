@@ -8,7 +8,7 @@ use storypole_core::index::query::resolve_task_id;
 use storypole_core::model::decision::HandoffPacket;
 use storypole_core::model::task::TaskStatus;
 use storypole_core::ops::decisions::{ask_decision, decide, supersede_decision};
-use storypole_core::ops::workflow::{claim_task, handoff_task, heartbeat, verify_task};
+use storypole_core::ops::workflow::{claim_task, handoff_task, heartbeat};
 use storypole_core::store::StorypoleStore;
 use uuid::Uuid;
 
@@ -156,8 +156,19 @@ pub fn handle_handoff(store: &mut StorypoleStore, args: HandoffArgs, json: bool)
 
 pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -> Result<()> {
     let id = resolve_task_id(store.conn(), &args.identifier)?;
-    let override_receipt = if args.verifier.is_some() || args.summary.is_some() {
-        Some(storypole_core::model::decision::VerificationReceipt {
+    // `--verifier` names who attested a manual receipt, so on the executing path it is a contradiction
+    // rather than an annotation. Refusing beats guessing which of the two was meant (`SP-49`).
+    if args.verifier.is_some() && !args.manual {
+        anyhow::bail!(
+            "--verifier names the person or tool that attested a manual receipt; pass --manual to \
+             record an attestation, or drop the flag to run the configured chain"
+        );
+    }
+    // Only `--manual` builds an override (`SP-49`). It used to fire on `--verifier` or `--summary` as
+    // well, so `verify --summary` produced verifier manual, command n/a and exit_code 0 - a receipt that
+    // ran nothing, which is the shape `GB-272` was filed to end.
+    let (override_receipt, note) = if args.manual {
+        let receipt = storypole_core::model::decision::VerificationReceipt {
             verifier: args.verifier.unwrap_or_else(|| "manual".to_string()),
             command: "n/a".to_string(),
             exit_code: Some(0),
@@ -172,19 +183,23 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
             commit_shas: Vec::new(),
             repo: None,
             chain_key: None,
-        })
+        };
+        (Some(receipt), None)
     } else {
-        None
+        // Carried into the receipt the chain produces: the claim and the evidence are different fields,
+        // and keeping them apart is the whole point.
+        (None, args.summary)
     };
     // Executing is the default (`GB-272`): a certification command that can return exit_code 0 without
     // running anything produces receipts that look like proof. `--manual` is the explicit opt-out.
     let run_command = !args.manual;
-    let receipt = verify_task(
+    let receipt = storypole_core::ops::verification::verify_task_with_note(
         store,
         id,
         override_receipt,
         run_command || args.run,
         args.compiler,
+        note.as_deref(),
     )?;
     if json {
         print_json("verify", &serde_json::json!({"receipt": receipt}))?;

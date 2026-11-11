@@ -19,12 +19,38 @@ use crate::store::StorypoleStore;
 use uuid::Uuid;
 
 /// Verify task execution, certify with a receipt, and unblock dependents.
+///
+/// The note-less form of [`verify_task_with_note`], kept so every existing call site does not have to
+/// pass a `None` it will never use.
 pub fn verify_task(
     store: &mut StorypoleStore,
     task_id: Uuid,
     receipt_override: Option<VerificationReceipt>,
     run_command: bool,
     run_compiler: bool,
+) -> Result<VerificationReceipt, StorypoleError> {
+    verify_task_with_note(
+        store,
+        task_id,
+        receipt_override,
+        run_command,
+        run_compiler,
+        None,
+    )
+}
+
+/// Verify task execution, appending `note` to whatever the run proved (`SP-49`).
+///
+/// The note is the caller's statement of what they checked. It never substitutes for the command, the
+/// exit code or the chain key: a receipt whose evidence is a sentence is the failure `GB-272` ended, and
+/// `--summary` was reproducing it by building a manual override on the executing path.
+pub fn verify_task_with_note(
+    store: &mut StorypoleStore,
+    task_id: Uuid,
+    receipt_override: Option<VerificationReceipt>,
+    run_command: bool,
+    run_compiler: bool,
+    note: Option<&str>,
 ) -> Result<VerificationReceipt, StorypoleError> {
     let task = get_task_by_id(store.conn(), task_id)?;
 
@@ -83,6 +109,7 @@ pub fn verify_task(
         receipt_override,
         run_command,
         run_compiler,
+        note,
     })?;
 
     // Which repository and which chain this receipt describes (`GB-316`). `repo` comes from the task's

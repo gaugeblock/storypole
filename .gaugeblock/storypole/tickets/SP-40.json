@@ -159,6 +159,25 @@
       "to": "ready",
       "reason": "claim lease expired at 1794209303436 (agent cline-agent); returned to the backlog",
       "timestamp_ms": 1794342720513
+    },
+    {
+      "event": "edge_added",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "edge": {
+        "kind": "blocked_by",
+        "target_id": "9f2b9c8c-676d-43f7-a0eb-57e8d62e5453",
+        "target_ticket_key": "MTR-1",
+        "target_repo": "miter"
+      },
+      "timestamp_ms": 1794430756159
+    },
+    {
+      "event": "status_changed",
+      "task_id": "827f7f2d-e2ea-49e1-a925-f97a5231939d",
+      "from": "ready",
+      "to": "blocked",
+      "reason": "Blocked by unverified task MTR-1",
+      "timestamp_ms": 1794430756159
     }
   ]
 }

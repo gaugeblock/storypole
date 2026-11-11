@@ -62,6 +62,55 @@
       },
       "captured_by_agent": "user",
       "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794427890291,
+        "lease_expires_at_epoch_ms": 1794431490291,
+        "git_branch": "fix/sp-48-cross-store-edge",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794427890291
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+      "title": null,
+      "description": "Measured 2026-11-10 in the live suite, both directions, three ways of naming the target. storypole link SP-40 MTR-1 from inside storypole/ answers Task not found: MTR-1; the same command from the suite root answers a different failure, no record for SP-40 in the root ticket file. Passing MTR-1 as the uuid 9f2b9c8c-676d-43f7-a0eb-57e8d62e5453 fails identically from both ends, so the defect is not key resolution against the unified index - link resolves only inside the store the command runs in. Consequence: since the 2026-11-08 migration moved tickets into their owning repositories, no cross-repository edge can be created at all. The 7 blocked_by, 15 related_to and 12 parent_epic cross-ledger edges SP-38 counts are historical; every new one is unexpressible. That matters for the burn-down because a dependency that spans repositories is exactly how the queue is ordered: SP-40 cannot be recorded as blocked_by MTR-1, so it keeps reading Ready while its only remaining deliverable sits in another repository. Wanted: link resolves a bare key by consulting the workspace rollup, writes the edge as uuid plus repo:key locator (the contract SP-38 already documents and 106 of 123 historical edges carry), and refuses to write a copy of the target. Acceptance: the two commands above succeed and a member-only checkout renders the locator without the target repository present.\n\nFIXED 2026-11-10 (storypole 1359175). The exact command that failed when this ticket was filed now succeeds, from inside the source repository: storypole link SP-40 MTR-1 --kind blocked_by answers Linked SP-40 -> MTR-1 (blocked_by), SP-40 moves to Blocked because MTR-1 is deferred and therefore unverified, and the recorded edge carries target_id 9f2b9c8c-676d-43f7-a0eb-57e8d62e5453 with target_ticket_key MTR-1 and target_repo miter. That is the locator without a copy: the storypole store still holds only its own tickets. Two design points worth keeping: edges have one writer now, link_tasks reading its local target and delegating to link_to_target, so a foreign target needs no node and no second code path; and cycle validation stays per-store, stated in the doc comment because a cross-repository cycle would need the workspace rollup. Not delivered here and deliberately not implied: the rendering half. A member-only checkout can now read the locator, but drawing it as MTR-1 (miter) rather than a bare uuid is SP-38 third piece, which remains open with benchwork DagView as its named consumer. Tests: cross_store_edge_tests - a task in another repository is findable and linkable, and a key no store holds stays not-found.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794430764217
+    },
+    {
+      "event": "task_verified",
+      "task_id": "5364c1f7-94ce-403b-93aa-9540734904a4",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794430766569,
+        "git_branch": "fix/sp-48-cross-store-edge",
+        "base_commit_sha": "2219cd64683b75f21eeda5aecd8a3f8c611b0bc2",
+        "head_commit_sha": "13591750080fb7be4a571addf3b05fb549aa68cd",
+        "commit_shas": [
+          "13591750080fb7be4a571addf3b05fb549aa68cd"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
     }
   ]
 }

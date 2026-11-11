@@ -1,0 +1,63 @@
+{
+  "ticket": {
+    "id": "1fa0f2f8-d6ce-4e37-9380-83270d417bc3",
+    "ticket_key": "SP-51",
+    "slug": "the-workspace-rollup-index-is-written-untracked-beside-the-ticket-records-so-every-reconcile-leaves-debris-a-git-add-a-would-commit-1fa0f2",
+    "title": "the workspace rollup index is written untracked beside the ticket records, so every reconcile leaves debris a git add -A would commit",
+    "description": "Observed 2026-11-10: runnning ledger-reconcile inside storypole/ left .gaugeblock/storypole/workspace.sqlite untracked in the working tree, so the file is derived state that no ignore rule covers. The harness root solved the same problem in 1eae42e by ignoring its workspace index; a member has no equivalent rule, and an untracked sqlite sitting beside tracked tickets is exactly the debris SP-24 records a careless git add -A committing. Either the workspace view should write inside the same ignored directory as index.sqlite or .gitignore should name it. Acceptance: ledger-reconcile and workspace commands leave no untracked file behind in any member repository.",
+    "kind": "tech_debt",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794378910637,
+    "updated_at_epoch_ms": 1794378910637
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "1fa0f2f8-d6ce-4e37-9380-83270d417bc3",
+        "ticket_key": "SP-51",
+        "slug": "the-workspace-rollup-index-is-written-untracked-beside-the-ticket-records-so-every-reconcile-leaves-debris-a-git-add-a-would-commit-1fa0f2",
+        "title": "the workspace rollup index is written untracked beside the ticket records, so every reconcile leaves debris a git add -A would commit",
+        "description": "Observed 2026-11-10: runnning ledger-reconcile inside storypole/ left .gaugeblock/storypole/workspace.sqlite untracked in the working tree, so the file is derived state that no ignore rule covers. The harness root solved the same problem in 1eae42e by ignoring its workspace index; a member has no equivalent rule, and an untracked sqlite sitting beside tracked tickets is exactly the debris SP-24 records a careless git add -A committing. Either the workspace view should write inside the same ignored directory as index.sqlite or .gitignore should name it. Acceptance: ledger-reconcile and workspace commands leave no untracked file behind in any member repository.",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794378910637,
+        "updated_at_epoch_ms": 1794378910637
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

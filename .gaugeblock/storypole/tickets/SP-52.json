@@ -1,0 +1,67 @@
+{
+  "ticket": {
+    "id": "61ebd235-e843-4455-a4c5-73847cc45752",
+    "ticket_key": "SP-52",
+    "slug": "storypole-mcp-exposes-no-park-unpark-or-reopen-so-an-agent-working-through-mcp-cannot-hold-a-ticket-61ebd2",
+    "title": "storypole-mcp exposes no park, unpark or reopen, so an agent working through MCP cannot hold a ticket",
+    "description": "SP-47 added park, unpark and reopen to the library and the CLI on 2026-11-10, and deliberately left the MCP surface alone because the ticket acceptance named the CLI. The consequence is that the half of the harness that works through MCP cannot hold a ticket: dispatch.rs exposes storypole_verify and storypole_claim and has no tools for the three transitions, so an agent told to park a task has to drop to a shell and the call it makes is invisible to the MCP trace. The verbs are already the right shape for tools - ticket identifier in, status out - so this is wiring plus the schema entries plus tests. Acceptance: storypole_park, storypole_unpark and storypole_reopen appear in the tool list, each refuses the same illegal transitions the library refuses, and a tools/call round trip parks and unparks one task.",
+    "kind": "feature",
+    "status": "deferred",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "storypole-mcp",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_mcp::dispatch"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794380949375,
+    "updated_at_epoch_ms": 1794380949375
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "61ebd235-e843-4455-a4c5-73847cc45752",
+        "ticket_key": "SP-52",
+        "slug": "storypole-mcp-exposes-no-park-unpark-or-reopen-so-an-agent-working-through-mcp-cannot-hold-a-ticket-61ebd2",
+        "title": "storypole-mcp exposes no park, unpark or reopen, so an agent working through MCP cannot hold a ticket",
+        "description": "SP-47 added park, unpark and reopen to the library and the CLI on 2026-11-10, and deliberately left the MCP surface alone because the ticket acceptance named the CLI. The consequence is that the half of the harness that works through MCP cannot hold a ticket: dispatch.rs exposes storypole_verify and storypole_claim and has no tools for the three transitions, so an agent told to park a task has to drop to a shell and the call it makes is invisible to the MCP trace. The verbs are already the right shape for tools - ticket identifier in, status out - so this is wiring plus the schema entries plus tests. Acceptance: storypole_park, storypole_unpark and storypole_reopen appear in the tool list, each refuses the same illegal transitions the library refuses, and a tools/call round trip parks and unparks one task.",
+        "kind": "feature",
+        "status": "deferred",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "storypole-mcp",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_mcp::dispatch"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794380949375,
+        "updated_at_epoch_ms": 1794380949375
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    }
+  ]
+}

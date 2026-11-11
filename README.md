@@ -80,6 +80,9 @@ Autonomous coding agents (Claude Code, Cursor, Cline, Windsurf) excel at localiz
 | `graph` | Display ASCII or Mermaid dependency DAG visualization. | — |
 | `archive <KEY>` | Archive a completed or closed task out of active backlog views. | — |
 | `unarchive <KEY>` | Restore an archived task back to active backlog views. | — |
+| `park <KEY> [--reason]` | Park a task: it stays in the backlog and leaves the ready queue. Refuses a verified task, a held claim, or an archived one, so parking cannot hide finished work. | — |
+| `unpark <KEY>` | Return a parked task to the backlog — as `blocked`, not `ready`, when a task it depends on is unverified. | — |
+| `reopen <KEY> --reason` | Reopen a verified task, keeping the receipt that certified it so the record still says what was verified and when. | — |
 | `remint` | Report, or with `--apply` perform, the key remint a store needs to mint under its own prefix, rewriting every reference in the same pass. | — |
 | `relink` | Report, or with `--apply` perform, the cross-store repair a per-store remint cannot do: rewrite citations of keys that moved elsewhere and link harness tickets to the tickets carrying the work. | — |
 | `workspace` | Manage multi-repository workspace members and store routing. Subcommands: `list`, `init`, `distribute`. | — |

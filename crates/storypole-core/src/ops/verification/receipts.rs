@@ -27,6 +27,9 @@ pub(super) struct BuildRequest<'a> {
     /// The caller's statement of what they set out to check (`SP-49`). Attached to the receipt the run
     /// produced; it never stands in for the run.
     pub note: Option<&'a str>,
+    /// The repository this task belongs to, resolved from its crate when it names none (`SP-50`). Both
+    /// chain lookups below read it, so a crate-scoped task reaches its repository's chain.
+    pub repo_for_chain: Option<&'a str>,
 }
 
 /// Produces the receipt for a verification attempt, and the chain key that ran.
@@ -47,6 +50,7 @@ pub(super) fn build(
         run_command,
         run_compiler,
         note,
+        repo_for_chain,
     } = request;
     let mut chain_used: Option<String> = None;
     let receipt = if let Some(r) = receipt_override {
@@ -61,10 +65,9 @@ pub(super) fn build(
                 .as_deref()
                 .and_then(|c| store.config().verification_chain_exact(c))
                 .or_else(|| {
-                    task.scope
-                        .repo
-                        .as_deref()
-                        .and_then(|r| store.config().verification_chain_exact(r))
+                    // The resolved repository, so a crate-only task is refused for the chain it would
+                    // actually have run (`SP-50`).
+                    repo_for_chain.and_then(|r| store.config().verification_chain_exact(r))
                 })
                 .or_else(|| store.config().verification_chain_default());
             if let Some((key, _command)) = chain {
@@ -81,12 +84,7 @@ pub(super) fn build(
             .crate_name
             .as_deref()
             .and_then(|c| store.config().verification_chain_exact(c))
-            .or_else(|| {
-                task.scope
-                    .repo
-                    .as_deref()
-                    .and_then(|r| store.config().verification_chain_exact(r))
-            })
+            .or_else(|| repo_for_chain.and_then(|r| store.config().verification_chain_exact(r)))
             // The `default` fallback is taken once, after both exact lookups, and it is the only reason
             // a task with neither a crate nor a repository still has a chain (`GB-272`). Taking the
             // fallback per lookup was a real defect: a task naming both matched `default` on the crate

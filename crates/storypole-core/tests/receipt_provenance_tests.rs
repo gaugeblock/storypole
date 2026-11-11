@@ -21,6 +21,19 @@ use tempfile::tempdir;
 fn fixture(root: &Path) -> StorypoleStore {
     fs::create_dir_all(root.join("miter").join("src")).expect("member dir");
     fs::write(root.join("miter").join("Cargo.toml"), "[workspace]\n").expect("manifest");
+    // `.git` is what `WorkspaceTopology::discover` qualifies a member by, and the suite root the store
+    // sits in is the fixture root, so the crate-to-repository map can see the member (`SP-50`).
+    fs::create_dir_all(root.join("miter").join(".git")).expect("member checkout");
+    // One crate the member declares, so a task scoped only by crate name has evidence of its owner.
+    fs::create_dir_all(root.join("miter").join("crates").join("miter-core")).expect("member crate");
+    fs::write(
+        root.join("miter")
+            .join("crates")
+            .join("miter-core")
+            .join("Cargo.toml"),
+        "[package]\nname = \"miter-core\"\nversion = \"0.1.0\"\n",
+    )
+    .expect("crate manifest");
     fs::create_dir_all(root.join(".gaugeblock").join("storypole")).expect("store dir");
 
     // `true` exits 0 without producing output: the chain identity is what is under test, not the work.
@@ -179,6 +192,46 @@ fn a_note_annotates_the_executed_receipt_instead_of_replacing_it() {
         "the note is attached ahead of the output, got: {}",
         receipt.summary
     );
+}
+
+#[test]
+fn a_crate_only_task_reaches_its_repository_chain_and_names_the_repository() {
+    // SP-50: a task scoped `crate_name` and no repository fell through to `cargo test` - command
+    // `cargo test`, chain_key none, repo none - on a repository that configured a full chain all along.
+    // The manifest is the evidence of ownership, so no heuristic is involved.
+    let tmp = tempdir().expect("tempdir");
+    let mut store = fixture(tmp.path());
+
+    let task = add_task(
+        &mut store,
+        CreateTaskParams {
+            title: "Crate-scoped work".into(),
+            scope: TaskScope {
+                crate_name: Some("miter-core".into()),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+    )
+    .expect("add task");
+
+    let receipt = verify_task(&mut store, task.id, None, true, false).expect("verify");
+
+    assert_eq!(
+        receipt.chain_key.as_deref(),
+        Some("miter"),
+        "the declaring repository's chain is reached through the crate"
+    );
+    assert_eq!(
+        receipt.repo.as_deref(),
+        Some("miter"),
+        "and the receipt says which repository it measured"
+    );
+    assert_eq!(
+        receipt.verifier, "storypole-verify",
+        "a resolved chain is a real run, not the cargo-test fallback"
+    );
+    assert_eq!(receipt.command, "true", "the command is the chain's");
 }
 
 #[test]

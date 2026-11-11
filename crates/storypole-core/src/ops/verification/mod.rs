@@ -18,6 +18,35 @@ use crate::model::task::{EdgeKind, TaskStatus};
 use crate::store::StorypoleStore;
 use uuid::Uuid;
 
+/// The repository that owns this task's crate, when the task names only a crate (`SP-50`).
+///
+/// The chain lookup used to answer "no chain" for a task scoped `crate_name: storypole-cli` with no
+/// repository, even though `storypole` declares that crate and configures a full chain. The receipt
+/// then certified `cargo test` and could not say which repository it had measured, which is the two
+/// halves of the same gap: nothing resolved a crate to its owner.
+///
+/// Evidence, not a guess: the answer comes from `[package] name` in the member manifests
+/// (`migrate::manifests::crate_owners`), which is the same map the ticket migration adopted work by.
+/// A crate no member declares returns `None`, and the caller keeps the honest fallback.
+fn owning_repo(store: &StorypoleStore, crate_name: &str) -> Option<String> {
+    // Canonicalised before asking membership, because `Membership::containing` walks ancestors and a
+    // relative path stops at the current directory (the `OF-42` lesson).
+    let root = store.root_dir();
+    let canonical = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
+    // A member's store answers for its suite; a lone checkout answers for itself.
+    let suite_root = gaugeblock_workspace::Membership::containing(&canonical)
+        .map_or_else(|| canonical.clone(), |membership| membership.suite_root);
+    let topology = gaugeblock_workspace::WorkspaceTopology::discover(&suite_root);
+    let members: Vec<(String, std::path::PathBuf)> = topology
+        .members()
+        .iter()
+        .map(|member| (member.name.clone(), member.path.clone()))
+        .collect();
+    crate::migrate::manifests::crate_owners(&members)
+        .get(crate_name)
+        .cloned()
+}
+
 /// Verify task execution, certify with a receipt, and unblock dependents.
 ///
 /// The note-less form of [`verify_task_with_note`], kept so every existing call site does not have to
@@ -100,6 +129,15 @@ pub fn verify_task_with_note(
         None
     };
 
+    // Which repository this task belongs to: its own, or the one that declares its crate (`SP-50`).
+    // Computed once so the chain lookup and the receipt cannot disagree about it.
+    let task_repo = task.scope.repo.clone().or_else(|| {
+        task.scope
+            .crate_name
+            .as_deref()
+            .and_then(|c| owning_repo(store, c))
+    });
+
     let (mut receipt, chain_used) = receipts::build(receipts::BuildRequest {
         store,
         task: &task,
@@ -110,13 +148,14 @@ pub fn verify_task_with_note(
         run_command,
         run_compiler,
         note,
+        repo_for_chain: task_repo.as_deref(),
     })?;
 
     // Which repository and which chain this receipt describes (`GB-316`). `repo` comes from the task's
     // placement, so a member ticket's receipt can never name the harness; `chain_key` is the
     // configuration entry that actually ran, because falling back to `default` was otherwise invisible.
     if receipt.repo.is_none() {
-        receipt.repo = task.scope.repo.clone();
+        receipt.repo = task_repo;
     }
     if receipt.chain_key.is_none() {
         receipt.chain_key = chain_used;

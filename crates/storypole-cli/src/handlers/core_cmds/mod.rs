@@ -159,6 +159,13 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
                     store.root_dir(),
                     &task,
                 ),
+                // Non-null when the commits the receipt names have been rewritten away: the receipt's
+                // diff_hash and captured diff are then the only record of what was certified (`SP-41`).
+                "orphaned_window": storypole_core::ops::revision::orphaned_window_warning(
+                    store.root_dir(),
+                    &task,
+                ),
+
             }),
         )?;
     } else {
@@ -167,6 +174,11 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
             storypole_core::ops::revision::unmerged_receipt_warning(store.root_dir(), &task)
         {
             eprintln!("{warning}");
+            if let Some(warning) =
+                storypole_core::ops::revision::orphaned_window_warning(store.root_dir(), &task)
+            {
+                eprintln!("{warning}");
+            }
         }
     }
     Ok(())

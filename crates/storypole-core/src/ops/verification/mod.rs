@@ -18,6 +18,10 @@ use crate::model::task::{EdgeKind, TaskStatus};
 use crate::store::StorypoleStore;
 use uuid::Uuid;
 
+/// What a reader is told when the window a receipt names no longer exists (`SP-41`).
+pub const ORPHANED_WINDOW_NOTE: &str = "[window: a commit this receipt names no longer exists, so the \
+     diff_hash and diff below are the only record of what was certified]";
+
 /// The repository that owns this task's crate, when the task names only a crate (`SP-50`).
 ///
 /// The chain lookup used to answer "no chain" for a task scoped `crate_name: storypole-cli` with no
@@ -181,6 +185,29 @@ pub fn verify_task_with_note(
             crate::ops::revision::unbounded_window_note(),
             receipt.summary
         );
+    }
+
+    // The change this receipt certifies, captured as content beside the window (`SP-41`). Unconditional:
+    // orphaning is discovered later by whoever reads the receipt, and a record that only exists when the
+    // author expected trouble is not a record.
+    let captured = crate::ops::revision::capture_change(
+        &target_dir,
+        receipt.base_commit_sha.as_deref(),
+        receipt.head_commit_sha.as_deref(),
+    );
+    if receipt.diff_hash.is_none() {
+        receipt.diff_hash = captured.hash;
+    }
+    if receipt.diff.is_none() {
+        receipt.diff = captured.diff;
+    }
+    if receipt.window_intact.is_none() {
+        receipt.window_intact = captured.window_intact;
+    }
+    // An orphaned window is reported where a reader will see it, not swallowed: the receipt is now the
+    // only record of what it certified (`SP-41`).
+    if receipt.window_intact == Some(false) {
+        receipt.summary = format!("{}\n{}", ORPHANED_WINDOW_NOTE, receipt.summary);
     }
 
     store.record_event(&LedgerEvent::TaskVerified {

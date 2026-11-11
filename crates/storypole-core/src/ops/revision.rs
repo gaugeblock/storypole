@@ -80,12 +80,52 @@ pub fn unbounded_window_note() -> &'static str {
     "[window: no base commit could be named, so this receipt covers HEAD only]"
 }
 
-/// A warning line when a task's receipt names commits that `main` never received.
+/// A warning line when a receipt's recorded window no longer exists (`SP-41`).
+///
+/// The write-time `window_intact` field records what was true when the receipt was written, which is
+/// almost always "the commits I just certified exist". The question a reader actually has is asked
+/// later, after a rebase, a squash or a force-push, so it is asked here against the repository the
+/// receipt names, and answered honestly. `None` means there is nothing to say: no receipt, no window,
+/// no repository to ask, or a window still intact.
+#[must_use]
+pub fn orphaned_window_warning(store_root: &Path, task: &TaskNode) -> Option<String> {
+    let receipt = task.verification_receipt.as_ref()?;
+    let head = receipt.head_commit_sha.as_deref()?;
+    let repo_dir = match receipt.repo.as_deref() {
+        Some(name) => store_root.join(name),
+        None => store_root.to_path_buf(),
+    };
+    let base = receipt.base_commit_sha.as_deref();
+    if window_exists(&repo_dir, base, Some(head))? {
+        return None;
+    }
+    Some(format!(
+        "warning: the window the receipt for {} names ({}) no longer exists in {} - it was rewritten or \
+         garbage-collected, so diff_hash {} and the captured diff are the only record of what was \
+         certified.",
+        task.ticket_key,
+        base.map_or_else(
+            || head[..head.len().min(9)].to_string(),
+            |base| format!(
+                "{}..{}",
+                &base[..base.len().min(9)],
+                &head[..head.len().min(9)]
+            )
+        ),
+        receipt.repo.as_deref().unwrap_or("the harness"),
+        receipt.diff_hash.as_deref().unwrap_or("<none recorded>"),
+    ))
+}
+
+/// A warning line when a task receipt names commits that `main` never received.
 ///
 /// Returns `None` when there is nothing to say: no receipt, no recorded head, no repository to ask, or
 /// commits that are reachable.
 #[must_use]
-pub fn unmerged_receipt_warning(store_root: &Path, task: &TaskNode) -> Option<String> {
+pub fn unmerged_receipt_warning(
+    store_root: &Path,
+    task: &TaskNode,
+) -> Option<String> {
     let receipt = task.verification_receipt.as_ref()?;
     let head = receipt.head_commit_sha.as_deref()?;
     let repo = receipt.repo.as_deref();
@@ -108,6 +148,9 @@ pub fn unmerged_receipt_warning(store_root: &Path, task: &TaskNode) -> Option<St
         )),
     }
 }
+
+mod change;
+pub use change::{CapturedChange, MAX_DIFF_BYTES, capture_change, window_exists};
 
 #[cfg(test)]
 mod tests;

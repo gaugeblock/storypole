@@ -183,6 +183,11 @@ pub fn handle_verify(store: &mut StorypoleStore, args: VerifyArgs, json: bool) -
             commit_shas: Vec::new(),
             repo: None,
             chain_key: None,
+            // A manual attestation names a person, not a run: there is no diff to hash and no window it
+            // can vouch for, so these stay empty rather than being filled with a guess (`SP-41`).
+            diff_hash: None,
+            diff: None,
+            window_intact: None,
         };
         (Some(receipt), None)
     } else {

@@ -36,6 +36,9 @@ fn receipt(verifier: &str) -> VerificationReceipt {
         commit_shas: Vec::new(),
         repo: None,
         chain_key: None,
+        diff_hash: None,
+        diff: None,
+        window_intact: None,
     }
 }
 

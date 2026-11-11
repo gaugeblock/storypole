@@ -1,113 +1,168 @@
 {
-  "events": [
-    {
-      "event": "task_created",
-      "task": {
-        "acceptance_criteria": [
-          "a benchwork clone with no root checkout renders its parent as a key with a repository, not a uuid; no edge handler writes a copy of the target task"
-        ],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794167014377,
-        "decisions": [],
-        "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.",
-        "edges": [],
-        "id": "0bb77760-e483-415f-a74e-e166e7f241be",
-        "kind": "feature",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 2,
-        "scope": {
-          "crate_name": "storypole-core",
-          "labels": [],
-          "module_path": null,
-          "repo": "storypole",
-          "target_files": [],
-          "target_symbols": []
-        },
-        "slug": "cross-ledger-edges-uuid-identity-plus-a-repository-locator-never-a-copy-0bb777",
-        "status": "ready",
-        "ticket_key": "SP-38",
-        "title": "Cross-ledger edges: uuid identity plus a repository locator, never a copy",
-        "updated_at_epoch_ms": 1794167014377,
-        "verification_receipt": null
-      }
-    },
-    {
-      "edge": {
-        "kind": "parent_epic",
-        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
-        "target_repo": "storypole",
-        "target_ticket_key": "SP-34"
-      },
-      "event": "edge_added",
-      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
-      "timestamp_ms": 1794167014521
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
-      "timestamp_ms": 1794206058881,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows SP-29 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
-      "timestamp_ms": 1794212578976,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows SP-29 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.\n\nCONSUMER GEOGRAPHY VERIFIED 2026-11-08, for the rendering piece (pieces 1 and 2, schema and insert, are already done).\n\n  crates/benchwork-core/src/model/dag.rs       52 lines - `DagQuery`, `DagView`, `DagStats`. No edge label field, so\n                                               nothing here is a rendering decision yet.\n  crates/benchwork-core/src/dag_service/query.rs  188 lines - the service that builds a view.\n  crates/benchwork-core/src/dag_service/routing.rs - where links are created, and where `target_id` is resolved before\n                                               insert.\n\nWHAT A GREP FOR `unresolved | Unknown | dangling` FOUND IN query.rs: nothing. There is no representation of an edge whose\ntarget this checkout cannot resolve - not a placeholder, not a warning, not a count. So the rendering piece is not a\nmatter of changing a format string from uuid to `KEY (repo)`; the state has no shape in the view at all, and the case the\nticket calls out (12 edges from a member to a root epic, unresolvable in a solo clone) is currently silent.\n\nWHAT THAT MEANS FOR THE WORK: the first step is to give the state a name in `DagView` - an edge target that is known by\nlocator and not by identity - and only then to decide how it renders. Formatting before the state exists would put\n`KEY (repo)` in front of a reader while leaving `DagStats` unable to report that some edges were not resolved, which is\nthe number an operator actually needs when looking at a graph that is missing twelve edges.\n\nSTOPPED THERE deliberately: this is now a model change in a second repository, not a rendering tweak, and it needs the\nsame gate as any other.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
-      "timestamp_ms": 1794278649070,
-      "title": null
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [
-      "a benchwork clone with no root checkout renders its parent as a key with a repository, not a uuid; no edge handler writes a copy of the target task"
-    ],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794167014377,
-    "decisions": [],
+    "id": "0bb77760-e483-415f-a74e-e166e7f241be",
+    "ticket_key": "SP-38",
+    "slug": "cross-ledger-edges-uuid-identity-plus-a-repository-locator-never-a-copy-0bb777",
+    "title": "Cross-ledger edges: uuid identity plus a repository locator, never a copy",
     "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).",
+    "kind": "feature",
+    "status": "ready",
+    "priority": 2,
+    "scope": {
+      "repo": "storypole",
+      "crate_name": "storypole-core",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
     "edges": [
       {
         "kind": "parent_epic",
         "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
-        "target_repo": "storypole",
-        "target_ticket_key": "SP-34"
+        "target_ticket_key": "SP-34",
+        "target_repo": "storypole"
       }
     ],
-    "id": "0bb77760-e483-415f-a74e-e166e7f241be",
-    "kind": "feature",
-    "latest_handoff": null,
+    "decisions": [],
+    "acceptance_criteria": [
+      "a benchwork clone with no root checkout renders its parent as a key with a repository, not a uuid; no edge handler writes a copy of the target task"
+    ],
     "plan": null,
-    "priority": 2,
-    "scope": {
-      "crate_name": "storypole-core",
-      "labels": [],
-      "module_path": null,
-      "repo": "storypole",
-      "target_files": [],
-      "target_symbols": []
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167014377,
+    "updated_at_epoch_ms": 1794206058881
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "0bb77760-e483-415f-a74e-e166e7f241be",
+        "ticket_key": "SP-38",
+        "slug": "cross-ledger-edges-uuid-identity-plus-a-repository-locator-never-a-copy-0bb777",
+        "title": "Cross-ledger edges: uuid identity plus a repository locator, never a copy",
+        "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "storypole",
+          "crate_name": "storypole-core",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "a benchwork clone with no root checkout renders its parent as a key with a repository, not a uuid; no edge handler writes a copy of the target task"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167014377,
+        "updated_at_epoch_ms": 1794167014377
+      }
     },
-    "slug": "cross-ledger-edges-uuid-identity-plus-a-repository-locator-never-a-copy-0bb777",
-    "status": "ready",
-    "ticket_key": "SP-38",
-    "title": "Cross-ledger edges: uuid identity plus a repository locator, never a copy",
-    "updated_at_epoch_ms": 1794206058881,
-    "verification_receipt": null
-  }
+    {
+      "event": "edge_added",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
+        "target_ticket_key": "SP-34",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794167014521
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "title": null,
+      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794206058881
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "title": null,
+      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows SP-29 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794212578976
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "title": null,
+      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows SP-29 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.\n\nCONSUMER GEOGRAPHY VERIFIED 2026-11-08, for the rendering piece (pieces 1 and 2, schema and insert, are already done).\n\n  crates/benchwork-core/src/model/dag.rs       52 lines - `DagQuery`, `DagView`, `DagStats`. No edge label field, so\n                                               nothing here is a rendering decision yet.\n  crates/benchwork-core/src/dag_service/query.rs  188 lines - the service that builds a view.\n  crates/benchwork-core/src/dag_service/routing.rs - where links are created, and where `target_id` is resolved before\n                                               insert.\n\nWHAT A GREP FOR `unresolved | Unknown | dangling` FOUND IN query.rs: nothing. There is no representation of an edge whose\ntarget this checkout cannot resolve - not a placeholder, not a warning, not a count. So the rendering piece is not a\nmatter of changing a format string from uuid to `KEY (repo)`; the state has no shape in the view at all, and the case the\nticket calls out (12 edges from a member to a root epic, unresolvable in a solo clone) is currently silent.\n\nWHAT THAT MEANS FOR THE WORK: the first step is to give the state a name in `DagView` - an edge target that is known by\nlocator and not by identity - and only then to decide how it renders. Formatting before the state exists would put\n`KEY (repo)` in front of a reader while leaving `DagStats` unable to report that some edges were not resolved, which is\nthe number an operator actually needs when looking at a graph that is missing twelve edges.\n\nSTOPPED THERE deliberately: this is now a model change in a second repository, not a rendering tweak, and it needs the\nsame gate as any other.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794278649070
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794438367188,
+        "lease_expires_at_epoch_ms": 1794441967188,
+        "git_branch": "feat/sp-38-dag-locator",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794438367188
+    },
+    {
+      "event": "task_verified",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nunresolved edges carry uuid plus locator and a count; bencwork-core 51 tests and web tsc clean; the storypole chain here attests this repository only\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794438496987,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "f837f8ba1a2c5add3cf1b2967954db6f83e166a5",
+        "commit_shas": [
+          "f837f8ba1a2c5add3cf1b2967954db6f83e166a5"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "title": null,
+      "description": "An edge carries the target uuid for identity and a repo:key locator for finding and rendering it. The contract already documents target_ticket_key and target_repo for cross-repository rendering and 106 of 123 edge events populate them, but nothing consumes them. Live cross-ledger edges: parent_epic 12, related_to 15, blocked_by 7; 12 run from a member to a root epic, which is the case a solo clone cannot resolve and must not resolve by copying the target, since copying is how GB-79 produced two live copies of one task. Rendering: repository unreachable means show the key with its repository and no link; reachable means resolve by uuid.\n\nCONFIRMED SCOPE 2026-11-08, from the consumer sweep that followed SP-36.\n\nThis ticket owns three pieces, not one:\n  1. schema: task_edges gains target_ticket_key and target_repo (index/schema.rs), because the table currently\n     stores task_id, kind, target_id and drops the two fields 106 of 123 edge events already carry;\n  2. insert path: index::insert_task_record must write them, or the columns stay empty and the schema change\n     buys nothing;\n  3. rendering: a member-only view must show a cross-repository target as its key plus repository rather than\n     a bare uuid. Consumers: benchwork DagBoard and the workspace rollup.\n\nThe live numbers that justify it: 7 blocked_by, 15 related_to, 12 parent_epic cross-ledger edges, of which 12\nrun from a member to a root epic - the case a single checkout cannot resolve and must not resolve by copying the\ntarget (GB-79).\n\nTWO OF THREE DONE 2026-11-08 (commit 60309bb).\n\nSchema and insert path are in: task_edges carries target_ticket_key and target_repo, insert_task_record writes\nthem, and init_schema upgrades an index built before they existed - the case that matters, because\nCREATE TABLE IF NOT EXISTS cannot alter a table and every existing index.sqlite would otherwise have kept three\ncolumns and dropped the locator on every rebuild, silently.\n\nThree tests: the locator round-trips, an edge without one is still an edge, and an old-shape index is upgraded in\nplace.\n\nRemaining: the rendering, so a consumer shows SP-29 (gaugeblock) instead of a uuid. Consumer-side, and it belongs\nwith whoever draws the graph - benchwork's DagBoard is the named one.\n\nCONSUMER GEOGRAPHY VERIFIED 2026-11-08, for the rendering piece (pieces 1 and 2, schema and insert, are already done).\n\n  crates/benchwork-core/src/model/dag.rs       52 lines - `DagQuery`, `DagView`, `DagStats`. No edge label field, so\n                                               nothing here is a rendering decision yet.\n  crates/benchwork-core/src/dag_service/query.rs  188 lines - the service that builds a view.\n  crates/benchwork-core/src/dag_service/routing.rs - where links are created, and where `target_id` is resolved before\n                                               insert.\n\nWHAT A GREP FOR `unresolved | Unknown | dangling` FOUND IN query.rs: nothing. There is no representation of an edge whose\ntarget this checkout cannot resolve - not a placeholder, not a warning, not a count. So the rendering piece is not a\nmatter of changing a format string from uuid to `KEY (repo)`; the state has no shape in the view at all, and the case the\nticket calls out (12 edges from a member to a root epic, unresolvable in a solo clone) is currently silent.\n\nWHAT THAT MEANS FOR THE WORK: the first step is to give the state a name in `DagView` - an edge target that is known by\nlocator and not by identity - and only then to decide how it renders. Formatting before the state exists would put\n`KEY (repo)` in front of a reader while leaving `DagStats` unable to report that some edges were not resolved, which is\nthe number an operator actually needs when looking at a graph that is missing twelve edges.\n\nSTOPPED THERE deliberately: this is now a model change in a second repository, not a rendering tweak, and it needs the\nsame gate as any other.\n\nTHIRD PIECE DELIVERED 2026-11-10 (benchwork 9283807). DagView now carries unresolved_edges - source key, kind, target uuid and the locator SP-48 writes - and DagStats counts them, so a reader learns the graph is short instead of assuming it is whole. UnresolvedEdge::label renders MTR-1 (miter), falls back to the key alone, then to a uuid prefix; the panel shows Outside this checkout: N with the labels in its title. Counted rather than drawn as a synthetic node on purpose: placing one would mean inventing a position for a ticket this checkout cannot read. Provenance, stated because it matters and because the same caveat is on BW-33 and GB-347: the code lives in benchwork and the ticket lives here, so the receipt below attests the storypole chain and nothing about the Rust change. The evidence for the change is benchwork own gates, recorded verbatim: fmt --check clean, clippy -p benchwork-core --all-targets -D warnings clean, nextest -p benchwork-core 51 tests passed, web tsc -b clean. Three tests pin the behaviour, including an edge whose target is a uuid with no locator surviving as something searchable.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794438589335
+    },
+    {
+      "event": "task_archived",
+      "task_id": "0bb77760-e483-415f-a74e-e166e7f241be",
+      "status": "verified",
+      "timestamp_ms": 1794438589644
+    }
+  ]
 }

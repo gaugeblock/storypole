@@ -80,7 +80,21 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
         include_archived: args.include_archived,
         ..Default::default()
     };
-    let tasks = query_tasks(store.conn(), &filter)?;
+    // A suite root answers for the suite (`GB-355`). Its own index holds only its own tickets now, so the
+    // suite is read through the rollup, which replays every member's records on open and therefore cannot
+    // serve a status from before someone else's verification.
+    let workspace = if storypole_core::workspace::declares_members(store.root_dir()) {
+        Some(storypole_core::workspace::StorypoleWorkspaceStore::open(
+            store.root_dir(),
+        )?)
+    } else {
+        None
+    };
+    let conn = workspace
+        .as_ref()
+        .map_or_else(|| store.conn(), |ws| ws.conn());
+
+    let tasks = query_tasks(conn, &filter)?;
 
     // An all-archived store printed exactly what an empty store prints, which read as a broken store during `GB-347`.
     // Counting what the filter hid costs one more query and answers the question the empty table raises.
@@ -89,7 +103,7 @@ pub fn handle_list(store: &StorypoleStore, args: ListArgs, json: bool) -> Result
     } else {
         let mut widened = filter.clone();
         widened.include_archived = true;
-        query_tasks(store.conn(), &widened)?
+        query_tasks(conn, &widened)?
             .len()
             .saturating_sub(tasks.len())
     };

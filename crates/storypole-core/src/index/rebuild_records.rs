@@ -37,10 +37,41 @@ pub fn open_and_sync_records(
     apply_connection_pragmas(&conn)?;
     init_schema(&conn)?;
 
-    if stored_fingerprint(&conn)? != Some(fingerprint(dot_dir)?) {
+    // Two independent questions, because the fingerprint only answers the first (`GB-355`).
+    //
+    //  * has a record changed? The fingerprint covers that.
+    //  * does the index still hold exactly what its own last rebuild wrote? The fingerprint cannot know:
+    //    it is computed from the files, so an index carrying rows from somewhere else looks up to date
+    //    forever. That is how the harness index served 374 rows - the suite's tickets - while the
+    //    harness owns 65, and how a member's status went stale in the root's view.
+    //
+    // The comparison is against the count the rebuild recorded, not against the file count: a record
+    // file can carry events without ever naming a task, so the two are not the same number and using
+    // the file count would rebuild on every command.
+    let current = fingerprint(dot_dir)?;
+    if stored_fingerprint(&conn)? != Some(current) || !holds_its_own(&conn)? {
         rebuild_from_records(&mut conn, dot_dir)?;
     }
     Ok(conn)
+}
+
+/// Whether the index still holds exactly the rows its own last rebuild produced (`GB-355`).
+fn holds_its_own(conn: &Connection) -> Result<bool, StorypoleError> {
+    let stored: Option<String> = conn
+        .query_row(
+            "SELECT value FROM meta WHERE key = 'tasks_indexed'",
+            [],
+            |row| row.get(0),
+        )
+        .ok();
+    let Some(stored) = stored.and_then(|value| value.parse::<i64>().ok()) else {
+        // Built before this marker existed. Rebuilding once costs a few milliseconds and settles it.
+        return Ok(false);
+    };
+    let live: i64 = conn
+        .query_row("SELECT COUNT(*) FROM tasks", [], |row| row.get(0))
+        .map_err(StorypoleError::Sqlite)?;
+    Ok(live == stored)
 }
 
 /// Replay every record into the index, replacing whatever was there.
@@ -77,9 +108,12 @@ pub fn rebuild_from_records(
         insert_task_record(&tx, task)?;
     }
     let (count, digest) = fingerprint(dot_dir)?;
+    // `tasks_indexed` is the count this rebuild produced, which is what `holds_its_own` compares live
+    // rows against (`GB-355`). It is deliberately not the file count above.
     tx.execute(
-        "INSERT OR REPLACE INTO meta (key, value) VALUES ('records_count', ?), ('records_digest', ?)",
-        params![count.to_string(), digest.to_string()],
+        "INSERT OR REPLACE INTO meta (key, value) VALUES ('records_count', ?), ('records_digest', ?), \
+         ('tasks_indexed', ?)",
+        params![count.to_string(), digest.to_string(), tasks.len().to_string()],
     )
     .map_err(StorypoleError::Sqlite)?;
     tx.commit().map_err(StorypoleError::Sqlite)?;

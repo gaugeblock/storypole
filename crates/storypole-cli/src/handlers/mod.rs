@@ -16,6 +16,7 @@ pub mod remint_apply;
 pub mod remint_cmds;
 pub mod remint_store;
 pub mod spool_cmds;
+pub mod transition_cmds;
 pub mod update_cmd;
 pub mod workspace_cmds;
 
@@ -26,5 +27,6 @@ pub use ledger_cmds::*;
 pub use lifecycle_cmds::*;
 pub use plan_cmds::*;
 pub use spool_cmds::*;
+pub use transition_cmds::*;
 pub use update_cmd::*;
 pub use workspace_cmds::*;

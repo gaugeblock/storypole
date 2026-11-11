@@ -149,4 +149,13 @@ pub enum StorypoleError {
     /// A ticket record could not be read, written or locked (`GB-329`).
     #[error("Ticket record at '{path}': {reason}")]
     TicketRecord { path: PathBuf, reason: String },
+
+    /// A status transition was requested where it would hide or misreport work (`SP-47`).
+    #[error("{ticket}: cannot move {from:?} -> {to:?}, {why}")]
+    IllegalTransition {
+        ticket: String,
+        from: TaskStatus,
+        to: TaskStatus,
+        why: String,
+    },
 }

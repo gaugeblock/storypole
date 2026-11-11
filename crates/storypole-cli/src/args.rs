@@ -106,6 +106,23 @@ pub enum Commands {
     Archive { identifier: String },
     /// Restore an archived task back to active backlog
     Unarchive { identifier: String },
+    /// Park a task: it stays in the backlog and leaves the ready queue without being closed
+    Park {
+        identifier: String,
+        /// Why it is parked; recorded on the ticket so the queue can explain itself later
+        #[arg(long)]
+        reason: Option<String>,
+    },
+    /// Return a parked task to the backlog, as Blocked if a dependency is still open
+    Unpark { identifier: String },
+    /// Reopen a verified task, keeping the receipt that certified it
+    Reopen {
+        identifier: String,
+        /// Why the earlier verification no longer holds; required, because reopening withdraws a
+        /// certification that something once depended on
+        #[arg(long)]
+        reason: String,
+    },
     /// Manage multi-repository workspace members and distributed migration
     Workspace(crate::workspace_args::WorkspaceArgs),
     /// Inspect or repair the local telemetry spool outbox

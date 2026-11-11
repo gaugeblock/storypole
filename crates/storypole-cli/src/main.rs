@@ -139,6 +139,15 @@ fn main() -> Result<()> {
                     Commands::Unarchive { identifier } => {
                         handle_unarchive(&mut store, &identifier, cli.json)?
                     }
+                    Commands::Park { identifier, reason } => {
+                        handle_park(&mut store, &identifier, reason.as_deref(), cli.json)?
+                    }
+                    Commands::Unpark { identifier } => {
+                        handle_unpark(&mut store, &identifier, cli.json)?
+                    }
+                    Commands::Reopen { identifier, reason } => {
+                        handle_reopen(&mut store, &identifier, &reason, cli.json)?
+                    }
                 }
             }
         }

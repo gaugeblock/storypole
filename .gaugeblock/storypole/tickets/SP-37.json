@@ -231,6 +231,51 @@
       "to": "ready",
       "reason": "claim lease expired at 1794212337209 (agent cline-agent); returned to the backlog",
       "timestamp_ms": 1794342720513
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "5c4ab6aa-05c8-4f78-be92-acd3b01e7533",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794431061697,
+        "lease_expires_at_epoch_ms": 1794434661697,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "5c4ab6aa-05c8-4f78-be92-acd3b01e7533",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794431061697
+    },
+    {
+      "event": "task_verified",
+      "task_id": "5c4ab6aa-05c8-4f78-be92-acd3b01e7533",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794431062214,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "ac50c741584aaa08db8ca298217018a1b310f534",
+        "commit_shas": [
+          "ac50c741584aaa08db8ca298217018a1b310f534"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole"
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "5c4ab6aa-05c8-4f78-be92-acd3b01e7533",
+      "status": "verified",
+      "timestamp_ms": 1794431100900
     }
   ]
 }

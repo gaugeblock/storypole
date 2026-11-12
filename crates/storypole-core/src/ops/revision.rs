@@ -118,6 +118,24 @@ pub fn coverage_line(task: &TaskNode) -> Option<String> {
     ))
 }
 
+/// The directory a receipt's repository name refers to (`GB-313`).
+///
+/// A member store's root *is* that repository, so `store_root/<repo>` would look one level too deep -
+/// which is exactly the mistake the first live run of the orphaned-window check made.
+fn receipt_repo_dir(store_root: &Path, repo: Option<&str>) -> std::path::PathBuf {
+    match repo {
+        Some(name) => {
+            let nested = store_root.join(name);
+            if nested.is_dir() {
+                nested
+            } else {
+                store_root.to_path_buf()
+            }
+        }
+        None => store_root.to_path_buf(),
+    }
+}
+
 /// A warning line when a receipt's recorded window no longer exists (`SP-41`).
 ///
 /// The write-time `window_intact` field records what was true when the receipt was written, which is
@@ -129,10 +147,7 @@ pub fn coverage_line(task: &TaskNode) -> Option<String> {
 pub fn orphaned_window_warning(store_root: &Path, task: &TaskNode) -> Option<String> {
     let receipt = task.verification_receipt.as_ref()?;
     let head = receipt.head_commit_sha.as_deref()?;
-    let repo_dir = match receipt.repo.as_deref() {
-        Some(name) => store_root.join(name),
-        None => store_root.to_path_buf(),
-    };
+    let repo_dir = receipt_repo_dir(store_root, receipt.repo.as_deref());
     let base = receipt.base_commit_sha.as_deref();
     if window_exists(&repo_dir, base, Some(head))? {
         return None;

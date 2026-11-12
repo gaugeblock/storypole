@@ -63,6 +63,10 @@ pub fn capture_change(dir: &Path, base: Option<&str>, head: Option<&str>) -> Cap
 /// certified, which is worth saying out loud rather than discovering at the audit.
 #[must_use]
 pub fn window_exists(dir: &Path, base: Option<&str>, head: Option<&str>) -> Option<bool> {
+    // A directory that is not a repository cannot answer, and "cannot answer" must not read as "the
+    // commit is gone" (`SP-41`): the first live run of the reader warning claimed a receipt's window had
+    // been rewritten when the only problem was that it pointed one directory too deep.
+    gaugeblock_git::Repository::discover(dir).ok()?;
     let mut shas: Vec<&str> = Vec::new();
     if let Some(base) = base {
         shas.push(base);

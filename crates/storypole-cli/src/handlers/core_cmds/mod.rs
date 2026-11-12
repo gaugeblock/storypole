@@ -165,7 +165,8 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
                     store.root_dir(),
                     &task,
                 ),
-
+                // What the receipt actually covered, beside what the ticket claims (`GB-313`).
+                "coverage": storypole_core::ops::revision::coverage_line(&task),
             }),
         )?;
     } else {
@@ -178,6 +179,9 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
                 storypole_core::ops::revision::orphaned_window_warning(store.root_dir(), &task)
             {
                 eprintln!("{warning}");
+            }
+            if let Some(coverage) = storypole_core::ops::revision::coverage_line(&task) {
+                eprintln!("{coverage}");
             }
         }
     }

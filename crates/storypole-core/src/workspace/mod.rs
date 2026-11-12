@@ -10,7 +10,17 @@ pub use discovery::{DiscoveredMember, discover_members};
 pub use lookup::{LocatedTask, find_task, suite_root_of};
 pub use store::StorypoleWorkspaceStore;
 
-/// Whether `root` declares suite members, which is what makes its answers a *suite* view (`GB-355`).
+/// Whether `root` declares `name` as a suite member (`GB-313`).
+///
+/// The distinction the verification guard needs: a scope naming a *declared member* that is not checked out
+/// is a ticket whose chain would run in the wrong tree, while a scope naming the harness itself (`gaugeblock`,
+/// `workspace`) has no directory by design - the root is that repository.
+#[must_use]
+pub fn declares_member(root: &std::path::Path, name: &str) -> bool {
+    gaugeblock_workspace::SuiteConfig::load(root)
+        .map(|config| config.members().iter().any(|member| member == name))
+        .unwrap_or(false)
+}
 ///
 /// The roster is the `[suite] members` declaration and nothing else: a directory holding `.gaugeblock` is
 /// not a suite for this question, because every member holds one too.

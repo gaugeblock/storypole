@@ -80,6 +80,44 @@ pub fn unbounded_window_note() -> &'static str {
     "[window: no base commit could be named, so this receipt covers HEAD only]"
 }
 
+/// One line stating what a receipt actually proved (`GB-313`).
+///
+/// The receipt already names its chain and its repository, but nothing put those beside the ticket's
+/// declared scope, so a reader had to infer coverage from fields that never claimed to describe it. Two
+/// defects shipped that way: a ticket fixed in `common` whose receipt attested `benchwork`, and a
+/// `benchwork` change verified against `storypole`'s chain. This is the sentence that makes the mismatch
+/// visible.
+#[must_use]
+pub fn coverage_line(task: &TaskNode) -> Option<String> {
+    let receipt = task.verification_receipt.as_ref()?;
+    let chain = receipt.chain_key.as_deref().unwrap_or("no chain");
+    let covered = receipt.repo.as_deref().unwrap_or("the harness");
+    let declared = match (task.scope.repo.as_deref(), task.scope.crate_name.as_deref()) {
+        (Some(repo), Some(crate_name)) => format!("{repo} ({crate_name})"),
+        (Some(repo), None) => repo.to_string(),
+        (None, Some(crate_name)) => format!("crate {crate_name}"),
+        (None, None) => "unscoped".to_string(),
+    };
+    let window = match (
+        receipt.base_commit_sha.as_deref(),
+        receipt.head_commit_sha.as_deref(),
+    ) {
+        (Some(base), Some(head)) => format!(
+            "{}..{}",
+            &base[..base.len().min(9)],
+            &head[..head.len().min(9)]
+        ),
+        (None, Some(head)) => format!("{} only", &head[..head.len().min(9)]),
+        _ => "no window".to_string(),
+    };
+    Some(format!(
+        "coverage: chain `{chain}` in {covered}, window {window} ({} commit(s)), diff {}; ticket scope \
+         says {declared}",
+        receipt.commit_shas.len(),
+        receipt.diff_hash.as_deref().unwrap_or("not captured"),
+    ))
+}
+
 /// A warning line when a receipt's recorded window no longer exists (`SP-41`).
 ///
 /// The write-time `window_intact` field records what was true when the receipt was written, which is

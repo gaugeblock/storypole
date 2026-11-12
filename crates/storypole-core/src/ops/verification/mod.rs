@@ -117,6 +117,23 @@ pub fn verify_task_with_note(
     let now = StorypoleStore::now_ms();
     let target_dir = resolve_target_dir(store.root_dir(), &task);
 
+    // A ticket scoped to a *declared member* that is not checked out must not be verified here (`GB-313`).
+    // `resolve_target_dir` falls back to the store root when `root/<repo>` is absent, and the receipt then
+    // stamped the declared repository - so the record named a tree nothing ran against.
+    //
+    // Deliberately narrow: a scope naming the harness itself (`gaugeblock`, `workspace`) has no directory by
+    // design, because the root *is* that repository, and refusing those would break every harness ticket.
+    if let Some(repo) = task.scope.repo.as_deref() {
+        let expected = store.root_dir().join(repo);
+        if !expected.is_dir() && crate::workspace::declares_member(store.root_dir(), repo) {
+            return Err(StorypoleError::RepositoryNotCheckedOut {
+                ticket: task.ticket_key.clone(),
+                repo: repo.to_string(),
+                path: expected,
+            });
+        }
+    }
+
     let git_branch = resolve_current_branch(Some(&target_dir));
     let head_commit_sha = resolve_head_commit(Some(&target_dir));
     let (base_commit_sha, commit_shas) = crate::ops::revision::branch_delta(

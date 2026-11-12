@@ -150,6 +150,21 @@ pub enum StorypoleError {
     #[error("Ticket record at '{path}': {reason}")]
     TicketRecord { path: PathBuf, reason: String },
 
+    /// A verification was asked for against a repository that is not checked out here (`GB-313`).
+    ///
+    /// The alternative was the silent one: `resolve_target_dir` falls back to the harness root when
+    /// `root/<repo>` is absent, the chain runs there, and the receipt stamps the repository the ticket
+    /// *declared* - so the record names a tree nothing was run against.
+    #[error(
+        "{ticket} is scoped to {repo}, which is not checked out at {path}: the chain would have run \
+         against another tree and the receipt would name one it never touched"
+    )]
+    RepositoryNotCheckedOut {
+        ticket: String,
+        repo: String,
+        path: PathBuf,
+    },
+
     /// A status transition was requested where it would hide or misreport work (`SP-47`).
     #[error("{ticket}: cannot move {from:?} -> {to:?}, {why}")]
     IllegalTransition {

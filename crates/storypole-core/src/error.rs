@@ -40,6 +40,16 @@ pub enum StorypoleError {
     #[error("Invalid task identifier: '{0}'")]
     InvalidIdentifier(String),
 
+    /// A request was refused on its merits, and no more specific variant fits (`GB-242`).
+    ///
+    /// The plan-step commands used [`Self::InvalidIdentifier`], which prefixed a correct message with a
+    /// wrong claim about *what* was invalid: `storypole plan step SP-1 99` answered "Invalid task
+    /// identifier: 'no plan step `99` on SP-1 (7 step(s) recorded)'", blaming the identifier for a step
+    /// number that is a perfectly good ticket key away from being a plain "no". Rendered verbatim, because
+    /// the message is the error and a prefix that contradicts it is worse than none.
+    #[error("{0}")]
+    Rejected(String),
+
     /// A dependency edge would introduce a topological cycle in the DAG.
     #[error("Cycle detected in DAG: {0}")]
     CycleDetected(String),

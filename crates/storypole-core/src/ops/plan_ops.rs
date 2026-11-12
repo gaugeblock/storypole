@@ -166,7 +166,7 @@ pub fn set_plan_step_complete(
 ) -> Result<TaskPlan, StorypoleError> {
     let task = get_task_by_id(store.conn(), task_id)?;
     let Some(mut plan) = task.plan.clone() else {
-        return Err(StorypoleError::InvalidIdentifier(format!(
+        return Err(StorypoleError::Rejected(format!(
             "task {} has no attached plan",
             task.ticket_key
         )));
@@ -179,7 +179,7 @@ pub fn set_plan_step_complete(
         .and_then(|n| n.checked_sub(1))
         .filter(|n| *n < plan.steps.len());
     let Some(index) = by_id.or(by_index) else {
-        return Err(StorypoleError::InvalidIdentifier(format!(
+        return Err(StorypoleError::Rejected(format!(
             "no plan step `{step}` on {} ({} step(s) recorded)",
             task.ticket_key,
             plan.steps.len()

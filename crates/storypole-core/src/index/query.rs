@@ -158,6 +158,12 @@ pub fn query_tasks(
         } else {
             conditions.push("t.status = ?".to_string());
             params_vec.push(s.into());
+            // The exclusion below is independent of the status filter (`GB-295`). It used to live in the
+            // `else` branch, so *any* `--status` turned it off - which is how an archived ticket answered
+            // `--status ready`, and why `list` and `list --status ready` disagreed by one row for months.
+            if !filter.include_archived {
+                conditions.push("t.archived_at IS NULL".to_string());
+            }
         }
     } else if !filter.include_archived {
         // Archived is a state, not a status (GB-179): hide by the timestamp so a task archived

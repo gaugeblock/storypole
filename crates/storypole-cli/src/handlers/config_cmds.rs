@@ -17,17 +17,13 @@ use storypole_core::config_audit::{ConfigFinding, ConfigSeverity};
 /// # Errors
 ///
 /// Returns an error when any finding is an error, or when the JSON envelope cannot be serialised.
-pub fn handle_config(
-    store: &StorypoleStore,
-    root_dir: &Path,
-    command: ConfigCommand,
-    json: bool,
-) -> Result<()> {
+pub fn handle_config(root_dir: &Path, command: ConfigCommand, json: bool) -> Result<()> {
     match command {
         ConfigCommand::Check(args) => {
             if args.workspace {
                 return check_workspace(root_dir, json);
             }
+            let store = StorypoleStore::open(root_dir)?;
             report(&[(None, store.config().audit())], json)
         }
     }
@@ -38,25 +34,47 @@ pub fn handle_config(
 /// Reads through `load_unified_or_legacy`, which creates nothing: an audit must not leave index files
 /// behind in repositories it merely inspected. Membership comes from `WorkspaceTopology`, never a glob.
 fn check_workspace(root_dir: &Path, json: bool) -> Result<()> {
-    let topology = gaugeblock_workspace::WorkspaceTopology::discover(root_dir);
+    // Which suite? The one this directory belongs to, not the one it happens to be. `Membership::containing`
+    // walks up to the declared suite, so `storypole config check --workspace` run inside a member audits the
+    // suite rather than a workspace of one that has no members at all - the shape `GB-305` exists for, where
+    // every test had exactly one repository and per-repository logic was indistinguishable from suite logic.
+    let suite_root = gaugeblock_workspace::Membership::containing(root_dir)
+        .map(|membership| membership.suite_root)
+        .unwrap_or_else(|| root_dir.to_path_buf());
+
+    // A repository with no suite above it is its own workspace of one. Resolving must not turn "I am alone"
+    // into an error, so the launch directory stands in when discovery finds no members.
+    let mut repositories: Vec<(String, std::path::PathBuf)> =
+        gaugeblock_workspace::WorkspaceTopology::discover(&suite_root)
+            .members()
+            .iter()
+            .map(|member| (member.name.clone(), member.path.clone()))
+            .collect();
+    if repositories.is_empty() {
+        let name = root_dir
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or(".")
+            .to_string();
+        repositories.push((name, root_dir.to_path_buf()));
+    }
+
     let mut audited = Vec::new();
 
     let mut inherited_from_suite: Vec<String> = Vec::new();
 
-    for member in topology.members() {
-        let legacy = member.path.join(".gaugeblock/storypole/config.toml");
-        if let Ok(config) = StorypoleConfig::load_unified_or_legacy(&member.path, &legacy) {
+    for (name, path) in &repositories {
+        let legacy = path.join(".gaugeblock/storypole/config.toml");
+        if let Ok(config) = StorypoleConfig::load_unified_or_legacy(path, &legacy) {
             // The audit still reads the file rather than opening a store - it must not leave index files in
             // repositories it merely inspects - but it applies the same inheritance `verify` does, or it reports a
             // fallback that no longer happens (`SP-3`).
             let declared_locally = !config.verification_commands.is_empty();
-            let config = config.inheriting(storypole_core::store::chains_declared_by_suite(
-                &member.path,
-            ));
+            let config = config.inheriting(storypole_core::store::chains_declared_by_suite(path));
             if !declared_locally && !config.verification_commands.is_empty() {
-                inherited_from_suite.push(member.name.clone());
+                inherited_from_suite.push(name.clone());
             }
-            audited.push((Some(member.name.clone()), config.audit()));
+            audited.push((Some(name.clone()), config.audit()));
         }
     }
 

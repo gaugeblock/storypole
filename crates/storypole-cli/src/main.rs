@@ -62,10 +62,21 @@ fn main() -> Result<()> {
                 storypole_mcp::run_stdio_server(&root_dir)
                     .map_err(|e| anyhow::anyhow!("MCP server error: {e}"))?;
             }
+            Commands::Config(args) => {
+                // Handled before the catch-all: `--workspace` audits repositories it was not launched in, so
+                // requiring an initialised store at the launch directory would refuse the one case that
+                // matters - a member auditing its suite (`GB-305`).
+                handle_config(&root_dir, args.command, cli.json)?
+            }
             cmd => {
                 let mut store = StorypoleStore::open(&root_dir)?;
                 match cmd {
-                    Commands::Init(_) | Commands::Mcp | Commands::Workspace(_) => unreachable!(),
+                    Commands::Init(_)
+                    | Commands::Mcp
+                    | Commands::Workspace(_)
+                    | Commands::Config(_) => {
+                        unreachable!()
+                    }
                     Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
                     Commands::LedgerVerify => handle_ledger_verify(&root_dir, cli.json)?,
                     Commands::LedgerReconcile => handle_ledger_reconcile(&root_dir, cli.json)?,
@@ -78,9 +89,6 @@ fn main() -> Result<()> {
                     Commands::Relink(args) => crate::handlers::relink_cmds::handle_relink(
                         &root_dir, args.apply, cli.json,
                     )?,
-                    Commands::Config(args) => {
-                        handle_config(&store, &root_dir, args.command, cli.json)?
-                    }
                     Commands::List(args) => handle_list(&store, args, cli.json)?,
                     Commands::Show { identifier } => handle_show(&store, &identifier, cli.json)?,
                     Commands::Next(args) => handle_next(&mut store, args, cli.json)?,

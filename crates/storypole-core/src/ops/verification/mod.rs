@@ -2,11 +2,13 @@
 
 mod capture_trace;
 mod children;
+mod placement;
 mod receipts;
 mod refusals;
 mod target;
 
 use self::capture_trace::capture_trace;
+use self::placement::owning_repo;
 use self::target::{resolve_target_dir, run_miter_verify};
 use crate::dag::is_task_dependency_ready;
 use crate::error::StorypoleError;
@@ -21,35 +23,6 @@ use uuid::Uuid;
 /// What a reader is told when the window a receipt names no longer exists (`SP-41`).
 pub const ORPHANED_WINDOW_NOTE: &str = "[window: a commit this receipt names no longer exists, so the \
      diff_hash and diff below are the only record of what was certified]";
-
-/// The repository that owns this task's crate, when the task names only a crate (`SP-50`).
-///
-/// The chain lookup used to answer "no chain" for a task scoped `crate_name: storypole-cli` with no
-/// repository, even though `storypole` declares that crate and configures a full chain. The receipt
-/// then certified `cargo test` and could not say which repository it had measured, which is the two
-/// halves of the same gap: nothing resolved a crate to its owner.
-///
-/// Evidence, not a guess: the answer comes from `[package] name` in the member manifests
-/// (`migrate::manifests::crate_owners`), which is the same map the ticket migration adopted work by.
-/// A crate no member declares returns `None`, and the caller keeps the honest fallback.
-fn owning_repo(store: &StorypoleStore, crate_name: &str) -> Option<String> {
-    // Canonicalised before asking membership, because `Membership::containing` walks ancestors and a
-    // relative path stops at the current directory (the `OF-42` lesson).
-    let root = store.root_dir();
-    let canonical = std::fs::canonicalize(root).unwrap_or_else(|_| root.to_path_buf());
-    // A member's store answers for its suite; a lone checkout answers for itself.
-    let suite_root = gaugeblock_workspace::Membership::containing(&canonical)
-        .map_or_else(|| canonical.clone(), |membership| membership.suite_root);
-    let topology = gaugeblock_workspace::WorkspaceTopology::discover(&suite_root);
-    let members: Vec<(String, std::path::PathBuf)> = topology
-        .members()
-        .iter()
-        .map(|member| (member.name.clone(), member.path.clone()))
-        .collect();
-    crate::migrate::manifests::crate_owners(&members)
-        .get(crate_name)
-        .cloned()
-}
 
 /// Verify task execution, certify with a receipt, and unblock dependents.
 ///
@@ -117,22 +90,7 @@ pub fn verify_task_with_note(
     let now = StorypoleStore::now_ms();
     let target_dir = resolve_target_dir(store.root_dir(), &task);
 
-    // A ticket scoped to a *declared member* that is not checked out must not be verified here (`GB-313`).
-    // `resolve_target_dir` falls back to the store root when `root/<repo>` is absent, and the receipt then
-    // stamped the declared repository - so the record named a tree nothing ran against.
-    //
-    // Deliberately narrow: a scope naming the harness itself (`gaugeblock`, `workspace`) has no directory by
-    // design, because the root *is* that repository, and refusing those would break every harness ticket.
-    if let Some(repo) = task.scope.repo.as_deref() {
-        let expected = store.root_dir().join(repo);
-        if !expected.is_dir() && crate::workspace::declares_member(store.root_dir(), repo) {
-            return Err(StorypoleError::RepositoryNotCheckedOut {
-                ticket: task.ticket_key.clone(),
-                repo: repo.to_string(),
-                path: expected,
-            });
-        }
-    }
+    placement::ensure_member_checked_out(store, &task)?;
 
     let git_branch = resolve_current_branch(Some(&target_dir));
     let head_commit_sha = resolve_head_commit(Some(&target_dir));

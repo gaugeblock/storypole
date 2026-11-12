@@ -118,10 +118,20 @@ pub(super) fn build(
                  'cargo test'. This receipt certifies less than a configured run would."
             );
         }
-        let output = Command::new("sh")
-            .arg("-c")
-            .arg(cmd_str)
-            .current_dir(target_dir)
+        let mut command = Command::new("sh");
+        command.arg("-c").arg(cmd_str).current_dir(target_dir);
+        // `GB-356`: this chain is run on behalf of one ticket, and this is the only process that knows which.
+        // Handing the key to the child is what makes a verification run's spans - every fmt, clippy, nextest and
+        // docs invocation inside the chain, plus whatever those spawn - attributable without any of them having
+        // to ask. The bound is the claim's lease when one is held, and otherwise a window from now: the variable
+        // must not outlive the run that justified it, or a later process inheriting it would be credited to work
+        // it did not do.
+        let expires = task.active_claim.as_ref().map_or_else(
+            || StorypoleStore::now_ms() + 3_600_000,
+            |claim| claim.lease_expires_at_epoch_ms,
+        );
+        gaugeblock_workspace::export_claim(&mut command, &task.ticket_key, expires);
+        let output = command
             .output()
             .map_err(|e| StorypoleError::VerificationFailed(e.to_string()))?;
 

@@ -175,14 +175,14 @@ pub fn handle_show(store: &StorypoleStore, ident: &str, json: bool) -> Result<()
             storypole_core::ops::revision::unmerged_receipt_warning(store.root_dir(), &task)
         {
             eprintln!("{warning}");
-            if let Some(warning) =
-                storypole_core::ops::revision::orphaned_window_warning(store.root_dir(), &task)
-            {
-                eprintln!("{warning}");
-            }
-            if let Some(coverage) = storypole_core::ops::revision::coverage_line(&task) {
-                eprintln!("{coverage}");
-            }
+        }
+        if let Some(warning) =
+            storypole_core::ops::revision::orphaned_window_warning(store.root_dir(), &task)
+        {
+            eprintln!("{warning}");
+        }
+        if let Some(coverage) = storypole_core::ops::revision::coverage_line(&task) {
+            eprintln!("{coverage}");
         }
     }
     Ok(())

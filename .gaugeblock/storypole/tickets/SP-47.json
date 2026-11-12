@@ -6,10 +6,10 @@
     "title": "Lifecycle transitions: no verb parks an existing ticket or reopens a verified one, so a held epic cannot be held down",
     "description": "Discovered 2026-11-10 while planning the backlog burn-down. Deferred is reachable only at creation: ops/graph.rs:88-91 maps a defer of a non-bug/tech_debt/chore kind straight to Deferred, and nothing else in the tree ever writes that status. Consequences measured on the live board the same day: GB-155 carries an owner do-not-start directive yet still reads Ready, and storypole next recommends it as the next task; SP-40 reads Ready although its only remaining deliverable is MTR-1, which sits Deferred in another repository, so even the blocked_by edge that would say so cannot be recorded against a parked task. GB-341 records the mirror-image half, a Verified task that cannot be reopened. Wanted: one transition verb with explicit legality rules - park a task into Deferred, return it to Ready, and reopen a Verified task while retaining the previous receipt for audit - recorded as its own ledger event kind so replay stays deterministic, and refusing transitions that would hide work. Acceptance: park GB-155 and storypole list stops offering it, unpark returns it to Ready with its priority intact, reopen preserves the prior receipt, and a ledger replay reproduces every transition in order.",
     "kind": "feature",
-    "status": "deferred",
+    "status": "verified",
     "priority": 3,
     "scope": {
-      "repo": null,
+      "repo": "storypole",
       "crate_name": "storypole-core",
       "module_path": null,
       "target_files": [],
@@ -24,9 +24,26 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "park/unpark/reopen with legality rules; GB-155 parked live and next stopped offering it; 5 transition tests\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794380880761,
+      "git_branch": "feat/sp-47-lifecycle-transitions",
+      "base_commit_sha": "71bdecb164b914fca433f494dbc5145855a33275",
+      "head_commit_sha": "d069c5da7ca29bea8a77837b48ab1c7eb75ece50",
+      "commit_shas": [
+        "24569ba6effee5c37a5b7bf2807957f418b3f867",
+        "d069c5da7ca29bea8a77837b48ab1c7eb75ece50"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1794351559381,
-    "updated_at_epoch_ms": 1794351559381
+    "updated_at_epoch_ms": 1794380918975,
+    "archived_at_epoch_ms": 1794380918975
   },
   "events": [
     {

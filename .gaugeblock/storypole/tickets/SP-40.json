@@ -4,9 +4,9 @@
     "ticket_key": "SP-40",
     "slug": "verify-gates-unchecked-plan-steps-unresolved-children-manual-receipts-state-deletion-827f7f",
     "title": "Verify gates: unchecked plan steps, unresolved children, manual receipts, state deletion",
-    "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: SP-6 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.\n\nPARTIAL 2026-11-08 (commit 347ae5d): refusal 1 of 4 is live.\n\nverify now refuses when the task's own plan has unchecked steps, naming each open step. A task with no plan,\nand a plan whose steps are all complete, pass - the plan is an optional stronger promise, and requiring one\nwould punish the honest small ticket.\n\nThis is the refusal that would have stopped the failure that motivated the ticket: SP-6 verified with 0 of 6\nsteps and a record claiming delivery of a fleet of distributed ledgers that did not exist.\n\nThe other three, each with the reason it is not in this commit:\n  - epic closure with unresolved children needs the workspace rollup to see children in other repositories\n    (SP-36);\n  - --manual alongside an executable chain: the chain is resolved inside receipts::build, so the check belongs\n    there rather than at the entry point;\n  - a commit deleting tracked .gaugeblock state without a decision record is a miter audit rule, in another\n    repository.",
+    "description": "Four refusals, each from a measured failure. (1) Refuse to verify a task whose plan has unchecked steps: SP-6 closed with 0 of 6 and a manual receipt. (2) Refuse to close an epic while a child is unresolved, reading the rollup because children may live in another repository. (3) Refuse --manual when the task has an executable verification chain, since verify now runs the chain and a manual receipt attests nothing. (4) Refuse a commit that deletes tracked files under .gaugeblock/ unless it cites a decision record: ten repositories retired their repo-local ledgers on 2026-11-06 as routine hygiene, and an ADR requirement would have forced the sentence that exposes the circularity, namely that the ledgers froze because nothing wrote to them and were deleted because they were frozen.\n\nPARTIAL 2026-11-08 (commit 347ae5d): refusal 1 of 4 is live.\n\nverify now refuses when the task's own plan has unchecked steps, naming each open step. A task with no plan,\nand a plan whose steps are all complete, pass - the plan is an optional stronger promise, and requiring one\nwould punish the honest small ticket.\n\nThis is the refusal that would have stopped the failure that motivated the ticket: SP-6 verified with 0 of 6\nsteps and a record claiming delivery of a fleet of distributed ledgers that did not exist.\n\nThe other three, each with the reason it is not in this commit:\n  - epic closure with unresolved children needs the workspace rollup to see children in other repositories\n    (SP-36);\n  - --manual alongside an executable chain: the chain is resolved inside receipts::build, so the check belongs\n    there rather than at the entry point;\n  - a commit deleting tracked .gaugeblock state without a decision record is a miter audit rule, in another\n    repository.\n\nREFUSAL 2 OF 4 LIVE 2026-11-08 (commit 1858c32).\n\nverify now refuses `verifier: manual` when a chain resolves for the task, and names the chain. Three tests: refused\nwith the chain named; an explicit --verifier accepted; and a manual receipt fine when nothing is configured.\n\nThe escape hatch is deliberate, not a loophole: a ticket verified on a machine without the toolchain must be able to\nsay who attested it. The rule targets the default, which is the path taken without thinking - and SP-6 is what\ntaking it looks like.\n\nStill owed: epic closure with unresolved children (needs the rollup, which SP-36 half-built) and the ADR-citation\ngate for deleting tracked state (a miter rule, in another repository).\n\nREFUSAL 3 OF 4 LIVE 2026-11-08 (commit ca0e733).\n\nAn epic can no longer be certified while a child of it is open. Children are found through the edges they carry,\nnot a list the epic holds, and the refusal names each open child with its status.\n\nFinished means verified or archived: archived is a state rather than a status, and a task retired without\nverification was dealt with whatever the outcome. A feature with children is unaffected - the rule is about what an\nepic claims.\n\nScope is stated rather than implied: only children in the same store are visible, because since ADR 0009 the rest\nlive in other repositories. The refusal is honest about what it can prove instead of silent about what it cannot,\nand extending it across stores is the workspace rollup's remaining half (SP-36).\n\nOne of four remains: the ADR-citation gate for deleting tracked .gaugeblock state, which is a miter rule in another\nrepository.\n\nALL FOUR REFUSALS DELIVERED AND VERIFIED 2026-11-10. Refusal 1 (unchecked plan steps) 347ae5d, refusal 2 (manual receipt while a chain resolves) 1858c32, refusal 3 (epic closure with an open child) ca0e733 - all three in storypole and covered by their own tests. Refusal 4 (a commit that deletes tracked state under .gaugeblock must cite a decision record) is a miter rule by design, because audit --paths is what every chain actually gates on: MTR-1 landed it as miter-cli c6370b1, audit_state.rs, with the baseline being a revision rather than the allowlist this ticket anticipated - reviewed history needs no justification and an allowlist is where the eleventh deletion would hide. Proven live on a real repository, not only in tests: a throwaway branch deleting .gaugeblock/storypole/tickets/SP-52.json was reported by commit, subject and file with a non-zero exit, and all twelve repositories pass the gate with zero false positives. The receipt below attests the storypole chain; the miter half is MTR-1 receipt, not this one.",
     "kind": "feature",
-    "status": "in_progress",
+    "status": "verified",
     "priority": 1,
     "scope": {
       "repo": "storypole",
@@ -22,6 +22,12 @@
         "target_id": "32422c86-ccda-4983-afc1-07a2f7200806",
         "target_ticket_key": "SP-34",
         "target_repo": "storypole"
+      },
+      {
+        "kind": "blocked_by",
+        "target_id": "9f2b9c8c-676d-43f7-a0eb-57e8d62e5453",
+        "target_ticket_key": "MTR-1",
+        "target_repo": "miter"
       }
     ],
     "decisions": [],
@@ -29,17 +35,27 @@
       "a perf task cannot be verified without a before/after measurement recorded in the commit, the task and a durable document (law 12), so the kind added in GB-343 does not license an unmeasured claim"
     ],
     "plan": null,
-    "active_claim": {
-      "agent_id": "cline-agent",
-      "claimed_at_epoch_ms": 1794205703436,
-      "lease_expires_at_epoch_ms": 1794209303436,
-      "git_branch": "main",
-      "base_commit_sha": "347ae5d6fe2f936dfd30ef9920f0bbb072c82bfa"
-    },
+    "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nrefusals 1-3 in storypole, refusal 4 delivered as miter audit --paths state-deletion gate (MTR-1, c6370b1)\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794432713789,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "22a4fec119d5673aa46d39879d959b92fd9b8733",
+      "commit_shas": [
+        "22a4fec119d5673aa46d39879d959b92fd9b8733"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1794167014714,
-    "updated_at_epoch_ms": 1794205703855
+    "updated_at_epoch_ms": 1794432751286,
+    "archived_at_epoch_ms": 1794432751286
   },
   "events": [
     {

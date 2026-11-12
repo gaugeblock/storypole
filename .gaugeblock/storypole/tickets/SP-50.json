@@ -6,7 +6,7 @@
     "title": "a task scoped only by crate name cannot reach its repository verification chain, so it certifies at cargo test and its receipt names no repository",
     "description": "Measured 2026-11-10 while verifying SP-49 itself. The ticket was scoped crate_name storypole-cli with no repository, which is the normal shape for a crate-level finding. Chain lookup is exact by crate key, then exact by repository key, then the default key; storypole-cli has no entry, the task names no repository so the repository lookup is skipped, and storypole config declares no default entry. The result was the cargo-test fallback: receipt command cargo test, chain_key none, repo none, verifier storypole-verify:cargo-test-fallback, on a repository that does configure a full storypole chain the whole time. The warning and the fallback marker both fired, so the receipt was honest rather than silently weak - the defect is that the chain was unreachable, not that the weakness went unreported. Two consequences: a crate-scoped ticket silently certifies at cargo test even when its repository has fmt+clippy+nextest+audit+docs configured, and the receipt cannot say which repository it measured because scope.repo is what supplies that field. Wanted: resolve the crate to its owning repository through the workspace topology before declaring no chain, and stamp the receipt with the resolved repository. Acceptance: a task scoped only by crate_name storypole-cli reaches the storypole chain, its receipt names repo storypole and chain_key storypole, and a crate no member owns still reports the fallback honestly.",
     "kind": "bug",
-    "status": "triage",
+    "status": "verified",
     "priority": 3,
     "scope": {
       "repo": null,
@@ -24,9 +24,26 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "crate-scoped tickets resolve their owning repository and reach its chain; 6 provenance tests\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794425297935,
+      "git_branch": "fix/sp-50-crate-chain",
+      "base_commit_sha": "be11a8848086d7a25f501562d65cf11030aef462",
+      "head_commit_sha": "a81a062f093638ef35a42fd7f9974d73877d2f28",
+      "commit_shas": [
+        "c7e1436f85a1645985145e2567eab05dc9426c86",
+        "a81a062f093638ef35a42fd7f9974d73877d2f28"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1794378816344,
-    "updated_at_epoch_ms": 1794378816344
+    "updated_at_epoch_ms": 1794425336881,
+    "archived_at_epoch_ms": 1794425336881
   },
   "events": [
     {

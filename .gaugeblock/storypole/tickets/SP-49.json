@@ -6,10 +6,10 @@
     "title": "storypole verify --summary fabricates a manual receipt with exit_code 0 instead of annotating the executed chain",
     "description": "Measured 2026-11-10 while verifying SP-24. lifecycle_cmds/mod.rs:159 builds the receipt override when args.verifier.is_some() OR args.summary.is_some(), and the record it builds is verifier manual with command n/a, exit_code Some(0), chain_key None and no commit window. So --summary, a flag whose documented purpose is to record what was verified, is an alias for a manual attestation: it does not annotate the executed chain, it replaces it with a claim that ran nothing. The failure is currently masked rather than absent, because refusal 2 (SP-40) fires whenever the task has a resolvable chain, which is how it surfaced: storypole verify SP-24 --summary was refused with the manual-receipt message even though --manual was never passed. In a repository whose config resolves no chain the same code path would write a receipt reading exit_code 0 after running nothing, which is precisely the failure GB-272 was filed to end. Wanted: --manual alone selects the attestation path; --summary and --verifier annotate the receipt the chain produced, so the command, exit code and chain key stay those of the run; and the attestation path keeps refusing when a chain exists. Acceptance: verify --summary on a task with a chain executes the chain and the receipt names it with the caller note attached, verify --manual without a chain still records an attestation, and a test pins that --summary alone never yields verifier manual.",
     "kind": "bug",
-    "status": "triage",
+    "status": "verified",
     "priority": 3,
     "scope": {
-      "repo": null,
+      "repo": "storypole",
       "crate_name": "storypole-cli",
       "module_path": null,
       "target_files": [],
@@ -24,9 +24,25 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "summary annotates the executed receipt; the chain runs and names itself\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794378829689,
+      "git_branch": "fix/sp-49-summary-receipt",
+      "base_commit_sha": "416f66f8ee8abc999756fced348b62a246ed71be",
+      "head_commit_sha": "c27682f0112567e1d98982f817688e006510d324",
+      "commit_shas": [
+        "c27682f0112567e1d98982f817688e006510d324"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1794352161764,
-    "updated_at_epoch_ms": 1794352161764
+    "updated_at_epoch_ms": 1794378906984,
+    "archived_at_epoch_ms": 1794378906984
   },
   "events": [
     {

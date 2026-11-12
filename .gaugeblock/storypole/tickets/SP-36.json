@@ -6,7 +6,7 @@
     "title": "Rebuild the index and workspace rollup from ticket records",
     "description": "index.sqlite and the workspace rollup project from ticket files. Rebuild reads tickets/*.json from the owning repository; the rollup reads every repository declared in the suite members list and every worktree reported by git worktree list, so an unmerged branch is visible to a view without being merged into truth. Two invariants: the projection is disposable, so deleting index.sqlite and rebuilding answers identically; and a task uuid found in two repositories is corruption reported with both paths, never merged, which is exactly how GB-79 diverged. task_edges gains target_ticket_key and target_repo, which the rollup drops today (index/schema.rs:68) although 106 of 123 edge events already carry them.\n\nDONE 2026-11-08 (commit 0cad22b).\n\nsync_all_members reads each source in the layout it uses: records replay from tickets/, legacy repositories are\nread from their ledger, so both coexist during the SP-37 migration. Before this a records-mode member\ncontributed nothing, silently - an absent ledger reads as zero events, not as an error.\n\nOne task id in two sources is now refused with both names instead of merged. That is the GB-79 invariant made\nenforceable at the only place that sees every source.\n\nStill owed from this ticket's original scope: task_edges has no target_ticket_key / target_repo columns, so a\ncross-repository edge renders as a bare uuid in the rollup. That is SP-38 and needs a schema change plus the\ninsert path.\n\nUnblocks: SP-40's second refusal (epic closure with unresolved children, which needs the rollup to see\nchildren in other repositories) and SP-37's migration (which needs a rollup that can read both layouts while it\nruns).",
     "kind": "feature",
-    "status": "in_progress",
+    "status": "verified",
     "priority": 2,
     "scope": {
       "repo": "storypole",
@@ -29,17 +29,27 @@
       "duplicate uuid across repositories fails loudly naming both files; deleting index.sqlite changes no answer; a member-only checkout builds a rollup of one member without error"
     ],
     "plan": null,
-    "active_claim": {
-      "agent_id": "cline-agent",
-      "claimed_at_epoch_ms": 1794205893953,
-      "lease_expires_at_epoch_ms": 1794209493953,
-      "git_branch": "main",
-      "base_commit_sha": "0cad22ba798650c2d3c45e242ea4ca1af23b6238"
-    },
+    "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794430955970,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "ac50c741584aaa08db8ca298217018a1b310f534",
+      "commit_shas": [
+        "ac50c741584aaa08db8ca298217018a1b310f534"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1794167013793,
-    "updated_at_epoch_ms": 1794205894316
+    "updated_at_epoch_ms": 1794431100562,
+    "archived_at_epoch_ms": 1794431100562
   },
   "events": [
     {

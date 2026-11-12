@@ -108,7 +108,8 @@
       "chain_key": "storypole"
     },
     "created_at_epoch_ms": 1794108179715,
-    "updated_at_epoch_ms": 1794118743698
+    "updated_at_epoch_ms": 1794343394045,
+    "archived_at_epoch_ms": 1794343394045
   },
   "events": [
     {

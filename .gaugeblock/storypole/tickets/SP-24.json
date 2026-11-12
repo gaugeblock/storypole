@@ -6,7 +6,7 @@
     "title": "storypole verify --dir <member> writes Silver traces to <member>/spool/outbox.jsonl instead of the canonical .gaugeblock spool",
     "description": "Reproduced 2026-11-06 while certifying eleven delivered tickets. Running 'storypole verify SP-5 --dir storypole' created storypole/spool/outbox.jsonl (592 bytes, one silver trace) and the same happened in outfeed/, benchwork/ and chalkline/ - four stray spool directories in four repositories, none of them canonical. The root-ledger verifies wrote to .gaugeblock/spool/ as expected, so the defect is only on the --dir path. Likely the spool path is derived from the store root instead of GaugeblockPaths, which is the same class of bug CO-7 exists to remove. Leaked into the working tree as untracked directories that a 'git add -A' would commit.",
     "kind": "bug",
-    "status": "triage",
+    "status": "verified",
     "priority": 3,
     "scope": {
       "repo": "storypole",
@@ -26,9 +26,25 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794352161875,
+      "git_branch": "fix/sp-24-canonical-spool",
+      "base_commit_sha": "c79ed8e490548cb1a65c5dd08756cea61c1b33d3",
+      "head_commit_sha": "8d80b4cdd6fd72509ccea231d659fd67226e3f7e",
+      "commit_shas": [
+        "8d80b4cdd6fd72509ccea231d659fd67226e3f7e"
+      ],
+      "repo": "storypole",
+      "chain_key": "storypole"
+    },
     "created_at_epoch_ms": 1793942209462,
-    "updated_at_epoch_ms": 1793942209462
+    "updated_at_epoch_ms": 1794352265336,
+    "archived_at_epoch_ms": 1794352265336
   },
   "events": [
     {

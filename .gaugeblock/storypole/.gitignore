@@ -1,3 +1,6 @@
 index.sqlite
 index.sqlite-shm
 index.sqlite-wal
+workspace.sqlite
+workspace.sqlite-shm
+workspace.sqlite-wal

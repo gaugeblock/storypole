@@ -216,6 +216,32 @@ pub fn dispatch_tool(
             let status = storypole_core::ops::archive::unarchive_task(store, task_id)?;
             Ok(json!({ "success": true, "status": format!("{status:?}") }))
         }
+        // The lifecycle transitions (`SP-47`) had a library and a CLI but no MCP surface, so an agent
+        // working through this server could not hold a ticket - it had to drop to a shell, and the call it
+        // made then was invisible to the trace (`SP-52`).
+        "storypole_park" => {
+            let ident = req_str(args, "identifier")?;
+            let task_id = resolve_task_id(store.conn(), ident)?;
+            let reason = opt_str(args, "reason");
+            let status =
+                storypole_core::ops::lifecycle::park_task(store, task_id, reason.as_deref())?;
+            Ok(json!({ "success": true, "status": format!("{status:?}") }))
+        }
+        "storypole_unpark" => {
+            let ident = req_str(args, "identifier")?;
+            let task_id = resolve_task_id(store.conn(), ident)?;
+            let status = storypole_core::ops::lifecycle::unpark_task(store, task_id)?;
+            Ok(json!({ "success": true, "status": format!("{status:?}") }))
+        }
+        "storypole_reopen" => {
+            let ident = req_str(args, "identifier")?;
+            let task_id = resolve_task_id(store.conn(), ident)?;
+            // The reason is required here for the same reason it is required on the command line: reopening
+            // withdraws a certification something may have depended on.
+            let reason = req_str(args, "reason")?;
+            let status = storypole_core::ops::lifecycle::reopen_task(store, task_id, reason)?;
+            Ok(json!({ "success": true, "status": format!("{status:?}") }))
+        }
         _ => Err(StorypoleError::InvalidIdentifier(format!(
             "Unknown MCP tool '{name}'"
         ))),

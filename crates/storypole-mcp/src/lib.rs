@@ -5,6 +5,7 @@
 pub mod dispatch;
 pub mod dispatch_helpers;
 pub mod schema;
+pub mod schema_lifecycle;
 pub mod schema_plan;
 
 use gaugeblock_mcp::{McpHandler, ToolOutcome};

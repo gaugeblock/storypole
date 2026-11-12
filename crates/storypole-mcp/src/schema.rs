@@ -229,6 +229,7 @@ pub fn list_tools() -> Vec<Value> {
         ),
     ];
     tools.extend(crate::schema_plan::plan_tools());
+    tools.extend(crate::schema_lifecycle::lifecycle_tools());
     tools
 }
 

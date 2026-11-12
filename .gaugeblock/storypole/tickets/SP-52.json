@@ -62,6 +62,64 @@
       },
       "captured_by_agent": "user",
       "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "61ebd235-e843-4455-a4c5-73847cc45752",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794451326767,
+        "lease_expires_at_epoch_ms": 1794454926767,
+        "git_branch": "feat/sp-52-mcp-transitions",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "61ebd235-e843-4455-a4c5-73847cc45752",
+      "from": "deferred",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794451326767
+    },
+    {
+      "event": "task_verified",
+      "task_id": "61ebd235-e843-4455-a4c5-73847cc45752",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/storypole\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794451341064,
+        "git_branch": "feat/sp-52-mcp-transitions",
+        "base_commit_sha": "b80367136271fce6faf6ed3961fc99ff1310fdbc",
+        "head_commit_sha": "b737131910300e69617b06a9acf18ed088b4e3f5",
+        "commit_shas": [
+          "b737131910300e69617b06a9acf18ed088b4e3f5"
+        ],
+        "repo": "storypole",
+        "chain_key": "storypole",
+        "diff_hash": "90525f973919ddc7bd1c37d81520b2061d218e8d",
+        "diff": "diff --git a/crates/storypole-mcp/src/dispatch.rs b/crates/storypole-mcp/src/dispatch.rs\nindex 595f156..e8850ab 100644\n--- a/crates/storypole-mcp/src/dispatch.rs\n+++ b/crates/storypole-mcp/src/dispatch.rs\n@@ -216,6 +216,32 @@ pub fn dispatch_tool(\n             let status = storypole_core::ops::archive::unarchive_task(store, task_id)?;\n             Ok(json!({ \"success\": true, \"status\": format!(\"{status:?}\") }))\n         }\n+        // The lifecycle transitions (`SP-47`) had a library and a CLI but no MCP surface, so an agent\n+        // working through this server could not hold a ticket - it had to drop to a shell, and the call it\n+        // made then was invisible to the trace (`SP-52`).\n+        \"storypole_park\" => {\n+            let ident = req_str(args, \"identifier\")?;\n+            let task_id = resolve_task_id(store.conn(), ident)?;\n+            let reason = opt_str(args, \"reason\");\n+            let status =\n+                storypole_core::ops::lifecycle::park_task(store, task_id, reason.as_deref())?;\n+            Ok(json!({ \"success\": true, \"status\": format!(\"{status:?}\") }))\n+        }\n+        \"storypole_unpark\" => {\n+            let ident = req_str(args, \"identifier\")?;\n+            let task_id = resolve_task_id(store.conn(), ident)?;\n+            let status = storypole_core::ops::lifecycle::unpark_task(store, task_id)?;\n+            Ok(json!({ \"success\": true, \"status\": format!(\"{status:?}\") }))\n+        }\n+        \"storypole_reopen\" => {\n+            let ident = req_str(args, \"identifier\")?;\n+            let task_id = resolve_task_id(store.conn(), ident)?;\n+            // The reason is required here for the same reason it is required on the command line: reopening\n+            // withdraws a certification something may have depended on.\n+            let reason = req_str(args, \"reason\")?;\n+            let status = storypole_core::ops::lifecycle::reopen_task(store, task_id, reason)?;\n+            Ok(json!({ \"success\": true, \"status\": format!(\"{status:?}\") }))\n+        }\n         _ => Err(StorypoleError::InvalidIdentifier(format!(\n             \"Unknown MCP tool '{name}'\"\n         ))),\ndiff --git a/crates/storypole-mcp/src/lib.rs b/crates/storypole-mcp/src/lib.rs\nindex b671681..2a0ab1e 100644\n--- a/crates/storypole-mcp/src/lib.rs\n+++ b/crates/storypole-mcp/src/lib.rs\n@@ -5,6 +5,7 @@\n pub mod dispatch;\n pub mod dispatch_helpers;\n pub mod schema;\n+pub mod schema_lifecycle;\n pub mod schema_plan;\n \n use gaugeblock_mcp::{McpHandler, ToolOutcome};\ndiff --git a/crates/storypole-mcp/src/schema.rs b/crates/storypole-mcp/src/schema.rs\nindex ef5a62a..af43461 100644\n--- a/crates/storypole-mcp/src/schema.rs\n+++ b/crates/storypole-mcp/src/schema.rs\n@@ -229,6 +229,7 @@ pub fn list_tools() -> Vec<Value> {\n         ),\n     ];\n     tools.extend(crate::schema_plan::plan_tools());\n+    tools.extend(crate::schema_lifecycle::lifecycle_tools());\n     tools\n }\n \ndiff --git a/crates/storypole-mcp/src/schema_lifecycle.rs b/crates/storypole-mcp/src/schema_lifecycle.rs\nnew file mode 100644\nindex 0000000..da9262e\n--- /dev/null\n+++ b/crates/storypole-mcp/src/schema_lifecycle.rs\n@@ -0,0 +1,47 @@\n+//! Lifecycle tool schemas for Storypole MCP (`SP-52`).\n+//!\n+//! Split out of `schema.rs`, which reached 278 lines when the three transition tools were added - the same\n+//! reason `schema_plan.rs` exists, and the same shape: a small module returning its own slice of the list.\n+\n+use serde_json::{Value, json};\n+\n+/// Return the lifecycle-transition MCP tool schemas.\n+pub fn lifecycle_tools() -> Vec<Value> {\n+    vec![\n+        crate::schema::tool(\n+            \"storypole_park\",\n+            \"Park a task: it stays in the backlog and leaves the ready queue. Refuses a verified task, a held claim, or an archived one\",\n+            json!({\n+                \"type\": \"object\",\n+                \"properties\": {\n+                    \"identifier\": { \"type\": \"string\" },\n+                    \"reason\": { \"type\": \"string\" }\n+                },\n+                \"required\": [\"identifier\"]\n+            }),\n+        ),\n+        crate::schema::tool(\n+            \"storypole_unpark\",\n+            \"Return a parked task to the backlog, as blocked rather than ready when a dependency is unverified\",\n+            json!({\n+                \"type\": \"object\",\n+                \"properties\": {\n+                    \"identifier\": { \"type\": \"string\" }\n+                },\n+                \"required\": [\"identifier\"]\n+            }),\n+        ),\n+        crate::schema::tool(\n+            \"storypole_reopen\",\n+            \"Reopen a verified task, keeping the receipt that certified it. The reason is required: reopening withdraws a certification\",\n+            json!({\n+                \"type\": \"object\",\n+                \"properties\": {\n+                    \"identifier\": { \"type\": \"string\" },\n+                    \"reason\": { \"type\": \"string\" }\n+                },\n+                \"required\": [\"identifier\", \"reason\"]\n+            }),\n+        ),\n+    ]\n+}\ndiff --git a/crates/storypole-mcp/tests/lifecycle_tools.rs b/crates/storypole-mcp/tests/lifecycle_tools.rs\nnew file mode 100644\nindex 0000000..ec78e38\n--- /dev/null\n+++ b/crates/storypole-mcp/tests/lifecycle_tools.rs\n@@ -0,0 +1,69 @@\n+//! The lifecycle transitions are reachable over MCP, not only from a shell (`SP-52`).\n+//!\n+//! The defect these pin: `park`, `unpark` and `reopen` existed in the library and on the command line, and\n+//! `storypole-mcp` exposed none of them - so an agent working through the server had to drop to a shell to\n+//! hold a ticket, and the call it made then was invisible to the trace.\n+\n+#![allow(clippy::unwrap_used, clippy::expect_used)]\n+\n+use serde_json::{Value, json};\n+use storypole_core::StorypoleConfig;\n+use storypole_core::store::StorypoleStore;\n+use storypole_mcp::dispatch::dispatch_tool;\n+use storypole_mcp::schema::list_tools;\n+\n+#[test]\n+fn the_three_transitions_are_advertised() {\n+    let names: Vec<String> = list_tools()\n+        .iter()\n+        .filter_map(|tool| tool.get(\"name\").and_then(|name| name.as_str()))\n+        .map(str::to_string)\n+        .collect();\n+    for tool in [\"storypole_park\", \"storypole_unpark\", \"storypole_reopen\"] {\n+        assert!(names.iter().any(|name| name == tool), \"{tool} is listed\");\n+    }\n+}\n+\n+#[test]\n+fn a_round_trip_parks_and_unparks_one_task() {\n+    let tmp = tempfile::tempdir().expect(\"tempdir\");\n+    let mut store = StorypoleStore::init(tmp.path(), StorypoleConfig::default()).expect(\"init\");\n+\n+    let key = add(&mut store, \"Hold this\");\n+\n+    let parked = call(\n+        &mut store,\n+        \"storypole_park\",\n+        json!({\"identifier\": key, \"reason\": \"owner hold\"}),\n+    );\n+    assert_eq!(parked[\"status\"], \"Deferred\");\n+\n+    let unparked = call(&mut store, \"storypole_unpark\", json!({\"identifier\": key}));\n+    assert_eq!(unparked[\"status\"], \"Ready\");\n+}\n+\n+#[test]\n+fn reopening_over_mcp_requires_a_reason() {\n+    let tmp = tempfile::tempdir().expect(\"tempdir\");\n+    let mut store = StorypoleStore::init(tmp.path(), StorypoleConfig::default()).expect(\"init\");\n+    let key = add(&mut store, \"Never verified\");\n+\n+    // The reason is part of the contract, not a convenience: reopening withdraws a certification.\n+    let refused = dispatch_tool(\"storypole_reopen\", &json!({\"identifier\": key}), &mut store);\n+    assert!(refused.is_err(), \"a reopen without a reason is refused\");\n+}\n+\n+/// Adds one task and returns its key.\n+fn add(store: &mut StorypoleStore, title: &str) -> String {\n+    let added = call(\n+        store,\n+        \"storypole_add\",\n+        json!({\"title\": title, \"kind\": \"feature\"}),\n+    );\n+    added[\"ticket_key\"].as_str().expect(\"key\").to_string()\n+}\n+\n+/// One MCP tool call, asserting it succeeded.\n+fn call(store: &mut StorypoleStore, tool: &str, args: Value) -> Value {\n+    dispatch_tool(tool, &args, store).unwrap_or_else(|error| panic!(\"{tool} failed: {error:?}\"))\n+}\n",
+        "window_intact": true
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "61ebd235-e843-4455-a4c5-73847cc45752",
+      "title": null,
+      "description": "SP-47 added park, unpark and reopen to the library and the CLI on 2026-11-10, and deliberately left the MCP surface alone because the ticket acceptance named the CLI. The consequence is that the half of the harness that works through MCP cannot hold a ticket: dispatch.rs exposes storypole_verify and storypole_claim and has no tools for the three transitions, so an agent told to park a task has to drop to a shell and the call it makes is invisible to the MCP trace. The verbs are already the right shape for tools - ticket identifier in, status out - so this is wiring plus the schema entries plus tests. Acceptance: storypole_park, storypole_unpark and storypole_reopen appear in the tool list, each refuses the same illegal transitions the library refuses, and a tools/call round trip parks and unparks one task.\n\nDELIVERED AND VERIFIED 2026-11-10 (storypole b737131). storypole_park, storypole_unpark and storypole_reopen are listed and dispatched; they are the library calls plus argument reading, so they refuse exactly what the library refuses - parking a verified task, a held claim or an archived one, and reopening without a reason, which the wire schema marks required as well. Schemas moved to schema_lifecycle.rs at 47 lines when schema.rs reached 278, following the shape schema_plan.rs already demonstrates. Three tests: advertised, a dispatch round trip that parks and unparks one task, and a reopen without a reason refused. Tier 2: fmt clean, clippy -p storypole-mcp --all-targets -D warnings clean, lifecycle_tools 3/3, miter audit 0 over 250, and the chain that produced the receipt below also ran the workspace-wide nextest and docs check.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794451453677
+    },
+    {
+      "event": "task_archived",
+      "task_id": "61ebd235-e843-4455-a4c5-73847cc45752",
+      "status": "verified",
+      "timestamp_ms": 1794451454203
     }
   ]
 }

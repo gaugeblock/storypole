@@ -69,6 +69,9 @@ fn main() -> Result<()> {
                     Commands::Add(args) => handle_add(&mut store, args, cli.json)?,
                     Commands::LedgerVerify => handle_ledger_verify(&root_dir, cli.json)?,
                     Commands::LedgerReconcile => handle_ledger_reconcile(&root_dir, cli.json)?,
+                    Commands::RefreshProjections(args) => {
+                        handle_refresh_projections(&root_dir, args.apply, cli.json)?
+                    }
                     Commands::Remint(args) => crate::handlers::remint_cmds::handle_remint(
                         &root_dir, args.apply, cli.json,
                     )?,

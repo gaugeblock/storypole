@@ -34,6 +34,14 @@ pub struct MigrateArgs {
     pub scope_only: bool,
 }
 
+/// `storypole refresh-projections` - rewrite ticket blocks that disagree with their own events (`GB-349`).
+#[derive(Debug, Args)]
+pub struct RefreshProjectionsArgs {
+    /// Rewrite the records that disagree; without this the pass only reports them
+    #[arg(long)]
+    pub apply: bool,
+}
+
 /// Arguments for the `spool` command group.
 #[derive(Debug, Args)]
 pub struct SpoolArgs {

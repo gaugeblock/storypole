@@ -29,12 +29,14 @@ use crate::model::{LedgerEvent, TaskNode};
 pub mod io;
 pub mod lock;
 pub mod order;
+pub mod refresh;
 #[cfg(test)]
 mod tests;
 
 pub use io::{append_event, create, read, write};
 pub use lock::TicketLock;
 pub use order::{event_timestamp, order_events, task_id_of_event};
+pub use refresh::{RefreshReport, refresh_store};
 
 /// Mapping from a ticket to its row in an external tracker.
 ///
@@ -54,7 +56,14 @@ pub struct ExternalRef {
 /// A ticket and everything that has happened to it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TicketRecord {
-    /// The task as created; later events carry every change.
+    /// The task as of its last event: a projection of `events`, refreshed on every write.
+    ///
+    /// It was documented as "the task as created", and that reading cost two wrong reports in one session
+    /// (`GB-349`): a board count reading these blocks said 148 active where the store said 77, because an
+    /// archive writes an event and the block kept the live status it was created with. Nothing is lost either
+    /// way - `events` is the truth and [`TicketRecord::replay`] recovers it - but a field that reads like
+    /// current state and is not is a trap for every reader that does not replay. It is current state now,
+    /// kept true by [`write`] rather than by each caller remembering to.
     pub ticket: TaskNode,
     /// Every event for this ticket, stored already ordered.
     pub events: Vec<LedgerEvent>,

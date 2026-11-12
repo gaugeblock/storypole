@@ -7,7 +7,9 @@ use std::path::PathBuf;
 
 // Task lifecycle, deferral and decision arguments live in `task_args` to hold this file under the
 // hard 250-line ceiling; re-exported here so `crate::args::*` still resolves every name.
-pub use crate::store_args::{MigrateArgs, RelinkArgs, RemintArgs, SpoolArgs, SpoolCommands};
+pub use crate::store_args::{
+    MigrateArgs, RefreshProjectionsArgs, RelinkArgs, RemintArgs, SpoolArgs, SpoolCommands,
+};
 pub use crate::task_args::{
     AskDecisionArgs, DecideArgs, DeferArgs, HandoffArgs, SplitArgs, VerifyArgs,
 };
@@ -38,6 +40,8 @@ pub enum Commands {
     LedgerVerify,
     /// Compare the unified index against the ledger replay
     LedgerReconcile,
+    /// Rewrite ticket blocks that disagree with their own events (GB-349)
+    RefreshProjections(RefreshProjectionsArgs),
     /// Report the key remint a store would need to mint under its own prefix (GB-347)
     Remint(RemintArgs),
     /// Repair references a per-store remint could not see, and link harness tickets to the work

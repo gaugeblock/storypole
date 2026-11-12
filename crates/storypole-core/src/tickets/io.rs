@@ -42,6 +42,24 @@ pub fn read(path: &Path) -> Result<TicketRecord, StorypoleError> {
 ///
 /// [`StorypoleError::TicketRecord`] when the record cannot be serialised, written or renamed.
 pub fn write(path: &Path, record: &TicketRecord) -> Result<(), StorypoleError> {
+    // `ticket` is a projection of `events`, and a file that disagrees with itself is what `GB-349` measured
+    // seventy-one times over: archived in the log, still reading a live status in its own block. Refreshing
+    // here rather than in each caller means no write path can produce that divergence - not verify, not
+    // archive, not a command nobody has written yet. A record with no replayable event keeps the block it
+    // was given, because inventing one would be worse than leaving it.
+    let refreshed;
+    let record = match record.replay() {
+        Some(current) if current != record.ticket => {
+            refreshed = TicketRecord {
+                ticket: current,
+                events: record.events.clone(),
+                external: record.external.clone(),
+            };
+            &refreshed
+        }
+        _ => record,
+    };
+
     let parent = path.parent().ok_or_else(|| StorypoleError::TicketRecord {
         path: path.to_path_buf(),
         reason: "record path has no parent directory".to_string(),

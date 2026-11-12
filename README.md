@@ -152,6 +152,19 @@ storypole ledger-reconcile
 `ledger-reconcile` ends in `index and ledger agree` when the SQLite projection matches the ledgers,
 and names each status group that disagrees otherwise.
 
+A third reader can disagree for a reason neither of those two looks at: each ticket file carries a `ticket`
+block that projects its own `events`, and a block written before the projection was kept current can hold a
+status the log has moved past (`GB-349`). `refresh-projections` reports those files and rewrites them only
+when asked, so a reader that never replays gets the same answer as one that does:
+
+```bash
+# Report records whose ticket block disagrees with their events
+storypole refresh-projections
+
+# Rewrite them; a second pass then reports every projection in agreement
+storypole refresh-projections --apply
+```
+
 ### Key migration
 
 A member store that inherited another repository's key numbering can be moved onto its own configured prefix. The

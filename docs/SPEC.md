@@ -114,6 +114,7 @@ stateDiagram-v2
 - **`plan_args::PlanArgs`** (`struct`): Command-line options for attached plan inspection and manipulation.
 - **`plan_args::PlanCommands`** (`enum`): Subcommands for managing attached execution plans.
 - **`plan::PlanStep`** (`struct`): Discrete actionable step within a `TaskPlan`.
+- **`refresh::RefreshReport`** (`struct`): What a projection pass examined, found stale, rewrote and could not read (`GB-349`).
 - **`args::SplitArgs`** (`struct`): Command-line options for splitting an oversized task into subtasks.
 - **`config::StorypoleConfig`** (`struct`): Configuration options mapped from `.storypole/config.toml` or `.gaugeblock/config.toml`.
 - **`error::StorypoleError`** (`enum`): Strongly typed domain error enum for all `storypole-core` operations.

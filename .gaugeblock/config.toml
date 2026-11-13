@@ -3,4 +3,16 @@ allowed_crates = []
 allowed_repos = ["storypole"]
 claim_ttl_minutes = 60
 ticket_prefix = "SP"
-verification_commands = [["storypole", "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole"]]
+verification_commands = [
+    [
+    "storypole",
+    "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+],
+    # Reserved key: verification resolves by crate, then repo, then `default`. Harness-level tasks
+    # are unscoped, so without this entry they fall back to `cargo test` and the receipt certifies
+    # less than the configured gate (SP-54).
+    [
+    "default",
+    "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d storypole",
+],
+]

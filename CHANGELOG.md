@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- `storypole-core`: `event_timestamp` now reads `HandoffRecorded` from the packet's own `timestamp_ms` instead of letting it fall through to the zero arm of the timestamp table, so a handoff no longer sorts ahead of every real event. Replay by `(timestamp, id)` and replay from a legacy ledger's file order now agree, which is what `migrate` checks before it archives a ledger. Before this, any store holding a handed-off ticket that was never subsequently verified could not be migrated: `migrate` aborted with a divergence error and the written record reported the stale status (SP-54).
 - `storypole-core`: `claim` now creates and checks out the lease branch in the repository that owns the task (`scope.repo`) instead of the store root, so claiming a member task can no longer switch a harness checkout onto a feature branch; harness-level tasks record the branch without touching any checkout, and verification receipts read branch/SHA from the task's own repository (GB-137).
 
 ### Changed

@@ -160,13 +160,18 @@ pub struct AddArgs {
     pub crate_name: Option<String>,
     #[arg(long)]
     pub module: Option<String>,
-    #[arg(long)]
+    /// Target file paths. Comma-separated or repeated; `--file` is a synonym (`GB-359`).
+    #[arg(long = "files", visible_alias = "file", value_delimiter = ',')]
     pub files: Vec<String>,
-    #[arg(long)]
+    /// Target code symbols. Comma-separated or repeated; `--symbol` is a synonym (`GB-359`).
+    #[arg(long = "symbols", visible_alias = "symbol", value_delimiter = ',')]
     pub symbols: Vec<String>,
-    #[arg(long)]
+    /// Labels/tags. Comma-separated or repeated; `--label` is a synonym (`GB-359`).
+    #[arg(long = "labels", visible_alias = "label", value_delimiter = ',')]
     pub labels: Vec<String>,
-    #[arg(long)]
+    /// Concrete acceptance criteria. Repeatable only; commas are NOT a separator, because criteria are prose
+    /// and splitting them silently turns one into several (`GB-250`).
+    #[arg(long = "criteria", visible_alias = "criterion")]
     pub criteria: Vec<String>,
 }
 

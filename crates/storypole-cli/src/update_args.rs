@@ -34,18 +34,18 @@ pub struct UpdateArgs {
     /// Target module path
     #[arg(long)]
     pub module: Option<String>,
-    /// Target file paths
-    #[arg(long = "file", value_delimiter = ',')]
+    /// Target file paths. Comma-separated or repeated; `--file` is a synonym (`GB-359`).
+    #[arg(long = "files", visible_alias = "file", value_delimiter = ',')]
     pub files: Vec<String>,
-    /// Target code symbols
-    #[arg(long = "symbol", value_delimiter = ',')]
+    /// Target code symbols. Comma-separated or repeated; `--symbol` is a synonym (`GB-359`).
+    #[arg(long = "symbols", visible_alias = "symbol", value_delimiter = ',')]
     pub symbols: Vec<String>,
-    #[arg(long = "label", value_delimiter = ',')]
-    /// Labels/tags
+    /// Labels/tags. Comma-separated or repeated; `--label` is a synonym (`GB-359`).
+    #[arg(long = "labels", visible_alias = "label", value_delimiter = ',')]
     pub labels: Vec<String>,
     /// Concrete acceptance criteria. Repeatable; commas are NOT a separator, because criteria are prose
     /// and splitting them silently turns one into several (`GB-250`).
-    #[arg(long = "criterion")]
+    #[arg(long = "criteria", visible_alias = "criterion")]
     pub criteria: Vec<String>,
     /// Read one acceptance criterion from a file, or `-` for stdin.
     ///

@@ -131,7 +131,11 @@ pub enum Commands {
     Workspace(crate::workspace_args::WorkspaceArgs),
     /// Inspect or repair the local telemetry spool outbox
     Spool(SpoolArgs),
-    /// Split one store's tickets into the repositories that own them
+    /// Convert this store to the Records layout and split its tickets into the repositories that own them
+    ///
+    /// Two effects, both applied: every ticket becomes a file under `tickets/<KEY>.json`, and the tickets whose
+    /// scope names a member repository move into that member's store. The `ledger.jsonl` is archived last, only
+    /// after every written record has been replay-verified against it (`GB-357`).
     Migrate(MigrateArgs),
     /// Start the stdio JSON-RPC 2.0 Model Context Protocol server
     Mcp,

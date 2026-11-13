@@ -144,7 +144,9 @@ but anything that reads ticket files directly - or filters a listing on status a
 open. Measured twice: a suite sweep reported 8 triage rows where the store held 2, and a board count reported
 148 active tickets where the answer was 78 (`GB-349`, `GB-360`).
 
-Ask the store, and test the archive marker rather than the status:
+Ask the store, and test the archive marker rather than the status. The marker is **omitted** on an open row rather
+than set to null, so read it defensively - a missing key and a null both mean open, and a strict reader that
+indexes it directly will fail on the rows it most wants:
 
 ```bash
 # Open work, counted from rows that carry both fields. Never glob tickets/*.json and filter on status.

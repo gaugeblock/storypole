@@ -135,6 +135,27 @@ storypole verify SP-1 agent-antigravity --summary "Completed unit tests and pass
 storypole reap --dry-run
 ```
 
+### Reporting open work: archived tasks keep their status
+
+Archiving records *that* a task left the backlog; it does not rewrite what it was when it left. A task archived
+from triage still carries `status = triage` with `archived_at_epoch_ms` set, and a task archived after
+verification still reads `verified`. `storypole list` hides archived rows by default and says how many it hid,
+but anything that reads ticket files directly - or filters a listing on status alone - counts closed work as
+open. Measured twice: a suite sweep reported 8 triage rows where the store held 2, and a board count reported
+148 active tickets where the answer was 78 (`GB-349`, `GB-360`).
+
+Ask the store, and test the archive marker rather than the status:
+
+```bash
+# Open work, counted from rows that carry both fields. Never glob tickets/*.json and filter on status.
+storypole list --json --include-archived \
+  | jq '[.tasks[] | select(.archived_at_epoch_ms == null)] | length'
+
+# Everything archived from triage, which is invisible to the line above by construction
+storypole list --json --include-archived \
+  | jq '[.tasks[] | select(.archived_at_epoch_ms != null and .status == "triage")] | length'
+```
+
 ### Ledger integrity and index reconciliation
 
 A distributed ledger set has no compiler, so these two commands make drift observable. Both exit

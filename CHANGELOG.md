@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- `storypole-cli`: the README now states that archiving preserves the status a task earned, so `status = triage` with `archived_at_epoch_ms` set means *archived*, not open, and gives the `list --json --include-archived` query that counts open work from rows rather than from ticket files. Two wrong counts in this suite came from filtering on status alone - a sweep that reported 8 open rows where the store held 2, and a board that reported 148 where replay said 78. Two tests pin the row shape the query depends on. [GB-360]
+
 ### Fixed
 - `storypole-cli`: `migrate` now reports both of its effects. The dry run names the layout transition (`Ledger -> Records`), the number of records applying would write, and where the ledger will be archived, in the table and in `--json` (`layout`, `target`, `records`); `--help` describes the layout change as well as the repository split; and a store where every ticket stays at the root no longer closes with "nothing was written and the ledger is untouched", which read as nothing to do for exactly the repository that most needed converting. A single-repository store previously saw `moving 0` while applying wrote every record and archived its ledger. `--dry-run` remains read-only. [GB-357]
 - `storypole-cli`: `workspace distribute --help` no longer describes itself as moving tasks "from root ledger into their respective repository ledgers", wording that predates the Records layout and made a second verb read like `migrate`. [GB-357]

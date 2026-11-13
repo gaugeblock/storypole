@@ -16,7 +16,7 @@ pub enum WorkspaceCommands {
     List,
     /// Initialize .storypole directories in member repositories that do not have one
     Init,
-    /// Distribute scoped tasks from root ledger into their respective repository ledgers
+    /// Copy tasks that name a member repository from the root store into that member's store
     Distribute {
         /// Perform dry-run audit without writing changes to disk
         #[arg(long)]

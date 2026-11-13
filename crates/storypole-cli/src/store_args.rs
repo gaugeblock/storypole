@@ -23,10 +23,11 @@ pub struct RelinkArgs {
     pub apply: bool,
 }
 
-/// `storypole migrate` - split one store's tickets into the repositories that own them.
+/// `storypole migrate` - convert a store to the Records layout and split its tickets into the repositories that
+/// own them.
 #[derive(Debug, Args)]
 pub struct MigrateArgs {
-    /// Report what would move without writing anything
+    /// Report the layout transition, the record count and the repository split without writing anything
     #[arg(long)]
     pub dry_run: bool,
     /// Move only the tickets whose own scope names their repository, leaving adoptions for review

@@ -48,6 +48,9 @@ fn store_with_archived_ticket() -> (tempfile::TempDir, String, String) {
         .unwrap_or_else(|| panic!("no status in {before}"))
         .to_string();
     run(dir.path(), &["archive", &key]);
+    // A second ticket stays open, so a listing can be checked for both shapes at once: the archived row carries
+    // the marker, the open row omits it.
+    run(dir.path(), &["add", "a ticket still open"]);
     (dir, key, status)
 }
 
@@ -77,6 +80,19 @@ fn an_archived_ticket_keeps_the_status_it_earned() {
         !row["archived_at_epoch_ms"].is_null(),
         "and the archive marker is present in the same row, which is what a filter must use instead"
     );
+
+    // The shape a reader trips over: on an open row the key is omitted rather than null, so a strict consumer
+    // that indexes it raises instead of reading "open". Documented in the README with this test as the pin.
+    let open_row = all
+        .as_array()
+        .expect("rows")
+        .iter()
+        .find(|row| row["archived_at_epoch_ms"].is_null())
+        .unwrap_or_else(|| panic!("no open row to inspect in {all}"));
+    assert!(
+        open_row.get("archived_at_epoch_ms").is_none(),
+        "an open row omits the marker rather than emitting null: {open_row}"
+    );
 }
 
 #[test]
@@ -102,5 +118,8 @@ fn the_default_listing_hides_it_so_the_marker_is_the_only_way_to_see_both_facts(
         .iter()
         .filter(|row| row["archived_at_epoch_ms"].is_null())
         .count();
-    assert_eq!(open, 0, "the store holds no open work, and says so");
+    assert_eq!(
+        open, 1,
+        "the archived ticket is invisible to the marker filter, and the open one is the only open work"
+    );
 }

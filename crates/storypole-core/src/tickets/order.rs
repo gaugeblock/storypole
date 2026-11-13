@@ -17,8 +17,9 @@ pub fn order_events(events: &mut [LedgerEvent]) {
 
 /// The event's own clock in epoch milliseconds.
 ///
-/// Every mutation variant carries `timestamp_ms`; creation carries the task's creation time and a receipt
-/// the time it was verified, so no event sorts at zero by accident.
+/// Every mutation variant carries `timestamp_ms`; creation carries the task's creation time, a receipt
+/// the time it was verified and a handoff the time it was recorded, so no event sorts at zero by
+/// accident (`SP-54`).
 #[must_use]
 pub fn event_timestamp(event: &LedgerEvent) -> u64 {
     match event {
@@ -46,11 +47,13 @@ fn timestamp_of(event: &LedgerEvent) -> u64 {
         | LedgerEvent::TaskReleased { timestamp_ms, .. }
         | LedgerEvent::TaskSplit { timestamp_ms, .. }
         | LedgerEvent::PlanUpdated { timestamp_ms, .. } => *timestamp_ms,
+        // The handoff packet carries its own clock (`SP-54`); reading it here keeps replay ordered by
+        // when the handoff happened instead of sorting it to zero.
+        LedgerEvent::HandoffRecorded { handoff, .. } => handoff.timestamp_ms,
         LedgerEvent::TaskCreated { .. }
         | LedgerEvent::DeferredItemCaptured { .. }
         | LedgerEvent::TaskVerified { .. }
-        | LedgerEvent::TaskClaimed { .. }
-        | LedgerEvent::HandoffRecorded { .. } => 0,
+        | LedgerEvent::TaskClaimed { .. } => 0,
     }
 }
 

@@ -1,0 +1,270 @@
+{
+  "ticket": {
+    "id": "19801af5-cd94-4531-8acf-f244e03834b4",
+    "ticket_key": "SP-54",
+    "slug": "handoff-events-sort-at-timestamp-zero-so-records-replay-disagrees-with-ledger-order-19801a",
+    "title": "handoff events sort at timestamp zero, so records replay disagrees with ledger order",
+    "description": "event_timestamp reads the clock from the payload for task_created, deferred_item_captured, task_verified and task_claimed, but HandoffRecorded falls through to timestamp_of, whose final arm returns 0. Every handoff therefore sorts ahead of all real events no matter when it happened, even though the handoff payload carries timestamp_ms and the doc comment promises that no event sorts at zero by accident. Measured on colinwolff.dev while migrating a legacy ledger store (CW-88 there): CW-71 was claimed at 1793748147488 and handed off to ready at 1793748365120, 216 seconds later. Replay from the ledger ends ready; replay by (timestamp, task_id) ends in_progress, so storypole migrate aborts with a divergence error and, worse, leaves a written record whose status is wrong. Any store with a handed-off ticket that was never subsequently verified cannot be migrated.",
+    "kind": "bug",
+    "status": "in_progress",
+    "priority": 2,
+    "scope": {
+      "repo": null,
+      "crate_name": null,
+      "module_path": null,
+      "target_files": [
+        "crates/storypole-core/src/tickets/order.rs"
+      ],
+      "target_symbols": [
+        "storypole_core::tickets::order"
+      ],
+      "labels": [
+        "ordering"
+      ]
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "event_timestamp returns handoff.timestamp_ms for HandoffRecorded and no variant sorts at zero unless its payload says so",
+      "a regression test replays claim-then-handoff and asserts the handoff wins by timestamp",
+      "cargo fmt, clippy with -D warnings and the storypole-core test suite pass"
+    ],
+    "plan": {
+      "summary": "Read the handoff packet clock instead of sorting it at zero, so records replay agrees with legacy ledger order and migrate stops aborting.",
+      "design_markdown": "# SP-54 - order a handoff by its own clock\n\n## Intent\nA handoff must sort by when it was recorded, so records replay agrees with a legacy ledger's file\norder and `migrate` can archive that ledger.\n\n## Steps\n1. Read `HandoffRecorded` from `handoff.timestamp_ms` in `tickets::order::timestamp_of`.\n   Gate: `cargo test -p storypole-core --lib order_tests`\n2. Pin it with a regression test that fails when the arm returns zero.\n   Gate: mutation check, then `cargo test -p storypole-core`\n3. Keep the crate gates clean.\n   Gate: `cargo fmt --check`, `cargo clippy --all-targets` rc=0\n",
+      "steps": [
+        {
+          "step_id": "1",
+          "title": "Read HandoffRecorded from handoff.timestamp_ms",
+          "target_files": [],
+          "verification_gate": "order_tests pass",
+          "completed": true
+        },
+        {
+          "step_id": "2",
+          "title": "Pin with a regression test that fails on zero",
+          "target_files": [],
+          "verification_gate": "mutation check then full crate tests",
+          "completed": true
+        },
+        {
+          "step_id": "3",
+          "title": "Keep crate gates clean",
+          "target_files": [],
+          "verification_gate": "fmt and clippy rc=0",
+          "completed": true
+        }
+      ],
+      "plan_file_path": ".gaugeblock/storypole/plans/SP-54.md",
+      "updated_at_epoch_ms": 1794540313232
+    },
+    "active_claim": {
+      "agent_id": "cline",
+      "claimed_at_epoch_ms": 1794540155276,
+      "lease_expires_at_epoch_ms": 1794543755276,
+      "git_branch": "fix/sp-54-handoff-timestamp",
+      "base_commit_sha": null
+    },
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794540152286,
+    "updated_at_epoch_ms": 1794540313232
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "19801af5-cd94-4531-8acf-f244e03834b4",
+        "ticket_key": "SP-54",
+        "slug": "handoff-events-sort-at-timestamp-zero-so-records-replay-disagrees-with-ledger-order-19801a",
+        "title": "handoff events sort at timestamp zero, so records replay disagrees with ledger order",
+        "description": "event_timestamp reads the clock from the payload for task_created, deferred_item_captured, task_verified and task_claimed, but HandoffRecorded falls through to timestamp_of, whose final arm returns 0. Every handoff therefore sorts ahead of all real events no matter when it happened, even though the handoff payload carries timestamp_ms and the doc comment promises that no event sorts at zero by accident. Measured on colinwolff.dev while migrating a legacy ledger store (CW-88 there): CW-71 was claimed at 1793748147488 and handed off to ready at 1793748365120, 216 seconds later. Replay from the ledger ends ready; replay by (timestamp, task_id) ends in_progress, so storypole migrate aborts with a divergence error and, worse, leaves a written record whose status is wrong. Any store with a handed-off ticket that was never subsequently verified cannot be migrated.",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": null,
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [
+            "crates/storypole-core/src/tickets/order.rs"
+          ],
+          "target_symbols": [
+            "storypole_core::tickets::order"
+          ],
+          "labels": [
+            "ordering"
+          ]
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "event_timestamp returns handoff.timestamp_ms for HandoffRecorded and no variant sorts at zero unless its payload says so",
+          "a regression test replays claim-then-handoff and asserts the handoff wins by timestamp",
+          "cargo fmt, clippy with -D warnings and the storypole-core test suite pass"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794540152286,
+        "updated_at_epoch_ms": 1794540152286
+      }
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1794540155276,
+        "lease_expires_at_epoch_ms": 1794543755276,
+        "git_branch": "fix/sp-54-handoff-timestamp",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1794540155276
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "plan": {
+        "summary": "Read the handoff packet clock instead of sorting it at zero, so records replay agrees with legacy ledger order and migrate stops aborting.",
+        "design_markdown": "# SP-54 - order a handoff by its own clock\n\n## Intent\nA handoff must sort by when it was recorded, so records replay agrees with a legacy ledger's file\norder and `migrate` can archive that ledger.\n\n## Steps\n1. Read `HandoffRecorded` from `handoff.timestamp_ms` in `tickets::order::timestamp_of`.\n   Gate: `cargo test -p storypole-core --lib order_tests`\n2. Pin it with a regression test that fails when the arm returns zero.\n   Gate: mutation check, then `cargo test -p storypole-core`\n3. Keep the crate gates clean.\n   Gate: `cargo fmt --check`, `cargo clippy --all-targets` rc=0\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "Read HandoffRecorded from handoff.timestamp_ms",
+            "target_files": [],
+            "verification_gate": "order_tests pass",
+            "completed": false
+          },
+          {
+            "step_id": "2",
+            "title": "Pin with a regression test that fails on zero",
+            "target_files": [],
+            "verification_gate": "mutation check then full crate tests",
+            "completed": false
+          },
+          {
+            "step_id": "3",
+            "title": "Keep crate gates clean",
+            "target_files": [],
+            "verification_gate": "fmt and clippy rc=0",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/SP-54.md",
+        "updated_at_epoch_ms": 1794540308899
+      },
+      "timestamp_ms": 1794540308899
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "plan": {
+        "summary": "Read the handoff packet clock instead of sorting it at zero, so records replay agrees with legacy ledger order and migrate stops aborting.",
+        "design_markdown": "# SP-54 - order a handoff by its own clock\n\n## Intent\nA handoff must sort by when it was recorded, so records replay agrees with a legacy ledger's file\norder and `migrate` can archive that ledger.\n\n## Steps\n1. Read `HandoffRecorded` from `handoff.timestamp_ms` in `tickets::order::timestamp_of`.\n   Gate: `cargo test -p storypole-core --lib order_tests`\n2. Pin it with a regression test that fails when the arm returns zero.\n   Gate: mutation check, then `cargo test -p storypole-core`\n3. Keep the crate gates clean.\n   Gate: `cargo fmt --check`, `cargo clippy --all-targets` rc=0\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "Read HandoffRecorded from handoff.timestamp_ms",
+            "target_files": [],
+            "verification_gate": "order_tests pass",
+            "completed": true
+          },
+          {
+            "step_id": "2",
+            "title": "Pin with a regression test that fails on zero",
+            "target_files": [],
+            "verification_gate": "mutation check then full crate tests",
+            "completed": false
+          },
+          {
+            "step_id": "3",
+            "title": "Keep crate gates clean",
+            "target_files": [],
+            "verification_gate": "fmt and clippy rc=0",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/SP-54.md",
+        "updated_at_epoch_ms": 1794540312863
+      },
+      "timestamp_ms": 1794540312863
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "plan": {
+        "summary": "Read the handoff packet clock instead of sorting it at zero, so records replay agrees with legacy ledger order and migrate stops aborting.",
+        "design_markdown": "# SP-54 - order a handoff by its own clock\n\n## Intent\nA handoff must sort by when it was recorded, so records replay agrees with a legacy ledger's file\norder and `migrate` can archive that ledger.\n\n## Steps\n1. Read `HandoffRecorded` from `handoff.timestamp_ms` in `tickets::order::timestamp_of`.\n   Gate: `cargo test -p storypole-core --lib order_tests`\n2. Pin it with a regression test that fails when the arm returns zero.\n   Gate: mutation check, then `cargo test -p storypole-core`\n3. Keep the crate gates clean.\n   Gate: `cargo fmt --check`, `cargo clippy --all-targets` rc=0\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "Read HandoffRecorded from handoff.timestamp_ms",
+            "target_files": [],
+            "verification_gate": "order_tests pass",
+            "completed": true
+          },
+          {
+            "step_id": "2",
+            "title": "Pin with a regression test that fails on zero",
+            "target_files": [],
+            "verification_gate": "mutation check then full crate tests",
+            "completed": true
+          },
+          {
+            "step_id": "3",
+            "title": "Keep crate gates clean",
+            "target_files": [],
+            "verification_gate": "fmt and clippy rc=0",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/SP-54.md",
+        "updated_at_epoch_ms": 1794540313103
+      },
+      "timestamp_ms": 1794540313103
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "19801af5-cd94-4531-8acf-f244e03834b4",
+      "plan": {
+        "summary": "Read the handoff packet clock instead of sorting it at zero, so records replay agrees with legacy ledger order and migrate stops aborting.",
+        "design_markdown": "# SP-54 - order a handoff by its own clock\n\n## Intent\nA handoff must sort by when it was recorded, so records replay agrees with a legacy ledger's file\norder and `migrate` can archive that ledger.\n\n## Steps\n1. Read `HandoffRecorded` from `handoff.timestamp_ms` in `tickets::order::timestamp_of`.\n   Gate: `cargo test -p storypole-core --lib order_tests`\n2. Pin it with a regression test that fails when the arm returns zero.\n   Gate: mutation check, then `cargo test -p storypole-core`\n3. Keep the crate gates clean.\n   Gate: `cargo fmt --check`, `cargo clippy --all-targets` rc=0\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "Read HandoffRecorded from handoff.timestamp_ms",
+            "target_files": [],
+            "verification_gate": "order_tests pass",
+            "completed": true
+          },
+          {
+            "step_id": "2",
+            "title": "Pin with a regression test that fails on zero",
+            "target_files": [],
+            "verification_gate": "mutation check then full crate tests",
+            "completed": true
+          },
+          {
+            "step_id": "3",
+            "title": "Keep crate gates clean",
+            "target_files": [],
+            "verification_gate": "fmt and clippy rc=0",
+            "completed": true
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/SP-54.md",
+        "updated_at_epoch_ms": 1794540313232
+      },
+      "timestamp_ms": 1794540313232
+    }
+  ]
+}

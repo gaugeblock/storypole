@@ -29,6 +29,8 @@ use crate::model::{LedgerEvent, TaskNode};
 pub mod io;
 pub mod lock;
 pub mod order;
+#[cfg(test)]
+mod order_tests;
 pub mod refresh;
 #[cfg(test)]
 mod tests;

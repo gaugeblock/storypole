@@ -68,6 +68,23 @@ neurosymbolic-suite/               # Multi-repo workspace meta-harness
 * **Local Scoped Execution:** When run inside a child repository (`cd miter`), `storypole` reads and writes to `miter/.storypole/ledger.jsonl`.
 * **Workspace Rollup & Store Routing:** When run at the root workspace (or with `--dir`), `storypole workspace distribute` partitions tasks from the root ledger into their respective repository ledgers while retaining cross-repo dependency edges.
 
+### 2.1 What follows the branch, and what is shared (`SP-45`, ADR 0009)
+
+Two kinds of state live in one store, and they resolve differently on purpose. Confusing them is how a
+worktree appears to lose its backlog, so the rule is written here once:
+
+| Kind | Lives in | Follows the branch? | Why |
+|---|---|---|---|
+| Tickets, events, plans | `.gaugeblock/storypole/tickets/`, `ledger.jsonl` | **Yes** | They are tracked source. A worktree cut before a ticket existed legitimately does not contain it. |
+| Claim leases | `<git-common-dir>/storypole/leases` (`leases/mod.rs`) | **No** | A claim in one worktree must block the other *before* any merge; two agents must not take the same ticket. |
+| Ticket numbers | `<git-common-dir>/storypole/keys` (`ticket_keys.rs`) | **No** | Two branches must not mint the same key. |
+| `index.sqlite` | `.gaugeblock/storypole/` (gitignored) | **Yes, as a cache** | It indexes tracked source, so a shared index would describe a tree the other worktree is not standing in. |
+
+`a_lease_taken_in_one_checkout_blocks_the_other` in `crates/storypole-cli/tests/two_client_records_tests.rs`
+is the regression test for the second and third rows. A resolver that walks ancestors is therefore correct for
+the first row and would be wrong for the others; `store_locate` consults the git common dir only as a fallback
+for a checkout that has no store of its own.
+
 ---
 
 ## 3. Crate & Package Topology

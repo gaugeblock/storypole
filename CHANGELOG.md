@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Documentation
+- `storypole-core`: ARCHITECTURE §2.1 now states which state follows the branch and which is shared, because the two resolve differently on purpose and confusing them is how a worktree appears to lose its backlog: tickets and events are tracked source, claim leases and ticket numbers live in the git common dir so two worktrees cannot claim or mint the same thing, and `index.sqlite` is a per-worktree cache of tracked source (SP-45).
 - `storypole-cli`: the README now states that archiving preserves the status a task earned, so `status = triage` with `archived_at_epoch_ms` set means *archived*, not open, and gives the `list --json --include-archived` query that counts open work from rows rather than from ticket files. Two wrong counts in this suite came from filtering on status alone - a sweep that reported 8 open rows where the store held 2, and a board that reported 148 where replay said 78. Two tests pin the row shape the query depends on. [GB-360]
 
 ### Fixed
